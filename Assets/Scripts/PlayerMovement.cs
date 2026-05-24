@@ -5,7 +5,6 @@ public class PlayerMovement : MonoBehaviour
 {
 
     public float test;
-    
     [Header("Referencias")]
     public CharacterController controller;
     public Transform cam;
