@@ -53,8 +53,8 @@ public class PlayerHUD : MonoBehaviour
         }
         else
         {
-            ammoText.text = weapon.balasActuales + " / " + weapon.balasMaximas;
-            if (weapon.balasActuales == 0) ammoText.color = Color.red;
+            ammoText.text = weapon.balasActuales + " / " + weapon.municionReserva;
+            if (weapon.balasActuales == 0 && weapon.municionReserva == 0) ammoText.color = Color.red;
             else ammoText.color = Color.white;
         }
     }

@@ -16,6 +16,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Regeneración de Vida")]
     public float regenRate = 5f; 
     public float timeBeforeRegen = 4f; 
+    [Range(0.1f, 1f)]
+    public float limiteRegenPorcentaje = 0.35f;
     private float regenTimer; 
 
     [Header("Ajustes de Movimiento")]
@@ -119,7 +121,6 @@ public class PlayerMovement : MonoBehaviour
     void Morir()
     {
         Debug.Log("El jugador ha muerto. Pasando a la pantalla de Game Over...");
-
         UnityEngine.SceneManagement.SceneManager.LoadScene("GameOver");
     }
 
@@ -131,9 +132,9 @@ public class PlayerMovement : MonoBehaviour
             velocity.y = -2f; 
             jumpCount = 0; 
         }
-
-        if (currentHealth < maxHealth && currentHealth > 0 && regenTimer >= timeBeforeRegen)
-            currentHealth = Mathf.Clamp(currentHealth + regenRate * Time.deltaTime, 0, maxHealth);
+        float limiteVidaRegen = maxHealth * limiteRegenPorcentaje;
+        if (currentHealth < limiteVidaRegen && currentHealth > 0 && regenTimer >= timeBeforeRegen)
+            currentHealth = Mathf.Clamp(currentHealth + regenRate * Time.deltaTime, 0, limiteVidaRegen);
         else
             regenTimer += Time.deltaTime;
 

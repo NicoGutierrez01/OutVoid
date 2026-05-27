@@ -13,10 +13,15 @@ public class EnemyHealth : MonoBehaviour
     private Color originalColor;
     private MaterialPropertyBlock propBlock;
 
-    [Header("UI y Drop")]
+    [Header("UI y Drops de Recursos")]
     public Slider healthBar;
-    public GameObject itemPrefab; 
-    [Range(0, 100)] public float probabilidadDrop = 30f;
+    
+    [Range(0, 100)] public float probabilidadDrop = 40f; 
+
+    // NUEVO: Separamos los prefabs de los drops
+    public GameObject prefabDropVida;
+    public GameObject prefabDropEscudo;
+    public GameObject prefabDropBalas;
 
     private PlayerMovement playerScript; 
     public static bool healthPerKillActive = false; 
@@ -24,11 +29,9 @@ public class EnemyHealth : MonoBehaviour
     void Awake() { propBlock = new MaterialPropertyBlock(); }
 
     void Start()
-    {
-        maxHealth = maxHealth + ((MapManager.nivelBucle - 1) * 25f);
+    {      
         currentHealth = maxHealth;
         
-        currentHealth = maxHealth;
         playerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMovement>();
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
         if (enemyRenderer != null) originalColor = enemyRenderer.sharedMaterial.color;
@@ -38,16 +41,13 @@ public class EnemyHealth : MonoBehaviour
 
     IEnumerator EfectoFuego()
     {
-        float damagePerTick = maxHealth * 0.25f / 3f; 
-        for (int i = 0; i < 3; i++)
+        float damagePerTick = maxHealth * 0.05f; 
+        int ticks = 5; 
+        for (int i = 0; i < ticks; i++)
         {
-            propBlock.SetColor("_Color", new Color(1f, 0.5f, 0f)); 
-            enemyRenderer.SetPropertyBlock(propBlock);
             TakeDamage(damagePerTick);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1f); 
         }
-        propBlock.SetColor("_Color", originalColor);
-        enemyRenderer.SetPropertyBlock(propBlock);
     }
 
     public void TakeDamage(float amount)
@@ -74,12 +74,17 @@ public class EnemyHealth : MonoBehaviour
             AdministradorDeProgreso.Instancia.enemigosMuertos++;
             AdministradorDeProgreso.Instancia.puntosTotales += Random.Range(120, 350); 
         }
-        
+
         if (healthPerKillActive && playerScript != null) 
-            {
-                playerScript.maxHealth += 1f; 
-                playerScript.Heal(1f); 
-            }
+        {
+            playerScript.maxHealth += 1f; 
+            playerScript.Heal(1f); 
+        }
+
+        if (MapManager.Instance != null)
+        {
+            MapManager.Instance.RegistrarMuerte();
+        }
 
         if (Random.value * 100 <= probabilidadDrop)
         {
@@ -91,14 +96,28 @@ public class EnemyHealth : MonoBehaviour
                 posicionSpawn = hit.point + Vector3.up * 0.5f; 
             }
 
-            Instantiate(itemPrefab, posicionSpawn, Quaternion.identity);
+            float dropRoll = Random.Range(1, 101);
+            GameObject recursoAElegir = null;
+
+            if (dropRoll <= 65) 
+            {
+                recursoAElegir = prefabDropBalas;
+            }
+            else if (dropRoll <= 85) 
+            {
+                recursoAElegir = prefabDropEscudo;
+            }
+            else 
+            {
+                recursoAElegir = prefabDropVida;
+            }
+
+            if (recursoAElegir != null)
+            {
+                Instantiate(recursoAElegir, posicionSpawn, Quaternion.identity);
+            }
         }
 
-        if (MapManager.Instance != null)
-            {
-                MapManager.Instance.RegistrarMuerte();
-            }
-        
         Destroy(gameObject);
     }
 }

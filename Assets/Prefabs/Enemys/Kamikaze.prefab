@@ -396,8 +396,10 @@ MonoBehaviour:
   enemyRenderer: {fileID: -7511558181221131132, guid: 978e52d21204d3747a23420b50b095b8, type: 3}
   flashDuration: 0.2
   healthBar: {fileID: 361033141033522978}
-  itemPrefab: {fileID: 8338463526003722253, guid: f47ef5a7195771c42912145668fb148e, type: 3}
   probabilidadDrop: 25
+  prefabDropVida: {fileID: 4871143905727763784, guid: c2b3f91d41b3b624b982a54f910a824e, type: 3}
+  prefabDropEscudo: {fileID: 3940866820498123476, guid: a92b9b36f0b13ae41b6c393d64af0687, type: 3}
+  prefabDropBalas: {fileID: 8352567516775117006, guid: cfe80a591f3ec8e48a23bcb7c95a4719, type: 3}
 --- !u!54 &99378595037899920
 Rigidbody:
   m_ObjectHideFlags: 0

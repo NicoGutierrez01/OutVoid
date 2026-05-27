@@ -12,6 +12,10 @@ public class WeaponSystem : MonoBehaviour
     [Header("Munición (Revólver)")]
     public int balasMaximas = 6;
     [HideInInspector] public int balasActuales;
+
+    public int municionReserva = 24;
+    public int municionReservaMaxima = 60; 
+    
     public float tiempoRecarga = 1.5f;
     public bool recargando = false;
 
@@ -36,9 +40,9 @@ public class WeaponSystem : MonoBehaviour
 
         if (AdministradorDeProgreso.Instancia != null)
         {
-        damage *= AdministradorDeProgreso.Instancia.multiplicadorDaño;
-        tiempoRecarga *= AdministradorDeProgreso.Instancia.multiplicadorRecarga;
-        tieneFuego = AdministradorDeProgreso.Instancia.balasDeFuego;
+            damage *= AdministradorDeProgreso.Instancia.multiplicadorDaño;
+            tiempoRecarga *= AdministradorDeProgreso.Instancia.multiplicadorRecarga;
+            tieneFuego = AdministradorDeProgreso.Instancia.balasDeFuego;
         }
     }
 
@@ -54,13 +58,13 @@ public class WeaponSystem : MonoBehaviour
                 float cadenciaActual = isUltActive ? fireRate * 0.75f : fireRate;
                 proximoTiempoDisparo = Time.time + cadenciaActual; 
             }
-            else if (!recargando)
+            else if (!recargando && municionReserva > 0) 
             {
                 StartCoroutine(RutinaRecarga());
             }
         }
 
-        if (Keyboard.current.rKey.wasPressedThisFrame && balasActuales < balasMaximas && !recargando)
+        if (Keyboard.current.rKey.wasPressedThisFrame && balasActuales < balasMaximas && !recargando && municionReserva > 0)
         {
             StartCoroutine(RutinaRecarga());
         }
@@ -113,7 +117,7 @@ public class WeaponSystem : MonoBehaviour
             }
         }
 
-        if (balasActuales <= 0 && !isUltActive)
+        if (balasActuales <= 0 && !isUltActive && municionReserva > 0)
         {
             StartCoroutine(RutinaRecarga());
         }
@@ -135,7 +139,17 @@ public class WeaponSystem : MonoBehaviour
 
         yield return new WaitForSeconds(tiempoRecarga);
 
-        balasActuales = balasMaximas;
+        int balasNecesarias = balasMaximas - balasActuales;
+        int balasARecargar = Mathf.Min(balasNecesarias, municionReserva);
+
+        municionReserva -= balasARecargar;
+        balasActuales += balasARecargar;
+
         recargando = false;
+    }
+
+    public void AddAmmo(int amount)
+    {
+        municionReserva = Mathf.Clamp(municionReserva + amount, 0, municionReservaMaxima);
     }
 }
