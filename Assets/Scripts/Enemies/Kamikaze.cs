@@ -6,7 +6,7 @@ public class Kamikaze : MonoBehaviour
 {
     public NavMeshAgent agent;
     public Transform playerTransform;
-    public PlayerMovement playerScript;
+    public PlayerStats playerScript;
 
     [Header("Configuración de Ataque")]
     public float damgeAmount = 30f;
@@ -44,7 +44,7 @@ public class Kamikaze : MonoBehaviour
         if (p != null)
         {
             playerTransform = p.transform;
-            playerScript = p.GetComponent<PlayerMovement>();
+playerScript = p.GetComponentInParent<PlayerStats>();
         }
 
         if (kamikazeRenderer != null) 
@@ -109,7 +109,7 @@ public class Kamikaze : MonoBehaviour
         {
             if (hit.CompareTag("Player"))
             {
-                PlayerMovement player = hit.GetComponent<PlayerMovement>();
+                PlayerStats player = hit.GetComponent<PlayerStats>();
                 if (player != null) player.TakeDamage(damgeAmount);
             }
         }
@@ -136,5 +136,7 @@ public class Kamikaze : MonoBehaviour
                 }
             }
         }
+        
     }
+    
 }

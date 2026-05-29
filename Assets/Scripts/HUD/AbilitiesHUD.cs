@@ -27,7 +27,7 @@ public class AbilitiesHUD : MonoBehaviour
         if (playerAbilities == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
-            if (p != null) playerAbilities = p.GetComponent<PlayerAbilities>();
+if (p != null) playerAbilities = p.GetComponentInChildren<PlayerAbilities>();
 
             if (playerAbilities == null) return; 
         }

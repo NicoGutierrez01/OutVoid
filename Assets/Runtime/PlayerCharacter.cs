@@ -28,6 +28,9 @@ public struct CharacterInput
     public bool Jump;
     public bool JumpSustain;
     public CrouchInput Crouch;
+    public bool Dash;
+    public bool Ultimate;
+    public bool AbilityE;
 }
 
 public class PlayerCharacter : MonoBehaviour, ICharacterController
@@ -90,15 +93,22 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     private Collider[] _uncrouchOverlapResults;
 
-    public void Initialize()
+void Awake()
+{
+    motor.CharacterController = this;
+}
+
+public void Initialize()
+{
+    _state.Stance = Stance.Stand;
+    _lastState = _state;
+    _uncrouchOverlapResults = new Collider[8];
+
+    if (AdministradorDeProgreso.Instancia != null)
     {
-        _state.Stance = Stance.Stand;
-        _lastState = _state;
-
-        _uncrouchOverlapResults = new Collider[8];
-
-        motor.CharacterController = this;
+        walkSpeed *= AdministradorDeProgreso.Instancia.multiplicadorVelocidad;
     }
+}
 
     public void UpdateInput(CharacterInput input)
     {

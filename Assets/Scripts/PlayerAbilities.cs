@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using UnityEngine.InputSystem;
 
 public class PlayerAbilities : MonoBehaviour
 {
@@ -9,8 +8,8 @@ public class PlayerAbilities : MonoBehaviour
     [HideInInspector] public float ultCooldownTimer;
 
     [Header("Referencias")]
-    public Transform cam; 
-    private PlayerMovement moveScript;
+    public Transform cam;
+    private PlayerStats moveScript;
     private WeaponSystem weaponScript;
 
     [Header("Cooldowns")]
@@ -30,34 +29,33 @@ public class PlayerAbilities : MonoBehaviour
     public float dashDuration = 2.5f;
 
     [Header("Configuración Akimbo (Q)")]
-    public GameObject revolverIzquierdo; 
-    public GameObject auraDerecha;      
-    public GameObject auraIzquierda;     
+    public GameObject revolverIzquierdo;
+    public GameObject auraDerecha;
+    public GameObject auraIzquierda;
 
     void Start()
     {
-        moveScript = GetComponent<PlayerMovement>();
+        moveScript = GetComponent<PlayerStats>();
         weaponScript = GetComponent<WeaponSystem>();
-
         if (cam == null) cam = Camera.main.transform;
-
         if (AdministradorDeProgreso.Instancia != null)
         {
-        dashCooldown *= AdministradorDeProgreso.Instancia.multiplicadorDashCooldown;
-        dynamiteCooldown *= AdministradorDeProgreso.Instancia.multiplicadorDinamitaCooldown;
+            dashCooldown *= AdministradorDeProgreso.Instancia.multiplicadorDashCooldown;
+            dynamiteCooldown *= AdministradorDeProgreso.Instancia.multiplicadorDinamitaCooldown;
         }
     }
 
-    public void OnAbilityE(InputValue value)
+    public void UpdateInput(CharacterInput input)
     {
-        if (value.isPressed && canUseE) StartCoroutine(UseDynamite());
+        if (input.AbilityE && canUseE) StartCoroutine(UseDynamite());
+        if (input.Ultimate && canUseQ && !isUltActive) StartCoroutine(HandleUltimate());
+        if (input.Dash && canDash) StartCoroutine(GhostDash());
     }
 
     IEnumerator UseDynamite()
     {
         canUseE = false;
         ThrowDynamite();
-        
         dynamiteCooldownTimer = dynamiteCooldown;
         while (dynamiteCooldownTimer > 0)
         {
@@ -71,15 +69,9 @@ public class PlayerAbilities : MonoBehaviour
     {
         GameObject dyn = Instantiate(dynamitePrefab, muzzle.position, muzzle.rotation);
         Rigidbody rb = dyn.GetComponent<Rigidbody>();
-
         if (rb != null)
-        {
             rb.AddForce(cam.forward * throwForce, ForceMode.Impulse);
-        }
     }
-
-    public void OnUltimate(InputValue value) { if (value.isPressed && canUseQ && !isUltActive) StartCoroutine(HandleUltimate()); }
-    public void OnDash(InputValue value) { if (value.isPressed && canDash) StartCoroutine(GhostDash()); }
 
     IEnumerator HandleUltimate()
     {
@@ -93,24 +85,18 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator ActivateUlt()
     {
         isUltActive = true;
-        
         if (revolverIzquierdo != null) revolverIzquierdo.SetActive(true);
         if (auraDerecha != null) auraDerecha.SetActive(true);
         if (auraIzquierda != null) auraIzquierda.SetActive(true);
-
         float originalDamage = weaponScript.damage;
         weaponScript.damage *= 1.5f;
         weaponScript.isUltActive = true;
-        
         yield return new WaitForSeconds(ultDuration);
-
         weaponScript.damage = originalDamage;
         weaponScript.isUltActive = false;
-        
         if (revolverIzquierdo != null) revolverIzquierdo.SetActive(false);
         if (auraDerecha != null) auraDerecha.SetActive(false);
         if (auraIzquierda != null) auraIzquierda.SetActive(false);
-        
         isUltActive = false;
     }
 

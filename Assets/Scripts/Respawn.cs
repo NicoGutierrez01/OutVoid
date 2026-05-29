@@ -17,16 +17,16 @@ public class Respawn : MonoBehaviour
             }
             else
             {
-                PlayerMovement pm = other.GetComponent<PlayerMovement>();
-                if (pm != null)
+                PlayerStats stats = other.GetComponent<PlayerStats>();
+
+                Player playerRoot = other.GetComponentInParent<Player>();
+
+                if (stats != null && playerRoot != null)
                 {
-                    float danioPorCaida = pm.maxHealth * 0.30f;
-                    
-                    pm.TakeDamage(danioPorCaida);
-                    
-                    pm.controller.enabled = false;
-                    other.transform.position = puntoDeReaparicion;
-                    pm.controller.enabled = true;
+                    float danioPorCaida = stats.maxHealth * 0.30f;
+                    stats.TakeDamage(danioPorCaida);
+
+                    playerRoot.Teleport(puntoDeReaparicion);
 
                     Debug.Log("¡El jugador se cayó al vacío! Reapareciendo con -30% de vida.");
                 }
