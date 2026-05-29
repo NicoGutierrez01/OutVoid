@@ -109,7 +109,7 @@ playerScript = p.GetComponentInParent<PlayerStats>();
         {
             if (hit.CompareTag("Player"))
             {
-                PlayerMovement player = hit.GetComponent<PlayerMovement>();
+                PlayerStats player = hit.GetComponent<PlayerStats>();
                 if (player != null) player.TakeDamage(damgeAmount);
             }
         }

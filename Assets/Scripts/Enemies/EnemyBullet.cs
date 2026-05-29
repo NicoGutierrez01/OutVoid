@@ -21,7 +21,7 @@ public class EnemyBullet : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-PlayerStats pm = other.GetComponentInParent<PlayerStats>();
+            PlayerStats pm = other.GetComponentInParent<PlayerStats>();
             if (pm != null)
             {
                 pm.TakeDamage(dano);
