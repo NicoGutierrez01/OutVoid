@@ -14,16 +14,25 @@ public class Player : MonoBehaviour
     private PlayerInputActions _inputActions;
 
     void Start()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        _inputActions = new PlayerInputActions();
-        _inputActions.Enable();
-        playerCharacter.Initialize();
-        playerCamera.Initialize(playerCharacter.GetCameraTarget());
-        cameraSpring.Initialize();
-        cameraLean.Initialize();
-        playerStats.Initialize();
-    }
+{
+    Cursor.lockState = CursorLockMode.Locked;
+    _inputActions = new PlayerInputActions();
+    _inputActions.Enable();
+
+    // Auto-buscar referencias en hijos si no están asignadas
+    if (playerCharacter == null) playerCharacter = GetComponentInChildren<PlayerCharacter>();
+    if (playerCamera == null) playerCamera = GetComponentInChildren<PlayerCamera>();
+    if (cameraSpring == null) cameraSpring = GetComponentInChildren<CameraSpring>();
+    if (cameraLean == null) cameraLean = GetComponentInChildren<CameraLean>();
+    if (playerStats == null) playerStats = GetComponentInChildren<PlayerStats>();
+    if (playerAbilities == null) playerAbilities = GetComponentInChildren<PlayerAbilities>();
+
+    playerCharacter.Initialize();
+    playerCamera.Initialize(playerCharacter.GetCameraTarget());
+    cameraSpring.Initialize();
+    cameraLean.Initialize();
+    playerStats.Initialize();
+}
 
     void OnDestroy()
     {
@@ -66,20 +75,23 @@ public class Player : MonoBehaviour
 #endif
     }
 
-    void LateUpdate()
-    {
-        var deltaTime = Time.deltaTime;
-        var cameraTarget = playerCharacter.GetCameraTarget();
-        var state = playerCharacter.GetState();
+void LateUpdate()
+{
+    // Sincronizar posición del root con el Character
+    transform.position = playerCharacter.transform.position;
 
-        playerCamera.UpdatePosition(cameraTarget);
-        cameraSpring.UpdateSpring(deltaTime, cameraTarget.up);
+    var deltaTime = Time.deltaTime;
+    var cameraTarget = playerCharacter.GetCameraTarget();
+    var state = playerCharacter.GetState();
 
-        if (state.Stance != Stance.Slide)
-            cameraLean.UpdateLean(deltaTime, state.Acceleration, cameraTarget.up);
-        else
-            cameraLean.transform.localRotation = Quaternion.identity;
-    }
+    playerCamera.UpdatePosition(cameraTarget);
+    cameraSpring.UpdateSpring(deltaTime, cameraTarget.up);
+
+    if (state.Stance != Stance.Slide)
+        cameraLean.UpdateLean(deltaTime, state.Acceleration, cameraTarget.up);
+    else
+        cameraLean.transform.localRotation = Quaternion.identity;
+}
 
     public void Teleport(Vector3 position)
     {

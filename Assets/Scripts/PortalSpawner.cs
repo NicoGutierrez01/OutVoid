@@ -34,8 +34,12 @@ public class PortalSpawner : MonoBehaviour
         foreach (Collider c in componentesFisicos) c.enabled = estado;
     }
 
-    IEnumerator CicloDeOleadas()
-    {
+IEnumerator CicloDeOleadas()
+{
+    // Esperar a que el Player exista
+    yield return new WaitUntil(() => GameObject.FindGameObjectWithTag("Player") != null);
+    // pequeño delay extra de seguridad
+    yield return new WaitForSeconds(1f);
         while (true)
         {
             if (posiblesEnemigos != null && posiblesEnemigos.Length > 0)

@@ -28,8 +28,8 @@ public class PlayerHUD : MonoBehaviour
             GameObject p = GameObject.FindGameObjectWithTag("Player");
             if (p != null)
             {
-player = p.GetComponentInChildren<PlayerStats>();
-weapon = p.GetComponentInChildren<WeaponSystem>();
+                player = p.GetComponentInChildren<PlayerStats>();
+                weapon = p.GetComponentInChildren<WeaponSystem>();
             }
             if (player == null || weapon == null) return; 
         }

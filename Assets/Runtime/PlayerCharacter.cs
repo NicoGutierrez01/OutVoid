@@ -93,14 +93,17 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     private Collider[] _uncrouchOverlapResults;
 
+void Awake()
+{
+    motor.CharacterController = this;
+}
+
 public void Initialize()
 {
     _state.Stance = Stance.Stand;
     _lastState = _state;
     _uncrouchOverlapResults = new Collider[8];
-    motor.CharacterController = this;
 
-    // --- Progreso ---
     if (AdministradorDeProgreso.Instancia != null)
     {
         walkSpeed *= AdministradorDeProgreso.Instancia.multiplicadorVelocidad;

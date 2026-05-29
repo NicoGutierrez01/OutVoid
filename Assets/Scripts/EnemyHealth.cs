@@ -29,7 +29,7 @@ public class EnemyHealth : MonoBehaviour
         currentHealth = maxHealth;
         
         currentHealth = maxHealth;
-        playerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStats>();
+        playerScript = GameObject.FindGameObjectWithTag("Player").GetComponentInChildren<PlayerStats>();
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
         if (enemyRenderer != null) originalColor = enemyRenderer.sharedMaterial.color;
     }
