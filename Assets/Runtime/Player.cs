@@ -14,25 +14,25 @@ public class Player : MonoBehaviour
     private PlayerInputActions _inputActions;
 
     void Start()
-{
-    Cursor.lockState = CursorLockMode.Locked;
-    _inputActions = new PlayerInputActions();
-    _inputActions.Enable();
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        _inputActions = new PlayerInputActions();
+        _inputActions.Enable();
 
-    // Auto-buscar referencias en hijos si no están asignadas
-    if (playerCharacter == null) playerCharacter = GetComponentInChildren<PlayerCharacter>();
-    if (playerCamera == null) playerCamera = GetComponentInChildren<PlayerCamera>();
-    if (cameraSpring == null) cameraSpring = GetComponentInChildren<CameraSpring>();
-    if (cameraLean == null) cameraLean = GetComponentInChildren<CameraLean>();
-    if (playerStats == null) playerStats = GetComponentInChildren<PlayerStats>();
-    if (playerAbilities == null) playerAbilities = GetComponentInChildren<PlayerAbilities>();
+        // Auto-buscar referencias en hijos si no están asignadas
+        if (playerCharacter == null) playerCharacter = GetComponentInChildren<PlayerCharacter>();
+        if (playerCamera == null) playerCamera = GetComponentInChildren<PlayerCamera>();
+        if (cameraSpring == null) cameraSpring = GetComponentInChildren<CameraSpring>();
+        if (cameraLean == null) cameraLean = GetComponentInChildren<CameraLean>();
+        if (playerStats == null) playerStats = GetComponentInChildren<PlayerStats>();
+        if (playerAbilities == null) playerAbilities = GetComponentInChildren<PlayerAbilities>();
 
-    playerCharacter.Initialize();
-    playerCamera.Initialize(playerCharacter.GetCameraTarget());
-    cameraSpring.Initialize();
-    cameraLean.Initialize();
-    playerStats.Initialize();
-}
+        playerCharacter.Initialize();
+        playerCamera.Initialize(playerCharacter.GetCameraTarget());
+        cameraSpring.Initialize();
+        cameraLean.Initialize();
+        playerStats.Initialize();
+    }
 
     void OnDestroy()
     {
@@ -67,6 +67,27 @@ public class Player : MonoBehaviour
         playerCharacter.UpdateBody(deltaTime);
         playerAbilities.UpdateInput(characterInput);
 
+        // --- SISTEMA DE INTERACCIÓN CON ITEMS DEL BOSS ---
+        float distanciaInteraccion = 3.5f; 
+        
+        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out RaycastHit hitInteract, distanciaInteraccion))
+        {
+            if (hitInteract.transform.CompareTag("ItemBoss"))
+            {
+                ItemInteractable itemMirado = hitInteract.transform.GetComponent<ItemInteractable>();
+                if (itemMirado != null && itemMirado.data != null)
+                {
+                    Debug.Log("MIRANDO: " + itemMirado.data.nombreItem + " | " + itemMirado.data.descripcion + " | Presiona F para agarrar");
+
+                    // Lee directamente la nueva acción "Interact" (tecla F)
+                    if (input.Interact.WasPressedThisFrame())
+                    {
+                        itemMirado.Recoger(gameObject);
+                    }
+                }
+            }
+        }
+
 #if UNITY_EDITOR
         if (Keyboard.current.tKey.wasPressedThisFrame)
         {
@@ -79,23 +100,23 @@ public class Player : MonoBehaviour
 #endif
     }
 
-void LateUpdate()
-{
-    // Sincronizar posición del root con el Character
-    transform.position = playerCharacter.transform.position;
+    void LateUpdate()
+    {
+        // Sincronizar posición del root con el Character
+        transform.position = playerCharacter.transform.position;
 
-    var deltaTime = Time.deltaTime;
-    var cameraTarget = playerCharacter.GetCameraTarget();
-    var state = playerCharacter.GetState();
+        var deltaTime = Time.deltaTime;
+        var cameraTarget = playerCharacter.GetCameraTarget();
+        var state = playerCharacter.GetState();
 
-    playerCamera.UpdatePosition(cameraTarget);
-    cameraSpring.UpdateSpring(deltaTime, cameraTarget.up);
+        playerCamera.UpdatePosition(cameraTarget);
+        cameraSpring.UpdateSpring(deltaTime, cameraTarget.up);
 
-    if (state.Stance != Stance.Slide)
-        cameraLean.UpdateLean(deltaTime, state.Acceleration, cameraTarget.up);
-    else
-        cameraLean.transform.localRotation = Quaternion.identity;
-}
+        if (state.Stance != Stance.Slide)
+            cameraLean.UpdateLean(deltaTime, state.Acceleration, cameraTarget.up);
+        else
+            cameraLean.transform.localRotation = Quaternion.identity;
+    }
 
     public void Teleport(Vector3 position)
     {

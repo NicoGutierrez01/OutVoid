@@ -57,6 +57,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6189902159810274576}
   - component: {fileID: 3053179755760165765}
+  - component: {fileID: 2457565318875711676}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -99,6 +100,18 @@ MonoBehaviour:
   cameraLean: {fileID: 2272820891694139977}
   playerStats: {fileID: 4289937473960210004}
   playerAbilities: {fileID: 4792990378224857872}
+--- !u!114 &2457565318875711676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663390133554984710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db42313b652452f4aa953600a8b7d5e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventario
 --- !u!1 &1033581938060082811
 GameObject:
   m_ObjectHideFlags: 0
@@ -307,7 +320,6 @@ MonoBehaviour:
   halfLife: 0.075
   frequency: 18
   angularDisplacement: 2
-  linearDisplacement: 0.05
 --- !u!1 &2664423783205645010
 GameObject:
   m_ObjectHideFlags: 0
@@ -618,6 +630,7 @@ MonoBehaviour:
   isGhostMode: 0
   regenRate: 5
   timeBeforeRegen: 4
+  limitRegen: 45
   tieneEscudoEmergencia: 0
 --- !u!114 &8775199690991540283
 MonoBehaviour:
@@ -636,6 +649,7 @@ MonoBehaviour:
   cam: {fileID: 974036132606901512}
   balasMaximas: 6
   balasActuales: 0
+  balasReserva: 24
   tiempoRecarga: 1.5
   recargando: 0
   gunAnim: {fileID: 7297546130736717265}

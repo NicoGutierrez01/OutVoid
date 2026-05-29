@@ -577,6 +577,7 @@ MonoBehaviour:
   popupObjeto: {fileID: 1459158334}
   popupTexto: {fileID: 650624503}
   tiempoVisible: 2
+  textoObjetivo: {fileID: 1461506914}
 --- !u!114 &433384164
 MonoBehaviour:
   m_ObjectHideFlags: 0
