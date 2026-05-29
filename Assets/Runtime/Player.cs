@@ -36,7 +36,11 @@ public class Player : MonoBehaviour
 
     void OnDestroy()
     {
-        _inputActions.Dispose();
+        if (_inputActions != null)
+        {
+            _inputActions.Gameplay.Disable();
+            _inputActions.Dispose();
+        }
     }
 
     void Update()

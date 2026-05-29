@@ -11,6 +11,7 @@ public class PlayerStats : MonoBehaviour
     [Header("Regeneración de Vida")]
     public float regenRate = 5f;
     public float timeBeforeRegen = 4f;
+    public float limitRegen = 45f;
     private float regenTimer;
 
     [Header("Mejoras Pasivas")]
@@ -79,18 +80,21 @@ public class PlayerStats : MonoBehaviour
         Debug.Log("El jugador ha muerto. Pasando a la pantalla de Game Over...");
         UnityEngine.SceneManagement.SceneManager.LoadScene("GameOver");
     }
-
+    
     private void Update()
     {
-        if (currentHealth < maxHealth && currentHealth > 0 && regenTimer >= timeBeforeRegen)
-            currentHealth = Mathf.Clamp(currentHealth + regenRate * Time.deltaTime, 0, maxHealth);
-        else
+        if (currentHealth < limitRegen && currentHealth > 0 && regenTimer >= timeBeforeRegen)
+        {
+            currentHealth = Mathf.Clamp(currentHealth + regenRate * Time.deltaTime, 0, limitRegen);
+        }
+        else{
             regenTimer += Time.deltaTime;
-
+        }
         if (AdministradorDeProgreso.Instancia != null)
         {
             AdministradorDeProgreso.Instancia.vidaActualGuardada = currentHealth;
             AdministradorDeProgreso.Instancia.vidaMaximaGuardada = maxHealth;
         }
     }
+
 }

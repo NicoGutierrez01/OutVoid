@@ -13,12 +13,17 @@ public class EnemyHealth : MonoBehaviour
     private Color originalColor;
     private MaterialPropertyBlock propBlock;
 
-    [Header("UI y Drop")]
+    [Header("UI y Drops de Recursos")]
     public Slider healthBar;
-    public GameObject itemPrefab; 
-    [Range(0, 100)] public float probabilidadDrop = 30f;
+    [Range(0, 100)] public float probabilidadDrop = 35f; // Un poquito más alta para que el sistema brille
 
+    public GameObject prefabDropVida;
+    public GameObject prefabDropEscudo;
+    public GameObject prefabDropBalas;
+
+    // Referencias al jugador para leer su estado
     private PlayerStats playerScript; 
+    private WeaponSystem weaponScript;
     public static bool healthPerKillActive = false; 
 
     void Awake() { propBlock = new MaterialPropertyBlock(); }
@@ -28,8 +33,14 @@ public class EnemyHealth : MonoBehaviour
         maxHealth = maxHealth + ((MapManager.nivelBucle - 1) * 25f);
         currentHealth = maxHealth;
         
-        currentHealth = maxHealth;
-        playerScript = GameObject.FindGameObjectWithTag("Player").GetComponentInChildren<PlayerStats>();
+        // Buscamos ambos scripts en el jugador
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            playerScript = playerObj.GetComponentInChildren<PlayerStats>();
+            weaponScript = playerObj.GetComponentInChildren<WeaponSystem>();
+        }
+
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
         if (enemyRenderer != null) originalColor = enemyRenderer.sharedMaterial.color;
     }
@@ -76,11 +87,12 @@ public class EnemyHealth : MonoBehaviour
         }
         
         if (healthPerKillActive && playerScript != null) 
-            {
-                playerScript.maxHealth += 1f; 
-                playerScript.Heal(1f); 
-            }
+        {
+            playerScript.maxHealth += 1f; 
+            playerScript.Heal(1f); 
+        }
 
+        // --- SISTEMA DE DROPS INTELIGENTE ---
         if (Random.value * 100 <= probabilidadDrop)
         {
             Vector3 posicionSpawn = transform.position;
@@ -91,13 +103,52 @@ public class EnemyHealth : MonoBehaviour
                 posicionSpawn = hit.point + Vector3.up * 0.5f; 
             }
 
-            Instantiate(itemPrefab, posicionSpawn, Quaternion.identity);
+            float dropRoll = Random.Range(1, 101);
+            GameObject recursoAElegir = null;
+
+            // Leemos cómo está el jugador
+            bool vidaCritica = playerScript != null && playerScript.currentHealth < 30f;
+            bool municionEscasa = weaponScript != null && weaponScript.balasReserva < 12;
+            bool municionLlena = weaponScript != null && weaponScript.balasReserva >= 30;
+
+            if (vidaCritica)
+            {
+                // Modo Pánico (Prioridad Vida)
+                if (dropRoll <= 70) recursoAElegir = prefabDropVida;
+                else if (dropRoll <= 90) recursoAElegir = prefabDropEscudo;
+                else recursoAElegir = prefabDropBalas;
+            }
+            else if (municionLlena)
+            {
+                // Modo Sobrado (Anula balas, prioriza Escudo)
+                if (dropRoll <= 60) recursoAElegir = prefabDropEscudo;
+                else recursoAElegir = prefabDropVida;
+            }
+            else if (municionEscasa)
+            {
+                // Modo Seco (Prioridad Balas)
+                if (dropRoll <= 70) recursoAElegir = prefabDropBalas;
+                else if (dropRoll <= 90) recursoAElegir = prefabDropEscudo;
+                else recursoAElegir = prefabDropVida;
+            }
+            else
+            {
+                // Estado Normal (Balanceado)
+                if (dropRoll <= 50) recursoAElegir = prefabDropBalas;
+                else if (dropRoll <= 80) recursoAElegir = prefabDropEscudo;
+                else recursoAElegir = prefabDropVida;
+            }
+
+            if (recursoAElegir != null)
+            {
+                Instantiate(recursoAElegir, posicionSpawn, Quaternion.identity);
+            }
         }
 
         if (MapManager.Instance != null)
-            {
-                MapManager.Instance.RegistrarMuerte();
-            }
+        {
+            MapManager.Instance.RegistrarMuerte();
+        }
         
         Destroy(gameObject);
     }
