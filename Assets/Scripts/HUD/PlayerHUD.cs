@@ -53,8 +53,9 @@ public class PlayerHUD : MonoBehaviour
         }
         else
         {
-            ammoText.text = weapon.balasActuales + " / " + weapon.balasMaximas;
-            if (weapon.balasActuales == 0) ammoText.color = Color.red;
+            ammoText.text = weapon.balasActuales + " / " + weapon.balasReserva;
+
+            if (weapon.balasActuales == 0 && weapon.balasReserva == 0) ammoText.color = Color.red;
             else ammoText.color = Color.white;
         }
     }
@@ -63,10 +64,8 @@ public class PlayerHUD : MonoBehaviour
     {
         if (shieldBar == null || healthSlider == null) return;
 
-
         float totalActual = player.currentHealth + player.currentShield;
         
-
         healthSlider.maxValue = player.maxHealth + player.currentShield;
         healthSlider.value = player.currentHealth;
 
