@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public class PlayerHUD : MonoBehaviour
 {
     [Header("Scripts")]
-    public PlayerMovement player;
+    public PlayerStats player;
     public WeaponSystem weapon;
 
     [Header("UI Vida y Escudo")]
@@ -28,8 +28,8 @@ public class PlayerHUD : MonoBehaviour
             GameObject p = GameObject.FindGameObjectWithTag("Player");
             if (p != null)
             {
-                player = p.GetComponent<PlayerMovement>();
-                weapon = p.GetComponent<WeaponSystem>();
+player = p.GetComponentInChildren<PlayerStats>();
+weapon = p.GetComponentInChildren<WeaponSystem>();
             }
             if (player == null || weapon == null) return; 
         }

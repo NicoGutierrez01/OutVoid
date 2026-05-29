@@ -18,7 +18,7 @@ public class EnemyHealth : MonoBehaviour
     public GameObject itemPrefab; 
     [Range(0, 100)] public float probabilidadDrop = 30f;
 
-    private PlayerMovement playerScript; 
+    private PlayerStats playerScript; 
     public static bool healthPerKillActive = false; 
 
     void Awake() { propBlock = new MaterialPropertyBlock(); }
@@ -29,7 +29,7 @@ public class EnemyHealth : MonoBehaviour
         currentHealth = maxHealth;
         
         currentHealth = maxHealth;
-        playerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMovement>();
+        playerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStats>();
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
         if (enemyRenderer != null) originalColor = enemyRenderer.sharedMaterial.color;
     }
