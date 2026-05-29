@@ -10,6 +10,7 @@ TagManager:
   - ZonaSegura
   - Obstaculo
   - MinionBoss
+  - ItemBoss
   layers:
   - Default
   - TransparentFX

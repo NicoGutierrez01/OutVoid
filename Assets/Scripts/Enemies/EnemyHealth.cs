@@ -98,7 +98,7 @@ public class EnemyHealth : MonoBehaviour
             Vector3 posicionSpawn = transform.position;
             RaycastHit hit;
 
-            if (Physics.Raycast(transform.position, Vector3.down, out hit, 5f))
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, 500f))
             {
                 posicionSpawn = hit.point + Vector3.up * 0.5f; 
             }

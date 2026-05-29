@@ -16,6 +16,10 @@ public class PlayerHUD : MonoBehaviour
     [Header("UI Munición")]
     public TextMeshProUGUI ammoText;
 
+    [Header("Objetivos")]
+    public TextMeshProUGUI textoObjetivo;
+    public int metaEnemigos = 25; // Podés cambiar este número directo en el Inspector
+
     [Header("Pop-up de Items")]
     public GameObject popupObjeto; 
     public TextMeshProUGUI popupTexto;
@@ -54,9 +58,24 @@ public class PlayerHUD : MonoBehaviour
         else
         {
             ammoText.text = weapon.balasActuales + " / " + weapon.balasReserva;
-
             if (weapon.balasActuales == 0 && weapon.balasReserva == 0) ammoText.color = Color.red;
             else ammoText.color = Color.white;
+        }
+
+        if (textoObjetivo != null && AdministradorDeProgreso.Instancia != null)
+        {
+            int muertos = AdministradorDeProgreso.Instancia.enemigosMuertos;
+            
+            if (muertos < metaEnemigos)
+            {
+                textoObjetivo.text = "OBJETIVO: Mata enemigos (" + muertos + " / " + metaEnemigos + ")";
+                textoObjetivo.color = Color.white;
+            }
+            else
+            {
+                textoObjetivo.text = "¡OBJETIVO COMPLETADO! Busca la tumba.";
+                textoObjetivo.color = Color.green;
+            }
         }
     }
 
@@ -68,8 +87,6 @@ public class PlayerHUD : MonoBehaviour
         
         healthSlider.maxValue = player.maxHealth + player.currentShield;
         healthSlider.value = player.currentHealth;
-
-        healthText.text = " " + totalActual.ToString("F0");
 
         if (player.currentShield > 0)
         {

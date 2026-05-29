@@ -201,7 +201,13 @@ public class Boss : MonoBehaviour
 
         if (MapManager.Instance != null)
         {
-            MapManager.Instance.ColapsarMapa();
+            //MapManager.Instance.ColapsarMapa();
+        }
+
+        BossLootSpawner lootSpawner = GetComponent<BossLootSpawner>();
+        if (lootSpawner != null)
+        {
+            lootSpawner.SpawnearRecompensas();
         }
 
         Destroy(gameObject);
