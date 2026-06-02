@@ -88,7 +88,7 @@ public class Player : MonoBehaviour
             }
         }
 
-#if UNITY_EDITOR
+    #if UNITY_EDITOR
         if (Keyboard.current.tKey.wasPressedThisFrame)
         {
             var ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
@@ -97,7 +97,7 @@ public class Player : MonoBehaviour
                 Teleport(hit.point);
             }
         }
-#endif
+    #endif
     }
 
     void LateUpdate()
