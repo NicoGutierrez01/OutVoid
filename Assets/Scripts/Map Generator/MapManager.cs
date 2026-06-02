@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using Unity.Services.Analytics;
+using static StaticVariables;
+using static EventManager;
 
 public class MapManager : MonoBehaviour
 {
@@ -68,7 +71,7 @@ public class MapManager : MonoBehaviour
     private bool[,] mapaDeGrietas;
     private NavMeshSurface navSurface;
 
-    void Start()
+void Start()
     {
         bossDerrotado = false;
         enemigosMuertosActuales = 0;
@@ -81,6 +84,19 @@ public class MapManager : MonoBehaviour
         GenerarMapa();
         ActualizarNavMesh();
         SpawnearElementosDeJuego();
+        
+        SessionData.level = nivelBucle;
+        SessionData.round = 1;
+        
+        Debug.Log($"Evento 'LevelStart' - Iniciando nivel {SessionData.level}");
+
+        LevelStartEvent levelStart = new LevelStartEvent
+        {
+            level = SessionData.level,
+            round = SessionData.round
+        };
+
+        AnalyticsService.Instance.RecordEvent(levelStart);
 
         if (nivelBucle == 1) 
         {
