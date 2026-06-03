@@ -310,19 +310,21 @@ void Start()
     public void ColapsarMapa()
     {
         bossDerrotado = true; 
-        nivelBucle++; 
 
-        foreach (var enemigo in FindObjectsByType<EnemyHealth>(FindObjectsSortMode.None))
+        LevelCompleteEvent levelComplete = new LevelCompleteEvent
         {
-            Destroy(enemigo.gameObject);
-        }
-        foreach (var minion in GameObject.FindGameObjectsWithTag("MinionBoss"))
-        {
-            Destroy(minion);
-        }
-        foreach (Transform hijo in transform)
-        {
-            Destroy(hijo.gameObject);
-        }
-    } 
+            level = SessionData.level,
+            round = SessionData.round,
+
+            time = Mathf.FloorToInt(GameTimer.tiempoTotal) 
+        };
+
+        AnalyticsService.Instance.RecordEvent(levelComplete);
+        Debug.Log($"Evento 'LevelComplete' enviado. Nivel: {SessionData.level}, Tiempo: {Mathf.FloorToInt(GameTimer.tiempoTotal)}s");
+
+        nivelBucle++; 
+        Debug.Log($"Avanzando al Nivel/Bucle {nivelBucle}. Recargando mapa...");
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
 }

@@ -80,19 +80,25 @@ public class PlayerStats : MonoBehaviour
 
     private void Morir()
     {
-        Debug.Log("El jugador ha muerto. Pasando a la pantalla de Game Over...");
-
+        Debug.Log("El jugador ha muerto. Enviando evento GameOver y pasando a la pantalla...");
+        
+        // Asignamos que perdió
         SessionData.win = false; 
-
+        
+        // Empaquetamos los parámetros
         GameOverEvent gameOverEvent = new GameOverEvent
         {
             level = SessionData.level,
-            time = SessionData.time,
+            // Sacamos el tiempo final directamente de tu GameTimer
+            time = Mathf.FloorToInt(GameTimer.tiempoTotal), 
             win = SessionData.win,
             chara = SessionData.chara,
-            weapon = SessionData.weapon
+            weapon = SessionData.weapon,
+            // Asumiendo que tenés la variable enemy en tu StaticVariables.SessionData
+            enemy = SessionData.enemy 
         };
 
+        // Grabamos el evento
         AnalyticsService.Instance.RecordEvent(gameOverEvent);
 
         UnityEngine.SceneManagement.SceneManager.LoadScene("GameOver");

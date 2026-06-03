@@ -1,4 +1,7 @@
 using UnityEngine;
+using Unity.Services.Analytics;
+using static StaticVariables;
+using static EventManager;
 
 public class ItemInteractable : MonoBehaviour
 {
@@ -22,6 +25,17 @@ public class ItemInteractable : MonoBehaviour
             inventario.AplicarMejora(data);
         }
 
+        SessionData.item = data.name; 
+        
+        Debug.Log($"Evento 'ItemPick' - El jugador eligió el ítem: {SessionData.item}");
+
+        ItemPickEvent itemPickEvent = new ItemPickEvent
+        {
+            itemName = SessionData.item
+        };
+
+        AnalyticsService.Instance.RecordEvent(itemPickEvent);
+
         ItemInteractable[] todosLosItems = Object.FindObjectsByType<ItemInteractable>(FindObjectsSortMode.None);
         foreach (ItemInteractable item in todosLosItems)
         {
@@ -29,6 +43,11 @@ public class ItemInteractable : MonoBehaviour
             {
                 Destroy(item.gameObject);
             }
+        }
+
+        if (MapManager.Instance != null)
+        {
+            MapManager.Instance.ColapsarMapa();
         }
     }
 }

@@ -10,7 +10,7 @@ public class MainMenu : MonoBehaviour
     public GameObject panelPrincipal;
     public GameObject panelOpciones;
     public GameObject panelCarga;
-    public GameObject panelConsentimiento; // <-- Asegurate de tener esta variable
+    public GameObject panelConsentimiento; 
 
     [Header("Pantalla de Carga")]
     public Slider barraDeCarga;
@@ -43,16 +43,18 @@ public class MainMenu : MonoBehaviour
         #endif
     }
 
-    // 2. NUEVO MÉTODO: Se llama cuando el jugador responde Sí o No
     public void MostrarMenuPrincipal()
     {
         panelConsentimiento.SetActive(false);
         panelPrincipal.SetActive(true);
     }
 
-    // 3. Este vuelve a ser exclusivo del botón "Play"
     public void EmpezarJuego()
     {
+        GameTimer.tiempoTotal = 0f; 
+
+        MapManager.nivelBucle = 1;
+
         panelPrincipal.SetActive(false);
         panelCarga.SetActive(true);
         
