@@ -35,6 +35,7 @@ public class EventManager : MonoBehaviour
         public bool win { set { SetParameter("win", value); } }
         public string chara { set { SetParameter("chara", value); } }
         public string weapon { set { SetParameter("weapon", value); } }
+        public string enemy { set { SetParameter("enemy", value); } }
     }
 
     public class ItemPickEvent : AnalyticsEvent
