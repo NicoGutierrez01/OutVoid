@@ -40,7 +40,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private Transform cameraTarget;
 
     [Space]
-    [SerializeField] private float walkSpeed = 20f;
+    [SerializeField] public float walkSpeed = 12f;
     [SerializeField] private float crouchSpeed = 7f;
     [SerializeField] private float walkResponse = 25f;
     [SerializeField] private float crouchResponse = 20f;
