@@ -9,6 +9,8 @@ public class PlayerAbilities : MonoBehaviour
 
     [Header("Referencias")]
     public Transform cam;
+    public PlayerCharacter playerCharacter; 
+    
     private PlayerStats moveScript;
     private WeaponSystem weaponScript;
 
@@ -26,7 +28,11 @@ public class PlayerAbilities : MonoBehaviour
     public float throwForce = 15f;
     public float ultDuration = 10f;
     public bool isUltActive = false;
-    public float dashDuration = 2.5f;
+    
+    [Header("Ajustes de Forma Espectral (Reaper)")]
+    public float dashDuration = 4f; 
+    [Tooltip("Por cuánto se multiplica tu velocidad actual. 2 = el doble de rápido.")]
+    public float ghostSpeedMultiplier = 1.3f; 
 
     [Header("Configuración Akimbo (Q)")]
     public GameObject revolverIzquierdo;
@@ -35,9 +41,17 @@ public class PlayerAbilities : MonoBehaviour
 
     void Start()
     {
-        moveScript = GetComponent<PlayerStats>();
-        weaponScript = GetComponent<WeaponSystem>();
+        moveScript = GetComponentInParent<PlayerStats>();
+        if (moveScript == null) moveScript = FindAnyObjectByType<PlayerStats>();
+
+        weaponScript = GetComponentInParent<WeaponSystem>();
+        if (weaponScript == null) weaponScript = FindAnyObjectByType<WeaponSystem>();
+
+        if (playerCharacter == null) playerCharacter = GetComponentInParent<PlayerCharacter>();
+        if (playerCharacter == null) playerCharacter = FindAnyObjectByType<PlayerCharacter>();
+
         if (cam == null) cam = Camera.main.transform;
+        
         if (AdministradorDeProgreso.Instancia != null)
         {
             dashCooldown *= AdministradorDeProgreso.Instancia.multiplicadorDashCooldown;
@@ -88,12 +102,16 @@ public class PlayerAbilities : MonoBehaviour
         if (revolverIzquierdo != null) revolverIzquierdo.SetActive(true);
         if (auraDerecha != null) auraDerecha.SetActive(true);
         if (auraIzquierda != null) auraIzquierda.SetActive(true);
+        
         float originalDamage = weaponScript.damage;
         weaponScript.damage *= 1.5f;
         weaponScript.isUltActive = true;
+        
         yield return new WaitForSeconds(ultDuration);
+        
         weaponScript.damage = originalDamage;
         weaponScript.isUltActive = false;
+        
         if (revolverIzquierdo != null) revolverIzquierdo.SetActive(false);
         if (auraDerecha != null) auraDerecha.SetActive(false);
         if (auraIzquierda != null) auraIzquierda.SetActive(false);
@@ -103,9 +121,27 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator GhostDash()
     {
         canDash = false;
-        moveScript.isGhostMode = true;
-        yield return new WaitForSeconds(dashDuration);
-        moveScript.isGhostMode = false;
+
+        moveScript.isGhostMode = true; 
+        if (weaponScript != null) weaponScript.enabled = false;
+
+        if (playerCharacter != null)
+        {
+            float velocidadNormal = playerCharacter.walkSpeed;
+            playerCharacter.walkSpeed = velocidadNormal * ghostSpeedMultiplier; 
+            
+            yield return new WaitForSeconds(dashDuration);
+            
+            playerCharacter.walkSpeed = velocidadNormal; 
+        }
+        else
+        {
+            yield return new WaitForSeconds(dashDuration);
+        }
+
+        moveScript.isGhostMode = false; 
+        if (weaponScript != null) weaponScript.enabled = true;
+
         dashCooldownTimer = dashCooldown;
         while (dashCooldownTimer > 0) { dashCooldownTimer -= Time.deltaTime; yield return null; }
         canDash = true;
