@@ -78,16 +78,16 @@ public class MapManager : MonoBehaviour
     void Start()
     {
         bossDerrotado = false;
-        rondaActual = 1; 
         
-        SessionData.level = nivelBucle;
-        SessionData.round = rondaActual;
-
         navSurface = GetComponent<NavMeshSurface>();
         mapaDeGrietas = new bool[gridWidth, gridheaight];
 
         if (nivelBucle >= 4)
         {
+            rondaActual = 0; 
+            SessionData.level = nivelBucle;
+            SessionData.round = rondaActual;
+            
             enemigosParaJefe = 0;
             enemigosMuertosActuales = 0;
             ActualizarTextoProgreso();
@@ -99,10 +99,14 @@ public class MapManager : MonoBehaviour
             Instantiate(playerPrefab, posPlayer, Quaternion.identity);
             SpawnearPortalBoss(); 
             
-            Debug.Log("¡Nivel 4 alcanzado! Batalla final iniciada.");
+            Debug.Log("¡Nivel 4 alcanzado! Batalla final iniciada (Sin rondas).");
         }
         else
         {
+            rondaActual = 1; 
+            SessionData.level = nivelBucle;
+            SessionData.round = rondaActual;
+
             ConfigurarRonda(); 
             GenerarMapa();
             ActualizarNavMesh();
@@ -223,6 +227,32 @@ public class MapManager : MonoBehaviour
     {
         if (lapidaPrefab != null)
         {
+            // --- NUEVO: TRANSICIÓN A LA RONDA 4 (BOSS) PARA ANALYTICS ---
+            if (rondaActual == 3)
+            {
+                // 1. Enviamos el éxito de haber pasado la ronda 3
+                LevelCompleteEvent levelComplete = new LevelCompleteEvent
+                {
+                    level = SessionData.level,
+                    round = SessionData.round,
+                    time = Mathf.FloorToInt(GameTimer.tiempoTotal)
+                };
+                AnalyticsService.Instance.RecordEvent(levelComplete);
+
+                // 2. Iniciamos oficialmente la ronda 4
+                rondaActual = 4;
+                SessionData.round = rondaActual;
+
+                LevelStartEvent levelStart = new LevelStartEvent
+                {
+                    level = SessionData.level,
+                    round = SessionData.round
+                };
+                AnalyticsService.Instance.RecordEvent(levelStart);
+                Debug.Log($"[Analytics] Fase de Boss Iniciada - Nivel {SessionData.level}, Ronda {SessionData.round}");
+            }
+            // -------------------------------------------------------------
+
             lapidaInstanciada = Instantiate(lapidaPrefab, posicionLapida, Quaternion.identity);
             DesactivarPortalesComunes(); 
 
@@ -380,13 +410,13 @@ public class MapManager : MonoBehaviour
         LevelCompleteEvent levelComplete = new LevelCompleteEvent
         {
             level = SessionData.level,
-            round = SessionData.round,
+            round = SessionData.round, // Esto va a enviar un '4' porque estamos en la fase del Boss
 
             time = Mathf.FloorToInt(GameTimer.tiempoTotal) 
         };
 
         AnalyticsService.Instance.RecordEvent(levelComplete);
-        Debug.Log($"Evento 'LevelComplete' enviado. Nivel: {SessionData.level}, Tiempo: {Mathf.FloorToInt(GameTimer.tiempoTotal)}s");
+        Debug.Log($"Evento 'LevelComplete' enviado. Nivel: {SessionData.level}, Ronda: {SessionData.round}, Tiempo: {Mathf.FloorToInt(GameTimer.tiempoTotal)}s");
 
         nivelBucle++; 
         Debug.Log($"Avanzando al Nivel/Bucle {nivelBucle}. Recargando mapa...");

@@ -43,9 +43,14 @@ public class PlayerHUD : MonoBehaviour
             healthSlider.value = player.currentHealth;
         }
 
-        healthText.text = " " + player.currentHealth.ToString("F0");
-        if (player.currentHealth < 30) healthText.color = Color.red;
+        // --- CAMBIO ACÁ: Sumamos vida + escudo para el texto numérico ---
+        float vidaTotal = player.currentHealth + player.currentShield;
+        
+        healthText.text = " " + vidaTotal.ToString("F0");
+        
+        if (vidaTotal < 30) healthText.color = Color.red;
         else healthText.color = Color.white;
+        // ----------------------------------------------------------------
 
         ActualizarEscudoVisual();
 
@@ -61,33 +66,31 @@ public class PlayerHUD : MonoBehaviour
             else ammoText.color = Color.white;
         }
 
+        // --- LÓGICA DE TEXTO DE RONDAS Y NIVELES ---
         if (textoObjetivo != null && MapManager.Instance != null)
         {
+            int ronda = MapManager.Instance.rondaActual;
+
             if (MapManager.nivelBucle >= 4)
             {
-                textoObjetivo.text = "¡BATALLA FINAL! Derrota al Jefe.";
+                textoObjetivo.text = "¡BATALLA FINAL! Acaba con el Jefe.";
+                textoObjetivo.color = Color.red;
+            }
+            else if (ronda >= 4)
+            {
+                textoObjetivo.text = "¡BATALLA DE JEFE! Busca la tumba y sobrevive.";
                 textoObjetivo.color = Color.red;
             }
             else
             {
                 int muertos = MapManager.Instance.enemigosMuertosActuales;
                 int meta = MapManager.Instance.enemigosParaJefe;
-                int ronda = MapManager.Instance.rondaActual;
 
-                if (ronda >= MapManager.Instance.maxRondas && muertos >= meta)
-                {
-                    textoObjetivo.text = "¡OBJETIVOS COMPLETADOS! Busca la tumba.";
-                    textoObjetivo.color = Color.green;
-                }
-                else
-                {
-                    textoObjetivo.text = $"OBJETIVO (Ronda {ronda}/3): Mata enemigos ({muertos} / {meta})";
-                    textoObjetivo.color = Color.white;
-                }
+                textoObjetivo.text = $"OBJETIVO (Ronda {ronda}/3): Mata enemigos ({muertos} / {meta})";
+                textoObjetivo.color = Color.white;
             }
         }
     }
-
     void ActualizarEscudoVisual()
     {
         if (shieldBar == null || healthSlider == null) return;

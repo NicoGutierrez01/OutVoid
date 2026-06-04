@@ -287,7 +287,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &103390348
 RectTransform:
   m_ObjectHideFlags: 0
@@ -574,10 +574,10 @@ MonoBehaviour:
   healthSlider: {fileID: 2081735890}
   shieldBar: {fileID: 905745174}
   ammoText: {fileID: 507532297}
+  textoObjetivo: {fileID: 1461506914}
   popupObjeto: {fileID: 1459158334}
   popupTexto: {fileID: 650624503}
   tiempoVisible: 2
-  textoObjetivo: {fileID: 1461506914}
 --- !u!114 &433384164
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2216,8 +2216,11 @@ MonoBehaviour:
   bossPrefab: {fileID: 2811968405897873640, guid: b450d5c152800f74fa93f4a754f8f5f6, type: 3}
   retrasoSpawnBoss: 2
   textoProgresoMuertes: {fileID: 0}
+  enemigosMuertosActuales: 0
   popupInstrucciones: {fileID: 0}
   popupLapidaInvocada: {fileID: 0}
+  rondaActual: 1
+  maxRondas: 3
 --- !u!4 &1479725374
 Transform:
   m_ObjectHideFlags: 0

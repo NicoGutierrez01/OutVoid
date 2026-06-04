@@ -15,13 +15,12 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("UI y Drops de Recursos")]
     public Slider healthBar;
-    [Range(0, 100)] public float probabilidadDrop = 35f; // Un poquito más alta para que el sistema brille
+    [Range(0, 100)] public float probabilidadDrop = 35f; 
 
     public GameObject prefabDropVida;
     public GameObject prefabDropEscudo;
     public GameObject prefabDropBalas;
 
-    // Referencias al jugador para leer su estado
     private PlayerStats playerScript; 
     private WeaponSystem weaponScript;
     public static bool healthPerKillActive = false; 
@@ -92,7 +91,6 @@ public class EnemyHealth : MonoBehaviour
             playerScript.Heal(1f); 
         }
 
-        // --- SISTEMA DE DROPS INTELIGENTE ---
         if (Random.value * 100 <= probabilidadDrop)
         {
             Vector3 posicionSpawn = transform.position;
@@ -113,27 +111,23 @@ public class EnemyHealth : MonoBehaviour
 
             if (vidaCritica)
             {
-                // Modo Pánico (Prioridad Vida)
                 if (dropRoll <= 70) recursoAElegir = prefabDropVida;
                 else if (dropRoll <= 90) recursoAElegir = prefabDropEscudo;
                 else recursoAElegir = prefabDropBalas;
             }
             else if (municionLlena)
             {
-                // Modo Sobrado (Anula balas, prioriza Escudo)
                 if (dropRoll <= 60) recursoAElegir = prefabDropEscudo;
                 else recursoAElegir = prefabDropVida;
             }
             else if (municionEscasa)
             {
-                // Modo Seco (Prioridad Balas)
                 if (dropRoll <= 70) recursoAElegir = prefabDropBalas;
                 else if (dropRoll <= 90) recursoAElegir = prefabDropEscudo;
                 else recursoAElegir = prefabDropVida;
             }
             else
             {
-                // Estado Normal (Balanceado)
                 if (dropRoll <= 50) recursoAElegir = prefabDropBalas;
                 else if (dropRoll <= 80) recursoAElegir = prefabDropEscudo;
                 else recursoAElegir = prefabDropVida;
