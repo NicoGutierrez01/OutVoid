@@ -18,7 +18,6 @@ public class PlayerHUD : MonoBehaviour
 
     [Header("Objetivos")]
     public TextMeshProUGUI textoObjetivo;
-    public int metaEnemigos = 25; // Podés cambiar este número directo en el Inspector
 
     [Header("Pop-up de Items")]
     public GameObject popupObjeto; 
@@ -62,19 +61,29 @@ public class PlayerHUD : MonoBehaviour
             else ammoText.color = Color.white;
         }
 
-        if (textoObjetivo != null && AdministradorDeProgreso.Instancia != null)
+        if (textoObjetivo != null && MapManager.Instance != null)
         {
-            int muertos = AdministradorDeProgreso.Instancia.enemigosMuertos;
-            
-            if (muertos < metaEnemigos)
+            if (MapManager.nivelBucle >= 4)
             {
-                textoObjetivo.text = "OBJETIVO: Mata enemigos (" + muertos + " / " + metaEnemigos + ")";
-                textoObjetivo.color = Color.white;
+                textoObjetivo.text = "¡BATALLA FINAL! Derrota al Jefe.";
+                textoObjetivo.color = Color.red;
             }
             else
             {
-                textoObjetivo.text = "¡OBJETIVO COMPLETADO! Busca la tumba.";
-                textoObjetivo.color = Color.green;
+                int muertos = MapManager.Instance.enemigosMuertosActuales;
+                int meta = MapManager.Instance.enemigosParaJefe;
+                int ronda = MapManager.Instance.rondaActual;
+
+                if (ronda >= MapManager.Instance.maxRondas && muertos >= meta)
+                {
+                    textoObjetivo.text = "¡OBJETIVOS COMPLETADOS! Busca la tumba.";
+                    textoObjetivo.color = Color.green;
+                }
+                else
+                {
+                    textoObjetivo.text = $"OBJETIVO (Ronda {ronda}/3): Mata enemigos ({muertos} / {meta})";
+                    textoObjetivo.color = Color.white;
+                }
             }
         }
     }
