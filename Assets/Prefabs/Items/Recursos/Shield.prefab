@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1014852363193255671}
   - component: {fileID: 1037515154185014193}
   - component: {fileID: 7071308707984129459}
+  - component: {fileID: 6520038690757173788}
   m_Layer: 0
   m_Name: Shield
   m_TagString: Untagged
@@ -99,6 +100,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.0844274, y: 2.6081676, z: 1}
   m_Center: {x: -0.052314043, y: -0.56978846, z: 0}
+--- !u!114 &6520038690757173788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3184387657182790489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc01879768fb2394895f810bcdac3f55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemDespawnTemporal
+  tiempoVidaNormal: 10
+  tiempoParpadeo: 5
+  velocidadParpadeo: 0.2
 --- !u!1001 &7198197016140700406
 PrefabInstance:
   m_ObjectHideFlags: 0
