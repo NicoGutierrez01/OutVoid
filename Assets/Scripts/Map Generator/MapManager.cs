@@ -61,34 +61,55 @@ public class MapManager : MonoBehaviour
 
     [Header("UI y Progreso")]
     public TextMeshProUGUI textoProgresoMuertes;
-    private int enemigosMuertosActuales = 0;
+    public int enemigosMuertosActuales = 0;
 
     [Header("UI de Objetivos (Pop-ups temporizados)")]
     public GameObject popupInstrucciones;  
     public GameObject popupLapidaInvocada;
 
+    [Header("Sistema de Rondas")]
+    public int rondaActual = 1;
+    public int maxRondas = 3;
+
     public static MapManager Instance;
     private bool[,] mapaDeGrietas;
     private NavMeshSurface navSurface;
 
-void Start()
+    void Start()
     {
         bossDerrotado = false;
-        enemigosMuertosActuales = 0;
-        enemigosParaJefe = enemigosParaJefe + ((nivelBucle - 1) * 10);
+        rondaActual = 1; 
+        
+        SessionData.level = nivelBucle;
+        SessionData.round = rondaActual;
 
         navSurface = GetComponent<NavMeshSurface>();
         mapaDeGrietas = new bool[gridWidth, gridheaight];
+
+        if (nivelBucle >= 4)
+        {
+            enemigosParaJefe = 0;
+            enemigosMuertosActuales = 0;
+            ActualizarTextoProgreso();
+            
+            GenerarMapa();
+            ActualizarNavMesh();
+
+            Vector3 posPlayer = new Vector3(2 * tileSize, 2f, 2 * tileSize);
+            Instantiate(playerPrefab, posPlayer, Quaternion.identity);
+            SpawnearPortalBoss(); 
+            
+            Debug.Log("¡Nivel 4 alcanzado! Batalla final iniciada.");
+        }
+        else
+        {
+            ConfigurarRonda(); 
+            GenerarMapa();
+            ActualizarNavMesh();
+            SpawnearElementosDeJuego();
+        }
         
-        ActualizarTextoProgreso();
-        GenerarMapa();
-        ActualizarNavMesh();
-        SpawnearElementosDeJuego();
-        
-        SessionData.level = nivelBucle;
-        SessionData.round = 1;
-        
-        Debug.Log($"Evento 'LevelStart' - Iniciando nivel {SessionData.level}");
+        Debug.Log($"Evento 'LevelStart' - Iniciando Nivel {SessionData.level}, Ronda {SessionData.round}");
 
         LevelStartEvent levelStart = new LevelStartEvent
         {
@@ -98,19 +119,57 @@ void Start()
 
         AnalyticsService.Instance.RecordEvent(levelStart);
 
-        if (nivelBucle == 1) 
+        if (nivelBucle == 1 && popupInstrucciones != null) 
         {
-            if (popupInstrucciones != null) 
-            {
-                StartCoroutine(ManejarPopupInstrucciones(5f));
-            }
+            StartCoroutine(ManejarPopupInstrucciones(5f));
         }
-        else 
+        else if (popupInstrucciones != null) 
         {
-            if (popupInstrucciones != null) popupInstrucciones.SetActive(false);
+            popupInstrucciones.SetActive(false);
         }
 
         if (popupLapidaInvocada != null) popupLapidaInvocada.SetActive(false);
+    }
+
+    void ConfigurarRonda()
+    {
+        enemigosMuertosActuales = 0;
+
+        int enemigosBase = 15 + ((nivelBucle - 1) * 10);
+        enemigosParaJefe = enemigosBase * rondaActual; 
+        
+        ActualizarTextoProgreso();
+        Debug.Log($"Iniciando Ronda {rondaActual}. Objetivo: {enemigosParaJefe} enemigos.");
+    }
+
+    void AvanzarRonda()
+    {
+        LevelCompleteEvent levelComplete = new LevelCompleteEvent
+        {
+            level = SessionData.level,
+            round = SessionData.round,
+            time = Mathf.FloorToInt(GameTimer.tiempoTotal)
+        };
+        AnalyticsService.Instance.RecordEvent(levelComplete);
+        Debug.Log($"[Analytics] Ronda Completada - Nivel {SessionData.level}, Ronda {SessionData.round}");
+
+        rondaActual++;
+        SessionData.round = rondaActual;
+
+        ConfigurarRonda();
+
+        LevelStartEvent levelStart = new LevelStartEvent
+        {
+            level = SessionData.level,
+            round = SessionData.round
+        };
+        AnalyticsService.Instance.RecordEvent(levelStart);
+        Debug.Log($"[Analytics] Nueva Ronda Iniciada - Nivel {SessionData.level}, Ronda {SessionData.round}");
+
+        if (popupInstrucciones != null) 
+        {
+            StartCoroutine(ManejarPopupInstrucciones(3f));
+        }
     }
 
     System.Collections.IEnumerator ManejarPopupInstrucciones(float tiempo)
@@ -138,9 +197,16 @@ void Start()
             StartCoroutine("AnimacionPopUp");
         }
 
-        if (enemigosMuertosActuales == enemigosParaJefe)
+        if (enemigosMuertosActuales >= enemigosParaJefe)
         {
-            SpawnearLapida();
+            if (rondaActual < maxRondas)
+            {
+                AvanzarRonda();
+            }
+            else if (lapidaInstanciada == null) 
+            {
+                SpawnearLapida();
+            }
         }
     }
 
