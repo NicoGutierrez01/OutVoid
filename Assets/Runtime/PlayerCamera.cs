@@ -33,11 +33,11 @@ public class PlayerCamera : MonoBehaviour
         #if UNITY_WEBGL
             currentSensitivity = sensibilidadUI * multiplicadorWebGL;
         #else
-            // Si es un .exe, usa el multiplicador de Desktop
+            // Ahora sí usamos la variable multiplicadorDesktop
             currentSensitivity = sensibilidadUI * multiplicadorDesktop;
         #endif
 
-        Debug.Log($"[CÁMARA] Sensibilidad UI: {sensibilidadUI} | Sensibilidad Real Aplicada: {currentSensitivity}");
+        Debug.Log($"[CÁMARA] Sensibilidad aplicada: {currentSensitivity}");
     }
 
     public void UpdateRotation(CameraInput input)

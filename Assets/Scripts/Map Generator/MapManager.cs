@@ -71,6 +71,12 @@ public class MapManager : MonoBehaviour
     public int rondaActual = 1;
     public int maxRondas = 3;
 
+    [Header("Recompensas de Ronda")]
+    public GameObject prefabContenedorMejora;
+    public MejoraData[] mejorasComunes;
+    public MejoraData[] mejorasRaras;
+    public MejoraData[] mejorasEpicas;
+
     public static MapManager Instance;
     private bool[,] mapaDeGrietas;
     private NavMeshSurface navSurface;
@@ -138,13 +144,11 @@ public class MapManager : MonoBehaviour
     void ConfigurarRonda()
     {
         enemigosMuertosActuales = 0;
-
-        enemigosParaJefe = 15 * rondaActual + ((nivelBucle - 1) * 10); 
+        enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10); 
         
         ActualizarTextoProgreso();
         Debug.Log($"Iniciando Ronda {rondaActual}. Objetivo: {enemigosParaJefe} enemigos.");
     }
-
     void AvanzarRonda()
     {
         LevelCompleteEvent levelComplete = new LevelCompleteEvent
@@ -154,25 +158,64 @@ public class MapManager : MonoBehaviour
             time = Mathf.FloorToInt(GameTimer.tiempoTotal)
         };
         AnalyticsService.Instance.RecordEvent(levelComplete);
-        Debug.Log($"[Analytics] Ronda Completada - Nivel {SessionData.level}, Ronda {SessionData.round}");
+
+        SpawnearMejoraMenor();
 
         rondaActual++;
         SessionData.round = rondaActual;
-
         ConfigurarRonda();
 
-        LevelStartEvent levelStart = new LevelStartEvent
-        {
-            level = SessionData.level,
-            round = SessionData.round
-        };
+        LevelStartEvent levelStart = new LevelStartEvent { level = SessionData.level, round = SessionData.round };
         AnalyticsService.Instance.RecordEvent(levelStart);
-        Debug.Log($"[Analytics] Nueva Ronda Iniciada - Nivel {SessionData.level}, Ronda {SessionData.round}");
 
-        if (popupInstrucciones != null) 
+        if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));
+    }
+    void SpawnearMejoraMenor()
+    {
+        if (prefabContenedorMejora == null) return;
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null) return;
+
+        for (int i = 0; i < 2; i++)
         {
-            StartCoroutine(ManejarPopupInstrucciones(3f));
+            float offsetX = (i == 0) ? -2f : 2f;
+            Vector3 posInicial = player.transform.position + player.transform.forward * 3f + player.transform.right * offsetX + Vector3.up * 5f;
+            
+            Vector3 spawnPos = posInicial; 
+            RaycastHit hit;
+            if (Physics.Raycast(posInicial, Vector3.down, out hit, 10f, capaSuelo))
+            {
+                spawnPos = hit.point + Vector3.up * 0.5f; 
+            }
+
+            int rng = Random.Range(1, 101);
+            MejoraData data = null;
+
+            if (rondaActual == 1) data = (rng <= 85) ? ObtenerMejoraRandom(mejorasComunes) : ObtenerMejoraRandom(mejorasRaras);
+            else if (rondaActual == 2) 
+            {
+                if (rng <= 50) data = ObtenerMejoraRandom(mejorasComunes);
+                else if (rng <= 90) data = ObtenerMejoraRandom(mejorasRaras);
+                else data = ObtenerMejoraRandom(mejorasEpicas);
+            }
+            else 
+            {
+                if (rng <= 20) data = ObtenerMejoraRandom(mejorasComunes);
+                else if (rng <= 70) data = ObtenerMejoraRandom(mejorasRaras);
+                else data = ObtenerMejoraRandom(mejorasEpicas);
+            }
+
+            if (data != null)
+            {
+                GameObject item = Instantiate(prefabContenedorMejora, spawnPos, Quaternion.identity);
+                item.GetComponent<ItemMejoraDinamica>().ConfigurarItem(data);
+            }
         }
+    }
+
+    MejoraData ObtenerMejoraRandom(MejoraData[] lista)
+    {
+        return (lista != null && lista.Length > 0) ? lista[Random.Range(0, lista.Length)] : null;
     }
 
     System.Collections.IEnumerator ManejarPopupInstrucciones(float tiempo)
@@ -188,6 +231,8 @@ public class MapManager : MonoBehaviour
         yield return new WaitForSeconds(tiempo);
         popupLapidaInvocada.SetActive(false);
     }
+
+    
 
     public void RegistrarMuerte()
     {
