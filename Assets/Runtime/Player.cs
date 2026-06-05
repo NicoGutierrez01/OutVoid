@@ -45,6 +45,8 @@ public class Player : MonoBehaviour
 
     void Update()
     {
+        if (Time.timeScale == 0f) return;
+
         var input = _inputActions.Gameplay;
         var deltaTime = Time.deltaTime;
 
@@ -67,7 +69,6 @@ public class Player : MonoBehaviour
         playerCharacter.UpdateBody(deltaTime);
         playerAbilities.UpdateInput(characterInput);
 
-        // --- SISTEMA DE INTERACCIÓN CON ITEMS DEL BOSS ---
         float distanciaInteraccion = 3.5f; 
         
         if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out RaycastHit hitInteract, distanciaInteraccion))
@@ -79,7 +80,6 @@ public class Player : MonoBehaviour
                 {
                     Debug.Log("MIRANDO: " + itemMirado.data.nombreItem + " | " + itemMirado.data.descripcion + " | Presiona F para agarrar");
 
-                    // Lee directamente la nueva acción "Interact" (tecla F)
                     if (input.Interact.WasPressedThisFrame())
                     {
                         itemMirado.Recoger(gameObject);
