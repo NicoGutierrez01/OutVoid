@@ -2534,6 +2534,13 @@ MonoBehaviour:
   popupLapidaInvocada: {fileID: 0}
   rondaActual: 1
   maxRondas: 3
+  prefabContenedorMejora: {fileID: 3367296277196983850, guid: 275865f72f0706f4c90102cc567b09f2, type: 3}
+  mejorasComunes:
+  - {fileID: 11400000, guid: 15de0f1a984c49646865c816ba7b2ca8, type: 2}
+  mejorasRaras:
+  - {fileID: 11400000, guid: ce7041853a391564e9cd32920708b1ce, type: 2}
+  mejorasEpicas:
+  - {fileID: 11400000, guid: 69cb924d41c16b04d92679faeec3610c, type: 2}
 --- !u!4 &1479725374
 Transform:
   m_ObjectHideFlags: 0
