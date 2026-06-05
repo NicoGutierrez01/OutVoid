@@ -139,8 +139,7 @@ public class MapManager : MonoBehaviour
     {
         enemigosMuertosActuales = 0;
 
-        int enemigosBase = 15 + ((nivelBucle - 1) * 10);
-        enemigosParaJefe = enemigosBase * rondaActual; 
+        enemigosParaJefe = 15 * rondaActual + ((nivelBucle - 1) * 10); 
         
         ActualizarTextoProgreso();
         Debug.Log($"Iniciando Ronda {rondaActual}. Objetivo: {enemigosParaJefe} enemigos.");
@@ -227,10 +226,8 @@ public class MapManager : MonoBehaviour
     {
         if (lapidaPrefab != null)
         {
-            // --- NUEVO: TRANSICIÓN A LA RONDA 4 (BOSS) PARA ANALYTICS ---
             if (rondaActual == 3)
             {
-                // 1. Enviamos el éxito de haber pasado la ronda 3
                 LevelCompleteEvent levelComplete = new LevelCompleteEvent
                 {
                     level = SessionData.level,
@@ -239,7 +236,6 @@ public class MapManager : MonoBehaviour
                 };
                 AnalyticsService.Instance.RecordEvent(levelComplete);
 
-                // 2. Iniciamos oficialmente la ronda 4
                 rondaActual = 4;
                 SessionData.round = rondaActual;
 
@@ -251,7 +247,6 @@ public class MapManager : MonoBehaviour
                 AnalyticsService.Instance.RecordEvent(levelStart);
                 Debug.Log($"[Analytics] Fase de Boss Iniciada - Nivel {SessionData.level}, Ronda {SessionData.round}");
             }
-            // -------------------------------------------------------------
 
             lapidaInstanciada = Instantiate(lapidaPrefab, posicionLapida, Quaternion.identity);
             DesactivarPortalesComunes(); 

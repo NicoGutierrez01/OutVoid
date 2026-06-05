@@ -33,7 +33,7 @@ public class EventManager : MonoBehaviour
         public int level { set { SetParameter("level", value); } }
         public int time { set { SetParameter("time", value); } }
         public bool win { set { SetParameter("win", value); } }
-        public string chara { set { SetParameter("chara", value); } }
+        public string avatar { set { SetParameter("avatar", value); } }
         public string weapon { set { SetParameter("weapon", value); } }
         public string enemy { set { SetParameter("enemy", value); } }
     }

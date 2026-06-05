@@ -25,13 +25,13 @@ public class ItemInteractable : MonoBehaviour
             inventario.AplicarMejora(data);
         }
 
-        SessionData.item = data.name; 
+        SessionData.itemName = data.name; 
         
-        Debug.Log($"Evento 'ItemPick' - El jugador eligió el ítem: {SessionData.item}");
+        Debug.Log($"Evento 'ItemPick' - El jugador eligió el ítem: {SessionData.itemName}");
 
         ItemPickEvent itemPickEvent = new ItemPickEvent
         {
-            itemName = SessionData.item
+            itemName = SessionData.itemName
         };
 
         AnalyticsService.Instance.RecordEvent(itemPickEvent);
