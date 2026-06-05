@@ -23,11 +23,21 @@ public class MainMenu : MonoBehaviour
     [Header("Botón Salir")]
     public GameObject botonSalir;
 
-    void Start()
+void Start()
     {
-        // 1. INVERTIMOS EL ORDEN INICIAL: Encendemos el consentimiento y apagamos el resto
-        if (panelConsentimiento != null) panelConsentimiento.SetActive(true);
-        if (panelPrincipal != null) panelPrincipal.SetActive(false);
+        int aceptoAnalytics = PlayerPrefs.GetInt("AnalyticsConsent", 0);
+
+        if (aceptoAnalytics == 1)
+        {
+            if (panelConsentimiento != null) panelConsentimiento.SetActive(false);
+            if (panelPrincipal != null) panelPrincipal.SetActive(true);
+        }
+        else
+        {
+            if (panelConsentimiento != null) panelConsentimiento.SetActive(true);
+            if (panelPrincipal != null) panelPrincipal.SetActive(false);
+        }
+
         if (panelOpciones != null) panelOpciones.SetActive(false);
         if (panelCarga != null) panelCarga.SetActive(false);
 

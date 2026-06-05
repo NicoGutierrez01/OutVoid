@@ -9,11 +9,11 @@ public class StaticVariables : MonoBehaviour
         public static int time = 0; 
 
         public static bool win = false;
-        public static string chara = "Default"; 
+        public static string avatar = "Default"; 
         public static string weapon = "Revolver";
         public static string enemy = "Ninguno"; 
 
-        public static string item = "";
+        public static string itemName = "";
         public static string type = "";
         public static string name = "";
         public static int cost = 0;
