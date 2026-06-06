@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro; 
+using UnityEngine.EventSystems;
+using System.Collections;
 
 public class GameOver : MonoBehaviour
 {
@@ -9,14 +11,25 @@ public class GameOver : MonoBehaviour
     public TextMeshProUGUI textoPuntos;
     public TextMeshProUGUI textoEnemigos;
     public TextMeshProUGUI textoMejoras;
+    public GameObject botonBack;
 
-    void Start()
-    {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-        
-        MostrarEstadisticas();
-    }
+void Start()
+{
+    Cursor.lockState = CursorLockMode.None;
+    Cursor.visible = true;
+
+    MostrarEstadisticas();
+
+    StartCoroutine(SeleccionInicial());
+}
+
+IEnumerator SeleccionInicial()
+{
+    yield return null; // espera 1 frame (clave)
+
+    EventSystem.current.SetSelectedGameObject(null);
+    EventSystem.current.SetSelectedGameObject(botonBack);
+}
 
     void MostrarEstadisticas()
     {
