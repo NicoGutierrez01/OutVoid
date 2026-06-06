@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum CrouchInput
 {
-    None, Toggle
+    None, Hold
 }
 
 public enum Stance
@@ -26,6 +26,7 @@ public struct CharacterInput
     public Quaternion Rotation;
     public Vector2 Move;
     public bool Jump;
+    public bool Melee;
     public bool JumpSustain;
     public CrouchInput Crouch;
     public bool Dash;
@@ -51,6 +52,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     [SerializeField] private float jumpSustainGravity = 0.4f;
     [SerializeField] private float gravity = -90f;
+    [SerializeField] private int maxJumps = 1;
 
     [Space]
     [SerializeField] private float slideStartSpeed = 25f;
@@ -91,6 +93,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private float _timeSinceJumpRequest;
     private bool _ungroundedDueToJump;
 
+    private int jumpsUsed = 0;
+
+
     private Collider[] _uncrouchOverlapResults;
 
 void Awake()
@@ -125,17 +130,13 @@ public void Initialize()
 
         _requestedSustainedJump = input.JumpSustain;
         var wasRequestingCrouch = _requestedCrouch;
-        _requestedCrouch = input.Crouch switch
-        {
-            CrouchInput.Toggle => !_requestedCrouch,
-            CrouchInput.None => _requestedCrouch,
-            _ => _requestedCrouch
-        };
-        if (_requestedCrouch && !wasRequestingCrouch)
-        _requestedCrouchInAir = !_state.Grounded;
-        else if 
-        (!_requestedCrouch && wasRequestingCrouch)
-        _requestedCrouchInAir = false;
+
+_requestedCrouch = input.Crouch == CrouchInput.Hold;
+
+if (_requestedCrouch && !wasRequestingCrouch)
+    _requestedCrouchInAir = !_state.Grounded;
+else if (!_requestedCrouch && wasRequestingCrouch)
+    _requestedCrouchInAir = false;
     
             
     }
@@ -179,6 +180,7 @@ public void Initialize()
         {
                     _timeSinceUngrounded = 0f;
                     _ungroundedDueToJump = false;
+                    jumpsUsed = 0;
 
                var groundedMovement =
                 motor.GetDirectionTangentToSurface
@@ -212,8 +214,8 @@ public void Initialize()
                     effectiveSlideStartSpeed = 0f;
                     _requestedCrouchInAir = false;
                 }
-                var slideSpeed =
-                    Mathf.Max(effectiveSlideStartSpeed, currentVelocity.magnitude);
+               var slideSpeed =
+    Mathf.Min(currentVelocity.magnitude, slideStartSpeed);
 
                 currentVelocity =
                     motor.GetDirectionTangentToSurface
@@ -379,27 +381,27 @@ public void Initialize()
             var grounded = motor.GroundingStatus.IsStableOnGround;
             var canCoyoteJump = _timeSinceUngrounded < coyoteTime && !_ungroundedDueToJump;
 
-            if (grounded || canCoyoteJump)
-            {          
-            
-            _requestedJump = false;
-            _requestedCrouch = false;
-            _requestedCrouchInAir = false;
+            if ((grounded || canCoyoteJump) || jumpsUsed < maxJumps)
+{
+    jumpsUsed++;
 
+    _requestedJump = false;
+    _requestedCrouch = false;
+    _requestedCrouchInAir = false;
 
-            motor.ForceUnground(0f);
-            _ungroundedDueToJump = true;
+    motor.ForceUnground(0f);
+    _ungroundedDueToJump = true;
 
-            var currentVerticalSpeed =
-                Vector3.Dot(currentVelocity, motor.CharacterUp);
+    var currentVerticalSpeed =
+        Vector3.Dot(currentVelocity, motor.CharacterUp);
 
-            var targetVerticalSpeed =
-                Mathf.Max(currentVerticalSpeed, jumpSpeed);
+    var targetVerticalSpeed =
+        Mathf.Max(currentVerticalSpeed, jumpSpeed);
 
-            currentVelocity +=
-                motor.CharacterUp *
-                (targetVerticalSpeed - currentVerticalSpeed);
-        }
+    currentVelocity +=
+        motor.CharacterUp *
+        (targetVerticalSpeed - currentVerticalSpeed);
+}
         else
             {
                 _timeSinceJumpRequest += deltaTime;
