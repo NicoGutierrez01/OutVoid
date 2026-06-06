@@ -592,14 +592,15 @@ MonoBehaviour:
   motor: {fileID: 6495852188040846631}
   root: {fileID: 776891707974602014}
   cameraTarget: {fileID: 7045548413959980449}
-  walkSpeed: 25
+  walkSpeed: 16
   crouchSpeed: 7
-  walkResponse: 25
-  crouchResponse: 20
+  walkResponse: 16
+  crouchResponse: 10
   jumpSpeed: 20
   coyoteTime: 0.2
   jumpSustainGravity: 0.4
   gravity: -80
+  maxJumps: 1
   slideStartSpeed: 25
   slideEndSpeed: 15
   slideFriction: 0.8
@@ -673,18 +674,25 @@ MonoBehaviour:
   dynamiteCooldownTimer: 0
   ultCooldownTimer: 0
   cam: {fileID: 974036132606901512}
+  playerCharacter: {fileID: 0}
+  playerCamera: {fileID: 0}
   dynamiteCooldown: 7
   canUseE: 1
   ultCooldown: 120
   canUseQ: 1
   dashCooldown: 7
   canDash: 1
+  meleeDamage: 35
+  meleeRange: 2
+  meleeCooldown: 0.5
+  canMelee: 1
   dynamitePrefab: {fileID: 883501954159504122, guid: 4927d69f179aa844987a9832017d6f04, type: 3}
   muzzle: {fileID: 777995885764841250}
   throwForce: 15
   ultDuration: 6
   isUltActive: 0
   dashDuration: 2.5
+  ghostSpeedMultiplier: 1.3
   revolverIzquierdo: {fileID: 440244470476179813}
   auraDerecha: {fileID: 0}
   auraIzquierda: {fileID: 0}
@@ -763,7 +771,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ceefe20e090904e189adc82ebf43e294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCamera
-  sensitivity: 0.1
+  multiplicadorDesktop: 0.05
+  multiplicadorWebGL: 0.02
 --- !u!1001 &782915855382819892
 PrefabInstance:
   m_ObjectHideFlags: 0
