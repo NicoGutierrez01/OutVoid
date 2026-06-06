@@ -51,8 +51,13 @@ public class WeaponSystem : MonoBehaviour
     {
         if (recargando) return;
 
-        if (Mouse.current.leftButton.wasPressedThisFrame && Time.time >= proximoTiempoDisparo)
-        {
+if (
+    (
+        (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) ||
+        (Gamepad.current != null && Gamepad.current.rightTrigger.wasPressedThisFrame)
+    )
+    && Time.time >= proximoTiempoDisparo
+)        {
             if (balasActuales > 0 || isUltActive)
             {
                 Disparar();
@@ -65,10 +70,17 @@ public class WeaponSystem : MonoBehaviour
             }
         }
 
-        if (Keyboard.current.rKey.wasPressedThisFrame && balasActuales < balasMaximas && balasReserva > 0 && !recargando)
-        {
-            StartCoroutine(RutinaRecarga());
-        }
+        if (
+    (Keyboard.current.rKey.wasPressedThisFrame ||
+     Gamepad.current != null && Gamepad.current.buttonWest.wasPressedThisFrame)
+    &&
+    balasActuales < balasMaximas &&
+    balasReserva > 0 &&
+    !recargando
+)
+{
+    StartCoroutine(RutinaRecarga());
+}
     }
 
     void Disparar()

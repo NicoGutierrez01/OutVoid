@@ -2,7 +2,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using TMPro; 
+using UnityEngine.EventSystems;
+using TMPro;
 
 public class MainMenu : MonoBehaviour
 {
@@ -10,11 +11,11 @@ public class MainMenu : MonoBehaviour
     public GameObject panelPrincipal;
     public GameObject panelOpciones;
     public GameObject panelCarga;
-    public GameObject panelConsentimiento; 
+    public GameObject panelConsentimiento;
 
     [Header("Pantalla de Carga")]
     public Slider barraDeCarga;
-    public string nombreEscenaJuego = "Desert"; 
+    public string nombreEscenaJuego = "Desert";
 
     [Header("Opciones - Sensibilidad")]
     public Slider sliderSensibilidad;
@@ -23,51 +24,70 @@ public class MainMenu : MonoBehaviour
     [Header("Botón Salir")]
     public GameObject botonSalir;
 
-void Start()
+    void Start()
     {
         int aceptoAnalytics = PlayerPrefs.GetInt("AnalyticsConsent", 0);
 
         if (aceptoAnalytics == 1)
         {
-            if (panelConsentimiento != null) panelConsentimiento.SetActive(false);
-            if (panelPrincipal != null) panelPrincipal.SetActive(true);
+            if (panelConsentimiento != null)
+                panelConsentimiento.SetActive(false);
+
+            if (panelPrincipal != null)
+                panelPrincipal.SetActive(true);
+
+            StartCoroutine(SeleccionarPrimerBoton(panelPrincipal));
         }
         else
         {
-            if (panelConsentimiento != null) panelConsentimiento.SetActive(true);
-            if (panelPrincipal != null) panelPrincipal.SetActive(false);
+            if (panelConsentimiento != null)
+                panelConsentimiento.SetActive(true);
+
+            if (panelPrincipal != null)
+                panelPrincipal.SetActive(false);
+
+            StartCoroutine(SeleccionarPrimerBoton(panelConsentimiento));
         }
 
-        if (panelOpciones != null) panelOpciones.SetActive(false);
-        if (panelCarga != null) panelCarga.SetActive(false);
+        if (panelOpciones != null)
+            panelOpciones.SetActive(false);
+
+        if (panelCarga != null)
+            panelCarga.SetActive(false);
 
         float sensibilidadGuardada = PlayerPrefs.GetFloat("SensibilidadMouse", 1f);
+
         if (sliderSensibilidad != null)
         {
             sliderSensibilidad.value = sensibilidadGuardada;
             ActualizarTextoSensibilidad(sensibilidadGuardada);
         }
 
-        #if UNITY_WEBGL
-            if (botonSalir != null) botonSalir.SetActive(false);
-        #endif
+#if UNITY_WEBGL
+        if (botonSalir != null)
+            botonSalir.SetActive(false);
+#endif
     }
 
     public void MostrarMenuPrincipal()
     {
-        panelConsentimiento.SetActive(false);
-        panelPrincipal.SetActive(true);
+        if (panelConsentimiento != null)
+            panelConsentimiento.SetActive(false);
+
+        if (panelPrincipal != null)
+            panelPrincipal.SetActive(true);
+
+        StartCoroutine(SeleccionarPrimerBoton(panelPrincipal));
     }
 
     public void EmpezarJuego()
     {
-        GameTimer.tiempoTotal = 0f; 
-
+        GameTimer.tiempoTotal = 0f;
         MapManager.nivelBucle = 1;
 
         panelPrincipal.SetActive(false);
         panelCarga.SetActive(true);
-        
+
         StartCoroutine(CargarEscenaAsincrona());
     }
 
@@ -75,7 +95,7 @@ void Start()
     {
         AsyncOperation operacion = SceneManager.LoadSceneAsync(nombreEscenaJuego);
 
-        operacion.allowSceneActivation = false; 
+        operacion.allowSceneActivation = false;
 
         float progresoVisual = 0f;
 
@@ -83,19 +103,19 @@ void Start()
         {
             float progresoReal = Mathf.Clamp01(operacion.progress / 0.9f);
 
-            progresoVisual = Mathf.MoveTowards(progresoVisual, progresoReal, 0.5f * Time.deltaTime);
-            
+            progresoVisual = Mathf.MoveTowards(
+                progresoVisual,
+                progresoReal,
+                0.5f * Time.deltaTime
+            );
+
             if (barraDeCarga != null)
-            {
                 barraDeCarga.value = progresoVisual;
-            }
 
             if (progresoVisual >= 1f)
-            {
                 operacion.allowSceneActivation = true;
-            }
 
-            yield return null; 
+            yield return null;
         }
     }
 
@@ -103,14 +123,18 @@ void Start()
     {
         panelPrincipal.SetActive(false);
         panelOpciones.SetActive(true);
+
+        StartCoroutine(SeleccionarPrimerBoton(panelOpciones));
     }
 
     public void CerrarOpciones()
     {
-        PlayerPrefs.Save(); 
-        
+        PlayerPrefs.Save();
+
         panelOpciones.SetActive(false);
         panelPrincipal.SetActive(true);
+
+        StartCoroutine(SeleccionarPrimerBoton(panelPrincipal));
     }
 
     public void CambiarSensibilidad(float valor)
@@ -123,7 +147,7 @@ void Start()
     {
         if (textoSensibilidad != null)
         {
-            textoSensibilidad.text = valor.ToString("F2"); 
+            textoSensibilidad.text = valor.ToString("F2");
         }
     }
 
@@ -131,5 +155,22 @@ void Start()
     {
         Debug.Log("Cerrando Out-Void...");
         Application.Quit();
+    }
+
+    IEnumerator SeleccionarPrimerBoton(GameObject panel)
+    {
+        yield return null;
+
+        if (panel == null)
+            yield break;
+
+        EventSystem.current.SetSelectedGameObject(null);
+
+        Button boton = panel.GetComponentInChildren<Button>(true);
+
+        if (boton != null)
+        {
+            EventSystem.current.SetSelectedGameObject(boton.gameObject);
+        }
     }
 }
