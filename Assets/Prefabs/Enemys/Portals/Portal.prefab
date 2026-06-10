@@ -81,6 +81,7 @@ MonoBehaviour:
   posiblesEnemigos:
   - {fileID: 8310958653126158524, guid: 06507cd6d90429e4eb8dc0678f0724b8, type: 3}
   - {fileID: 4509103767023525435, guid: 950f1dd076fdc4c46887d159ed6cf327, type: 3}
+  - {fileID: 7282796277306291087, guid: 584c857e0c4648148810499416f012cf, type: 3}
   cantidadEnemigos: 5
   tiempoEntreSpawns: 2
   radioDispersion: 2

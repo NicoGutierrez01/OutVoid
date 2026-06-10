@@ -13,7 +13,7 @@ public class PortalSpawner : MonoBehaviour
     public float distanciaCaida = 3f; 
 
     [Header("Tiempos de Juego")]
-    public float tiempoEntreOleadas = 15f; 
+    public float tiempoEntreOleadas = 20f; 
 
     private GameObject enemigoDeEstePortal;
     
@@ -36,9 +36,7 @@ public class PortalSpawner : MonoBehaviour
 
 IEnumerator CicloDeOleadas()
 {
-    // Esperar a que el Player exista
     yield return new WaitUntil(() => GameObject.FindGameObjectWithTag("Player") != null);
-    // pequeño delay extra de seguridad
     yield return new WaitForSeconds(1f);
         while (true)
         {
