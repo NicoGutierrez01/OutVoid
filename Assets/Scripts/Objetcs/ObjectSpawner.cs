@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections; // ¡Clave para usar corrutinas!
+using System.Collections;
 using System.Collections.Generic;
 
 public class ObjectSpawner : MonoBehaviour

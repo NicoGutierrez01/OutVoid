@@ -109,15 +109,15 @@ MonoBehaviour:
   - {fileID: 8775978792791231413, guid: 7ffe4924f6901284ab1d3dcedea29c39, type: 3}
   - {fileID: 1687128777873670659, guid: 08ea27e48771e95409b53b44c1e73e05, type: 3}
   piedras:
-  - {fileID: 2280312110530335826, guid: 61a46f675881ae649bb7e5f07b6fd7fe, type: 3}
-  - {fileID: 259962303340538291, guid: b5a97d9939dd6bf4788f8c9ec34600ad, type: 3}
-  - {fileID: 3679496364244577210, guid: df437d2337861304dba89536958393f1, type: 3}
-  - {fileID: 9165316842128806339, guid: 3cb5b693b6039e343a39db0c11b21911, type: 3}
+  - {fileID: 1014157794876209, guid: 61a46f675881ae649bb7e5f07b6fd7fe, type: 3}
+  - {fileID: 5855183989304747290, guid: b5a97d9939dd6bf4788f8c9ec34600ad, type: 3}
+  - {fileID: 1604988023781113816, guid: df437d2337861304dba89536958393f1, type: 3}
+  - {fileID: 9140106920124498177, guid: 3cb5b693b6039e343a39db0c11b21911, type: 3}
   arboles:
-  - {fileID: 3042264916864823244, guid: d35a37cd401117046937e655b7069cc6, type: 3}
-  - {fileID: 924920113845883188, guid: 878eca668dbce0e42a685d5f023f9d55, type: 3}
+  - {fileID: 6554328710291321494, guid: d35a37cd401117046937e655b7069cc6, type: 3}
+  - {fileID: 6963621031325828773, guid: 878eca668dbce0e42a685d5f023f9d55, type: 3}
   tronco: {fileID: 2843310798097469699, guid: 3276a084c40c6ec40a76b09bf5a4625b, type: 3}
-  pasto: {fileID: 3670074687462338851, guid: bfa26e024db5d5941b35acf92909d1cc, type: 3}
+  pasto: {fileID: 6439883145149483738, guid: 7eff52fd4ae45a64ba32bbd92a7b3ca2, type: 3}
   capaSuelo:
     serializedVersion: 2
     m_Bits: 8
