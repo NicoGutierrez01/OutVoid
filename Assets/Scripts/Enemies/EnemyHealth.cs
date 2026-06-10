@@ -27,6 +27,8 @@ public class EnemyHealth : MonoBehaviour
     private WeaponSystem weaponScript;
     public static bool healthPerKillActive = false; 
 
+    private bool isDead = false;
+
     void Awake() { propBlock = new MaterialPropertyBlock(); }
 
     void Start()
@@ -63,6 +65,7 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(float amount)
     {
+        if (isDead) return;
         currentHealth -= amount;
 
         if (currentHealth > 0)
@@ -70,19 +73,32 @@ public class EnemyHealth : MonoBehaviour
             StartCoroutine(StunRoutine());
         }
         if (healthBar != null) healthBar.value = currentHealth;
-        if (currentHealth <= 0) Die();
+        if (currentHealth <= 0)
+        {
+            isDead = true;
+            Die();
+        }
     }
 
     IEnumerator StunRoutine()
     {
-        NavMeshAgent agent = GetComponent<NavMeshAgent>();
-        if (agent != null) agent.isStopped = true;
+        if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+        {
+            agent.isStopped = true;
 
-        Animator anim = GetComponent<Animator>();
-        if (anim != null) anim.SetTrigger("Stun");
-        yield return new WaitForSeconds(0.3f);
+            Animator anim = GetComponentInChildren<Animator>();
+            if (anim != null && !anim.GetBool("isDead")) 
+            {
+                anim.SetTrigger("Stun");
+            }
+            
+            yield return new WaitForSeconds(0.3f);
 
-        if (agent != null) agent.isStopped = false;
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+            {
+                agent.isStopped = false;
+            }
+        }
     }
 
     IEnumerator FlashRed()
