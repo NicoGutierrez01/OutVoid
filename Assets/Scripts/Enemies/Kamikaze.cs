@@ -7,6 +7,7 @@ public class Kamikaze : MonoBehaviour
     public NavMeshAgent agent;
     public Transform playerTransform;
     public PlayerStats playerScript;
+    public Animator anim;
 
     [Header("Configuración de Ataque")]
     public float damgeAmount = 30f;
@@ -27,6 +28,8 @@ public class Kamikaze : MonoBehaviour
     private bool haAterrizado = false;
     private bool estaExplotando = false; 
 
+    public bool estaVivo = true;
+
     void Awake() 
     { 
         propBlock = new MaterialPropertyBlock(); 
@@ -44,7 +47,7 @@ public class Kamikaze : MonoBehaviour
         if (p != null)
         {
             playerTransform = p.transform;
-playerScript = p.GetComponentInParent<PlayerStats>();
+            playerScript = p.GetComponentInParent<PlayerStats>();
         }
 
         if (kamikazeRenderer != null) 
@@ -53,7 +56,7 @@ playerScript = p.GetComponentInParent<PlayerStats>();
 
     void Update()
     {
-        if (estaExplotando) return;
+        if (!estaVivo || estaExplotando) return;
 
         if (haAterrizado && agent.enabled && agent.isOnNavMesh && playerTransform != null)
         {
@@ -66,6 +69,8 @@ playerScript = p.GetComponentInParent<PlayerStats>();
 
             agent.SetDestination(playerTransform.position);
 
+            anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.1f);
+
             float distance = Vector3.Distance(transform.position, playerTransform.position);
             if (distance <= attackRange) EmpezarExplosion();
         }
@@ -75,6 +80,7 @@ playerScript = p.GetComponentInParent<PlayerStats>();
     {
         estaExplotando = true;
         agent.isStopped = true;
+        anim.SetTrigger("Explode");
         StartCoroutine(RutinaExplosion());
     }
 

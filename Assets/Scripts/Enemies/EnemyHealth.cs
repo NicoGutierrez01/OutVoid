@@ -1,9 +1,11 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.AI;
 
 public class EnemyHealth : MonoBehaviour
 {
+    public NavMeshAgent agent;
     public float maxHealth = 100f;
     private float currentHealth;
     
@@ -31,8 +33,7 @@ public class EnemyHealth : MonoBehaviour
     {
         maxHealth = maxHealth + ((MapManager.nivelBucle - 1) * 25f);
         currentHealth = maxHealth;
-        
-        // Buscamos ambos scripts en el jugador
+
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
@@ -63,9 +64,25 @@ public class EnemyHealth : MonoBehaviour
     public void TakeDamage(float amount)
     {
         currentHealth -= amount;
+
+        if (currentHealth > 0)
+        {
+            StartCoroutine(StunRoutine());
+        }
         if (healthBar != null) healthBar.value = currentHealth;
-        if (enemyRenderer != null && gameObject.activeInHierarchy) StartCoroutine(FlashRed());
         if (currentHealth <= 0) Die();
+    }
+
+    IEnumerator StunRoutine()
+    {
+        NavMeshAgent agent = GetComponent<NavMeshAgent>();
+        if (agent != null) agent.isStopped = true;
+
+        Animator anim = GetComponent<Animator>();
+        if (anim != null) anim.SetTrigger("Stun");
+        yield return new WaitForSeconds(0.3f);
+
+        if (agent != null) agent.isStopped = false;
     }
 
     IEnumerator FlashRed()
@@ -79,6 +96,23 @@ public class EnemyHealth : MonoBehaviour
 
     void Die()
     {
+        NavMeshAgent agent = GetComponent<NavMeshAgent>();
+        if (agent != null)
+        {
+            agent.isStopped = true;
+            agent.enabled = false;
+        }
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null) rb.isKinematic = true;
+
+        Animator anim = GetComponentInChildren<Animator>();
+        if (anim != null) 
+        {
+            anim.SetBool("isMoving", false); 
+            anim.SetTrigger("Die");
+        }
+
         if (AdministradorDeProgreso.Instancia != null)
         {
             AdministradorDeProgreso.Instancia.enemigosMuertos++;
@@ -95,7 +129,6 @@ public class EnemyHealth : MonoBehaviour
         {
             Vector3 posicionSpawn = transform.position;
             RaycastHit hit;
-
             if (Physics.Raycast(transform.position, Vector3.down, out hit, 500f))
             {
                 posicionSpawn = hit.point + Vector3.up * 0.5f; 
@@ -104,46 +137,41 @@ public class EnemyHealth : MonoBehaviour
             float dropRoll = Random.Range(1, 101);
             GameObject recursoAElegir = null;
 
-            // Leemos cómo está el jugador
             bool vidaCritica = playerScript != null && playerScript.currentHealth < 30f;
             bool municionEscasa = weaponScript != null && weaponScript.balasReserva < 12;
             bool municionLlena = weaponScript != null && weaponScript.balasReserva >= 30;
 
-            if (vidaCritica)
-            {
+            if (vidaCritica) {
                 if (dropRoll <= 70) recursoAElegir = prefabDropVida;
                 else if (dropRoll <= 90) recursoAElegir = prefabDropEscudo;
                 else recursoAElegir = prefabDropBalas;
             }
-            else if (municionLlena)
-            {
+            else if (municionLlena) {
                 if (dropRoll <= 60) recursoAElegir = prefabDropEscudo;
                 else recursoAElegir = prefabDropVida;
             }
-            else if (municionEscasa)
-            {
+            else if (municionEscasa) {
                 if (dropRoll <= 70) recursoAElegir = prefabDropBalas;
                 else if (dropRoll <= 90) recursoAElegir = prefabDropEscudo;
                 else recursoAElegir = prefabDropVida;
             }
-            else
-            {
+            else {
                 if (dropRoll <= 50) recursoAElegir = prefabDropBalas;
                 else if (dropRoll <= 80) recursoAElegir = prefabDropEscudo;
                 else recursoAElegir = prefabDropVida;
             }
 
-            if (recursoAElegir != null)
-            {
-                Instantiate(recursoAElegir, posicionSpawn, Quaternion.identity);
-            }
+            if (recursoAElegir != null) Instantiate(recursoAElegir, posicionSpawn, Quaternion.identity);
         }
 
-        if (MapManager.Instance != null)
-        {
-            MapManager.Instance.RegistrarMuerte();
-        }
-        
+        if (MapManager.Instance != null) MapManager.Instance.RegistrarMuerte();
+
+        StartCoroutine(EsperarYDestruir(2.0f));
+    }
+
+    IEnumerator EsperarYDestruir(float tiempo)
+    {
+        yield return new WaitForSeconds(tiempo);
         Destroy(gameObject);
     }
 }
