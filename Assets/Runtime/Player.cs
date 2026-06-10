@@ -63,7 +63,7 @@ public class Player : MonoBehaviour
             Dash = input.Dash.WasPressedThisFrame(),
             Ultimate = input.Ultimate.WasPressedThisFrame(),
             AbilityE = input.AbilityE.WasPressedThisFrame(),
-Melee = input.Melee.WasPressedThisFrame(),
+            Melee = input.Melee.WasPressedThisFrame(),
         };
 
         playerCharacter.UpdateInput(characterInput);
@@ -103,7 +103,6 @@ Melee = input.Melee.WasPressedThisFrame(),
 
     void LateUpdate()
     {
-        // Sincronizar posición del root con el Character
         transform.position = playerCharacter.transform.position;
 
         var deltaTime = Time.deltaTime;

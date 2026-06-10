@@ -9,18 +9,23 @@ public class GameOver : MonoBehaviour
     public TextMeshProUGUI textoPuntos;
     public TextMeshProUGUI textoEnemigos;
     public TextMeshProUGUI textoMejoras;
+    public TextMeshProUGUI textoTitulo;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        if (MapManager.nivelBucle >= 4 && textoTitulo != null)
+        {
+            textoTitulo.text = "¡VICTORIA!";
+        }
         
         MostrarEstadisticas();
     }
 
     void MostrarEstadisticas()
     {
-        // 1. Mostrar el Tiempo
         float t = GameTimer.tiempoTotal;
         int horas = (int)t / 3600;
         int minutos = (int)t / 60 % 60;
