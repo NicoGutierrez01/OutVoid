@@ -19,9 +19,13 @@ public class EventManager : MonoBehaviour
         {
         }
 
-        public int level { set { SetParameter("level", value); } }
-        public int round { set { SetParameter("round", value); } }
-        public int time { set { SetParameter("time", value); } }
+        private int _level;
+        private int _round;
+        private int _time;
+
+        public int level { get { return _level; } set { _level = value; SetParameter("level", value); } }
+        public int round { get { return _round; } set { _round = value; SetParameter("round", value); } }
+        public int time { get { return _time; } set { _time = value; SetParameter("time", value); } }
     }
 
     public class GameOverEvent : AnalyticsEvent

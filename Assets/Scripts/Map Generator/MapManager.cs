@@ -83,14 +83,13 @@ public class MapManager : MonoBehaviour
 
     void Start()
     {
-        bossDerrotado = false;
-        
+        bossDerrotado = false; 
         navSurface = GetComponent<NavMeshSurface>();
         mapaDeGrietas = new bool[gridWidth, gridheaight];
 
-        if (nivelBucle >= 4)
+        if (nivelBucle == 4)
         {
-            rondaActual = 0; 
+            rondaActual = 4; 
             SessionData.level = nivelBucle;
             SessionData.round = rondaActual;
             
@@ -105,7 +104,7 @@ public class MapManager : MonoBehaviour
             Instantiate(playerPrefab, posPlayer, Quaternion.identity);
             SpawnearPortalBoss(); 
             
-            Debug.Log("¡Nivel 4 alcanzado! Batalla final iniciada (Sin rondas).");
+            Debug.Log("¡Nivel 4 alcanzado! Batalla final iniciada.");
         }
         else
         {
@@ -118,7 +117,7 @@ public class MapManager : MonoBehaviour
             ActualizarNavMesh();
             SpawnearElementosDeJuego();
         }
-        
+
         Debug.Log($"Evento 'LevelStart' - Iniciando Nivel {SessionData.level}, Ronda {SessionData.round}");
 
         LevelStartEvent levelStart = new LevelStartEvent
@@ -271,6 +270,8 @@ public class MapManager : MonoBehaviour
     {
         if (lapidaPrefab != null)
         {
+            SpawnearMejoraMenor(); 
+
             if (rondaActual == 3)
             {
                 LevelCompleteEvent levelComplete = new LevelCompleteEvent
@@ -445,22 +446,43 @@ public class MapManager : MonoBehaviour
 
     public void ColapsarMapa()
     {
-        bossDerrotado = true; 
+        bossDerrotado = true;
+        RecordarEventoCompletado(); 
 
+        if (nivelBucle < 4)
+        {
+            nivelBucle++; 
+            SessionData.round = 1; 
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+        else
+        {
+            GameOverEvent winEvent = new GameOverEvent
+            {
+                level = nivelBucle,
+                time = Mathf.FloorToInt(GameTimer.tiempoTotal),
+                win = true 
+            };
+
+            
+            AnalyticsService.Instance.RecordEvent(winEvent);
+            Debug.Log("[Analytics] ¡Victoria registrada!");
+
+            SceneManager.LoadScene("GameOver"); 
+        }
+    }
+    void RecordarEventoCompletado()
+    {
         LevelCompleteEvent levelComplete = new LevelCompleteEvent
         {
             level = SessionData.level,
-            round = SessionData.round, // Esto va a enviar un '4' porque estamos en la fase del Boss
-
-            time = Mathf.FloorToInt(GameTimer.tiempoTotal) 
+            round = SessionData.round,
+            time = Mathf.FloorToInt(GameTimer.tiempoTotal)
         };
+        Debug.Log($"[Analytics] Enviando evento: Nivel={levelComplete.level}, Ronda={levelComplete.round}, Tiempo={levelComplete.time}");
 
         AnalyticsService.Instance.RecordEvent(levelComplete);
-        Debug.Log($"Evento 'LevelComplete' enviado. Nivel: {SessionData.level}, Ronda: {SessionData.round}, Tiempo: {Mathf.FloorToInt(GameTimer.tiempoTotal)}s");
 
-        nivelBucle++; 
-        Debug.Log($"Avanzando al Nivel/Bucle {nivelBucle}. Recargando mapa...");
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        
     }
 }

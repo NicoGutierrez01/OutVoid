@@ -5,7 +5,7 @@ using System.Collections;
 public class WeaponSystem : MonoBehaviour
 {
     [Header("Configuración de Disparo")]
-    public float damage = 20f;
+    public float damage = 500f;
     public float range = 100f; 
     public Transform cam; 
 
