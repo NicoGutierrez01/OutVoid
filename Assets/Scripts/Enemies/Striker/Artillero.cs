@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 public class Artillero : MonoBehaviour
 {
@@ -8,22 +9,18 @@ public class Artillero : MonoBehaviour
 
     [Header("Configuración de Movimiento")]
     public float attackRange = 15f;  
-    public float retreatRange = 5f;  
     
     [Header("Configuración de Disparo")]
     public GameObject projectilePrefab; 
     public Transform firePoint;        
     public float timeBetweenShots = 2f; 
     private float nextShotTime;
+    private bool isReloading = false;
 
     [Header("Seguridad NavMesh")]
     public LayerMask capaObstaculos; 
-    private float tiempoTrabado = 0f;
-
     private bool haAterrizado = false;
     private Animator anim;
-
-    private int estadoActualAnim = -1; 
 
     void Start()
     {
@@ -41,93 +38,75 @@ public class Artillero : MonoBehaviour
 
     void Update()
     {
-        if (haAterrizado && agent.enabled && agent.isOnNavMesh && playerTransform != null)
+        if (!haAterrizado || !agent.enabled || playerTransform == null) return;
+
+        float distance = Vector3.Distance(transform.position, playerTransform.position);
+
+        if (distance > attackRange)
         {
-            if (agent.velocity.sqrMagnitude < 0.2f && !agent.isStopped)
+            // Movimiento
+            agent.isStopped = false;
+            agent.SetDestination(playerTransform.position);
+            anim.SetBool("isMoving", true);
+        }
+        else
+        {
+            // Combate
+            agent.isStopped = true;
+            anim.SetBool("isMoving", false);
+            MirarAlJugador();
+            
+            if (Time.time >= nextShotTime && !isReloading)
             {
-                tiempoTrabado += Time.deltaTime;
-                if (tiempoTrabado > 10f) Destroy(gameObject);
-            }
-            else { tiempoTrabado = 0f; }
-
-            float distance = Vector3.Distance(transform.position, playerTransform.position);
-
-            if (distance > attackRange)
-            {
-                agent.isStopped = false;
-                agent.SetDestination(playerTransform.position);
-                
-                if (estadoActualAnim != 0)
-                {
-                    SetAnimState(true, false);
-                    estadoActualAnim = 0;
-                }
-            }
-            else
-            {
-                agent.isStopped = true;
-                MirarAlJugador();
-                
-                if (estadoActualAnim != 1)
-                {
-                    SetAnimState(false, true);
-                    estadoActualAnim = 1;
-                }
-
-                if (Time.time >= nextShotTime)
-                {
-                    Disparar();
-                    nextShotTime = Time.time + timeBetweenShots;
-                }
+                StartCoroutine(SecuenciaAtaque());
+                nextShotTime = Time.time + timeBetweenShots;
             }
         }
     }
 
-    void SetAnimState(bool walking, bool aiming)
+    IEnumerator SecuenciaAtaque()
     {
-        if (anim != null)
-        {
-            anim.SetBool("isWalking", walking);
-            anim.SetBool("isAiming", aiming);
-        }
+        isReloading = true;
+        anim.SetTrigger("isShooting");
+        
+        // Disparo
+        Vector3 puntoDeMira = playerTransform.position + Vector3.up * 0.5f;
+        firePoint.LookAt(puntoDeMira);
+        Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+
+        yield return new WaitForSeconds(0.8f); 
+        
+        anim.SetTrigger("isRecharge");
+        yield return new WaitForSeconds(1.2f); 
+        
+        isReloading = false;
     }
 
     void MirarAlJugador()
     {
         Vector3 direccion = (playerTransform.position - transform.position).normalized;
         direccion.y = 0; 
-        Quaternion rotacionMirar = Quaternion.LookRotation(direccion);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotacionMirar, Time.deltaTime * 5f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direccion), Time.deltaTime * 5f);
     }
 
-    void Disparar() 
+    public void Morir()
     {
-        if (playerTransform != null)
-        {
-            Vector3 puntoDeMira = playerTransform.position + Vector3.up * 0.5f;
-            firePoint.LookAt(puntoDeMira);
-            Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
-        }
+        anim.SetTrigger("Die");
+        agent.enabled = false;
+        Destroy(gameObject, 2.0f); 
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.GetComponent<Kamikaze>() != null || collision.gameObject.GetComponent<Artillero>() != null) return;
-
         if (!haAterrizado && collision.gameObject.CompareTag("Suelo"))
         {
             NavMeshHit hit;
             if (NavMesh.SamplePosition(transform.position, out hit, 4.0f, NavMesh.AllAreas))
             {
-                if (!Physics.CheckSphere(hit.position, 0.8f, capaObstaculos))
-                {
-                    haAterrizado = true;
-                    agent.enabled = true;
-                    agent.Warp(hit.position);
-
-                    Rigidbody rb = GetComponent<Rigidbody>();
-                    if (rb != null) rb.isKinematic = true;
-                }
+                haAterrizado = true;
+                agent.enabled = true;
+                agent.Warp(hit.position);
+                GetComponent<Rigidbody>().isKinematic = true;
             }
         }
     }
