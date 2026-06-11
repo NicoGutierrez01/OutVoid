@@ -12,6 +12,8 @@ public class MainMenu : MonoBehaviour
     public GameObject panelCarga;
     public GameObject panelConsentimiento; 
 
+    public Animator anim;
+
     [Header("Pantalla de Carga")]
     public Slider barraDeCarga;
     public string nombreEscenaJuego = "Desert"; 
