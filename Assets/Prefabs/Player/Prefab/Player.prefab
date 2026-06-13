@@ -645,12 +645,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ff55f08dde75c244916abed583a9f6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponSystem
-  damage: 20
+  damage: 500
   range: 500
   cam: {fileID: 974036132606901512}
   balasMaximas: 6
   balasActuales: 0
-  balasReserva: 24
+  balasReserva: 3000
   tiempoRecarga: 1.5
   recargando: 0
   gunAnim: {fileID: 7297546130736717265}

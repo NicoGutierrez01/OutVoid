@@ -370,7 +370,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
   agent: {fileID: 7986919050949441940}
   playerTransform: {fileID: 1595652438616190290, guid: 1aca0ea909f45dd4a89bb54dbd47247d, type: 3}
-  playerScript: {fileID: 5481051528254710078, guid: 1aca0ea909f45dd4a89bb54dbd47247d, type: 3}
+  playerScript: {fileID: 0}
   anim: {fileID: 6563635342969747567}
   damgeAmount: 45
   attackRange: 2.5
@@ -381,6 +381,7 @@ MonoBehaviour:
   capaObstaculos:
     serializedVersion: 2
     m_Bits: 0
+  estaVivo: 1
 --- !u!114 &5188010951378959755
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -398,7 +399,7 @@ MonoBehaviour:
   enemyRenderer: {fileID: -7511558181221131132, guid: 978e52d21204d3747a23420b50b095b8, type: 3}
   flashDuration: 0.2
   healthBar: {fileID: 361033141033522978}
-  probabilidadDrop: 80
+  probabilidadDrop: 75
   prefabDropVida: {fileID: 6385839727874418933, guid: 3249ff7a91e8d4b4dad708989be0ec1f, type: 3}
   prefabDropEscudo: {fileID: 3184387657182790489, guid: 23529e97538f6594c9d675702d9ccd2f, type: 3}
   prefabDropBalas: {fileID: 1474640402716526875, guid: 7ae7eb568e709fa43a4916ad208e07e1, type: 3}

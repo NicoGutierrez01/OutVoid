@@ -191,25 +191,25 @@ public class Boss : MonoBehaviour
 
     void Die()
     {
-        if (AdministradorDeProgreso.Instancia != null)
-        {
-            AdministradorDeProgreso.Instancia.enemigosMuertos++;
-            AdministradorDeProgreso.Instancia.puntosTotales += Random.Range(750, 1200);
-        }
+        AnalyticsBridge.EnviarLevelComplete(MapManager.nivelBucle, 4);
 
-        if (bossHealthBarGlobal != null) bossHealthBarGlobal.gameObject.SetActive(false);
+        MapManager.nivelBucle++; 
+        
+        MapManager.Instance.rondaActual = 1;
 
         if (MapManager.Instance != null)
         {
-            //MapManager.Instance.ColapsarMapa();
+            MapManager.Instance.ColapsarMapa();
         }
 
         BossLootSpawner lootSpawner = GetComponent<BossLootSpawner>();
+        
         if (lootSpawner != null)
         {
+            Debug.Log("Intentando spawnear loot del Boss");
             lootSpawner.SpawnearRecompensas();
         }
 
-        Destroy(gameObject);
+        Destroy(gameObject, 0.5f);
     }
 }

@@ -10,164 +10,170 @@ using static EventManager;
 
 public class MapManager : MonoBehaviour
 {
+    #region Variables y Referencias
     [Header("Ajustes del Mapa")]
-    public int gridWidth = 5; 
-    public int gridheaight = 5;
+    public int gridWidth = 5; public int gridheaight = 5;
     public float tileSize = 50f;
-
-    [Header("Prefabs de Suelo Base")]
-    public GameObject tileBaseLiso;
-    public GameObject tileBaseRugoso;
-
-    [Header("Lista de Tiles")]
-    public List<GameObject> tilesDunes;
-    public List<GameObject> tilesRifts;
-
-    [Header("Prefab de Montañas Único")]
+    public GameObject tileBaseLiso, tileBaseRugoso;
+    public List<GameObject> tilesDunes, tilesRifts;
     public GameObject prefabAnilloMontañas;
     public Vector3 positionMontains;
 
-    [Header("Probabilidades (0 a 1)")]
+    [Header("Probabilidades")]
     [Range(0f, 1f)] public float chanceRugoso = 0.8f;
     [Range(0f, 1f)] public float chanceDunes = 0.4f;
     [Range(0f, 1f)] public float chanceRifts = 0.1f;
 
-    [Header("Player & Enemys")]
-    public GameObject playerPrefab;
-    public GameObject portalEnemigoPrefab;
+    [Header("Player & Enemigos")]
+    public GameObject playerPrefab, portalEnemigoPrefab;
     public LayerMask capaSuelo;
 
-    [Header("Configuración del Boss")]
-    public GameObject lapidaPrefab;
+    [Header("Boss Settings")]
+    public GameObject lapidaPrefab, portalBossPrefab, bossPrefab;
     public int enemigosParaJefe = 15;
-    public int contadorMuertes = 0;
+    public int enemigosMuertosActuales = 0;
     private GameObject lapidaInstanciada;
     private Vector3 posicionLapida = new Vector3(95f, 0.2f, 100f);
-
-    [Header("Boss Portal Settings")]
-    public GameObject portalBossPrefab; 
     public Vector3 alturaPortalBoss = new Vector3(95f, 40f, 100f);
-
-    [Header("Gestión de Portales")]
-    private List<GameObject> portalesActivos = new List<GameObject>();
-
-    [Header("Ajustes del Boss")]
-    public GameObject bossPrefab; 
     public float retrasoSpawnBoss = 2f;
 
-    [Header("Sistema de Bucle")]
-    public static int nivelBucle = 1; 
+    [Header("Sistema de Rondas y Bucle")]
+    public static int nivelBucle = 1;
     public static bool bossDerrotado = false;
-
-    [Header("UI y Progreso")]
-    public TextMeshProUGUI textoProgresoMuertes;
-    public int enemigosMuertosActuales = 0;
-
-    [Header("UI de Objetivos (Pop-ups temporizados)")]
-    public GameObject popupInstrucciones;  
-    public GameObject popupLapidaInvocada;
-
-    [Header("Sistema de Rondas")]
     public int rondaActual = 1;
     public int maxRondas = 3;
 
-    [Header("Recompensas de Ronda")]
-    public GameObject prefabContenedorMejora;
-    public MejoraData[] mejorasComunes;
-    public MejoraData[] mejorasRaras;
-    public MejoraData[] mejorasEpicas;
+    [Header("UI")]
+    public TextMeshProUGUI textoProgresoMuertes;
+    public GameObject popupInstrucciones, popupLapidaInvocada;
 
-    public static MapManager Instance;
+    [Header("Recompensas")]
+    public GameObject prefabContenedorMejora;
+    public MejoraData[] mejorasComunes, mejorasRaras, mejorasEpicas;
+
+    private List<GameObject> portalesActivos = new List<GameObject>();
     private bool[,] mapaDeGrietas;
     private NavMeshSurface navSurface;
+    public static MapManager Instance;
+    #endregion
+
+    #region Ciclo de Vida
+    void Awake() 
+    { 
+        Instance = this; 
+    }
 
     void Start()
     {
-        bossDerrotado = false; 
+        bossDerrotado = false;
         navSurface = GetComponent<NavMeshSurface>();
         mapaDeGrietas = new bool[gridWidth, gridheaight];
 
-        if (nivelBucle == 4)
+        if (nivelBucle >= 4) 
         {
-            rondaActual = 4; 
-            SessionData.level = nivelBucle;
-            SessionData.round = rondaActual;
-            
-            enemigosParaJefe = 0;
-            enemigosMuertosActuales = 0;
-            ActualizarTextoProgreso();
-            
-            GenerarMapa();
-            ActualizarNavMesh();
-
-            Vector3 posPlayer = new Vector3(2 * tileSize, 2f, 2 * tileSize);
-            Instantiate(playerPrefab, posPlayer, Quaternion.identity);
-            SpawnearPortalBoss(); 
-            
-            Debug.Log("¡Nivel 4 alcanzado! Batalla final iniciada.");
+            InicializarNivelBoss();
         }
-        else
-        {
-            rondaActual = 1; 
-            SessionData.level = nivelBucle;
-            SessionData.round = rondaActual;
+        else 
+        InicializarRondaNormal();
 
-            ConfigurarRonda(); 
-            GenerarMapa();
-            ActualizarNavMesh();
-            SpawnearElementosDeJuego();
-        }
-
-        Debug.Log($"Evento 'LevelStart' - Iniciando Nivel {SessionData.level}, Ronda {SessionData.round}");
-
-        LevelStartEvent levelStart = new LevelStartEvent
-        {
-            level = SessionData.level,
-            round = SessionData.round
-        };
-
-        AnalyticsService.Instance.RecordEvent(levelStart);
-
-        if (nivelBucle == 1 && popupInstrucciones != null) 
-        {
-            StartCoroutine(ManejarPopupInstrucciones(5f));
-        }
-        else if (popupInstrucciones != null) 
-        {
-            popupInstrucciones.SetActive(false);
-        }
-
-        if (popupLapidaInvocada != null) popupLapidaInvocada.SetActive(false);
+        AnalyticsBridge.EnviarLevelStart(SessionData.level, rondaActual);
     }
+    #endregion
 
-    void ConfigurarRonda()
+    #region Logica del Loop de Juego
+    public void RegistrarMuerte()
     {
-        enemigosMuertosActuales = 0;
-        enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10); 
-        
+        if (rondaActual >= 4) return;
+        enemigosMuertosActuales++;
         ActualizarTextoProgreso();
-        Debug.Log($"Iniciando Ronda {rondaActual}. Objetivo: {enemigosParaJefe} enemigos.");
-    }
-    void AvanzarRonda()
-    {
-        LevelCompleteEvent levelComplete = new LevelCompleteEvent
+
+        if (enemigosMuertosActuales >= enemigosParaJefe)
         {
-            level = SessionData.level,
-            round = SessionData.round,
-            time = Mathf.FloorToInt(GameTimer.tiempoTotal)
-        };
-        AnalyticsService.Instance.RecordEvent(levelComplete);
+            AnalyticsBridge.EnviarLevelComplete(SessionData.level, rondaActual);
+            if (rondaActual < 3)
+            {
+                AvanzarRonda();
+            }
+            else
+            {
+                SpawnearLapida();
+            }
+        }
+    }
 
+    private void AvanzarRonda()
+    {
         SpawnearMejoraMenor();
-
         rondaActual++;
         SessionData.round = rondaActual;
         ConfigurarRonda();
-
-        LevelStartEvent levelStart = new LevelStartEvent { level = SessionData.level, round = SessionData.round };
-        AnalyticsService.Instance.RecordEvent(levelStart);
-
+        AnalyticsBridge.EnviarLevelStart(SessionData.level, rondaActual);
         if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));
+    }
+
+    private void InicializarRondaNormal()
+    {
+        rondaActual = 1;
+        SessionData.level = nivelBucle;
+        SessionData.round = rondaActual;
+        ConfigurarRonda();
+        GenerarMapa();
+        ActualizarNavMesh();
+        SpawnearElementosDeJuego();
+    }
+
+    private void InicializarNivelBoss()
+    {
+        rondaActual = 4;
+        SessionData.level = nivelBucle;
+        SessionData.round = rondaActual;
+        enemigosParaJefe = 0;
+        GenerarMapa();
+        ActualizarNavMesh();
+        Instantiate(playerPrefab, new Vector3(2 * tileSize, 2f, 2 * tileSize), Quaternion.identity);
+        SpawnearPortalBoss();
+    }
+
+    public void ColapsarMapa()
+    {
+        foreach (Transform child in transform) {
+            Destroy(child.gameObject);
+        }
+
+        if (nivelBucle > 4) 
+        {
+            SceneManager.LoadScene("GameOver");
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+    }
+    #endregion
+
+    #region Generacion y Helpers
+    void ConfigurarRonda() 
+    { 
+        enemigosMuertosActuales = 0; 
+        enemigosParaJefe = (1 * rondaActual) + ((nivelBucle - 1) * 10); 
+    }
+
+    void SpawnearLapida()
+    {
+        if (lapidaInstanciada != null) return; 
+
+        if (nivelBucle < 4) 
+        {
+            SpawnearMejoraMenor();
+        }
+
+        rondaActual = 4;
+        SessionData.round = rondaActual;
+        
+        AnalyticsBridge.EnviarLevelStart(SessionData.level, 4);
+
+        lapidaInstanciada = Instantiate(lapidaPrefab, posicionLapida, Quaternion.identity);
+        DesactivarPortalesComunes();
     }
     void SpawnearMejoraMenor()
     {
@@ -217,104 +223,42 @@ public class MapManager : MonoBehaviour
         return (lista != null && lista.Length > 0) ? lista[Random.Range(0, lista.Length)] : null;
     }
 
-    System.Collections.IEnumerator ManejarPopupInstrucciones(float tiempo)
+    void ActualizarNavMesh()
     {
-        popupInstrucciones.SetActive(true);
-        yield return new WaitForSeconds(tiempo);
-        popupInstrucciones.SetActive(false);
+        if (navSurface != null) navSurface.BuildNavMesh();
     }
 
-    System.Collections.IEnumerator ManejarPopupLapida(float tiempo)
+    void SpawnearElementosDeJuego()
     {
-        popupLapidaInvocada.SetActive(true);
-        yield return new WaitForSeconds(tiempo);
-        popupLapidaInvocada.SetActive(false);
+        Vector3 posPlayer = new Vector3(2* tileSize, 2f, 2 * tileSize);
+        Instantiate(playerPrefab, posPlayer, Quaternion.identity);
+        SpawnearPortales();
     }
 
-    
-
-    public void RegistrarMuerte()
+    void SpawnearPortales()
     {
-        enemigosMuertosActuales++;
-        ActualizarTextoProgreso();
-
-        if (textoProgresoMuertes != null)
+        Vector3[] puntosExactos = new Vector3[]
         {
-            StopCoroutine("AnimacionPopUp"); 
-            StartCoroutine("AnimacionPopUp");
-        }
+            new Vector3(25f, 15f, 25f),   
+            new Vector3(25f, 15f, 175f),  
+            new Vector3(175f, 15f, 175f), 
+            new Vector3(175f, 15f, 25f)   
+        };
 
-        if (enemigosMuertosActuales >= enemigosParaJefe)
+        foreach (Vector3 pos in puntosExactos)
         {
-            if (rondaActual < maxRondas)
-            {
-                AvanzarRonda();
-            }
-            else if (lapidaInstanciada == null) 
-            {
-                SpawnearLapida();
-            }
+            GameObject nuevoPortal = Instantiate(portalEnemigoPrefab, pos, Quaternion.identity);
+            portalesActivos.Add(nuevoPortal); 
         }
     }
 
-    void ActualizarTextoProgreso()
+    public void DesactivarPortalesComunes()
     {
-        if (textoProgresoMuertes != null)
+        foreach (GameObject portal in portalesActivos)
         {
-            int muertesVisuales = Mathf.Min(enemigosMuertosActuales, enemigosParaJefe);
-            textoProgresoMuertes.text = "Matados: " + muertesVisuales + " / " + enemigosParaJefe;
+            if (portal != null) portal.SetActive(false); 
         }
-    }
-
-    void SpawnearLapida()
-    {
-        if (lapidaPrefab != null)
-        {
-            SpawnearMejoraMenor(); 
-
-            if (rondaActual == 3)
-            {
-                LevelCompleteEvent levelComplete = new LevelCompleteEvent
-                {
-                    level = SessionData.level,
-                    round = SessionData.round,
-                    time = Mathf.FloorToInt(GameTimer.tiempoTotal)
-                };
-                AnalyticsService.Instance.RecordEvent(levelComplete);
-
-                rondaActual = 4;
-                SessionData.round = rondaActual;
-
-                LevelStartEvent levelStart = new LevelStartEvent
-                {
-                    level = SessionData.level,
-                    round = SessionData.round
-                };
-                AnalyticsService.Instance.RecordEvent(levelStart);
-                Debug.Log($"[Analytics] Fase de Boss Iniciada - Nivel {SessionData.level}, Ronda {SessionData.round}");
-            }
-
-            lapidaInstanciada = Instantiate(lapidaPrefab, posicionLapida, Quaternion.identity);
-            DesactivarPortalesComunes(); 
-
-            if (popupInstrucciones != null) popupInstrucciones.SetActive(false);
-            if (popupLapidaInvocada != null) 
-            {
-                StartCoroutine(ManejarPopupLapida(2f));
-            }
-        }
-    }
-
-    public void SpawnearPortalBoss()
-    {
-        if (portalBossPrefab != null)
-        {
-            if (popupLapidaInvocada != null) popupLapidaInvocada.SetActive(false);
-
-            GameObject portal = Instantiate(portalBossPrefab, alturaPortalBoss, Quaternion.identity);
-            portal.transform.localScale = Vector3.one * 5f; 
-            StartCoroutine(SecuenciaSpawnBoss(portal));
-        }
+        portalesActivos.Clear(); 
     }
 
     void GenerarMapa()
@@ -375,50 +319,9 @@ public class MapManager : MonoBehaviour
         if (x > 0 && z > 0 && mapaDeGrietas[x - 1, z - 1]) return true;
         return false;
     }
+    #endregion
 
-    void ActualizarNavMesh()
-    {
-        if (navSurface != null) navSurface.BuildNavMesh();
-    }
-
-    void SpawnearElementosDeJuego()
-    {
-        Vector3 posPlayer = new Vector3(2* tileSize, 2f, 2 * tileSize);
-        Instantiate(playerPrefab, posPlayer, Quaternion.identity);
-        SpawnearPortales();
-    }
-
-    void SpawnearPortales()
-    {
-        Vector3[] puntosExactos = new Vector3[]
-        {
-            new Vector3(25f, 15f, 25f),   
-            new Vector3(25f, 15f, 175f),  
-            new Vector3(175f, 15f, 175f), 
-            new Vector3(175f, 15f, 25f)   
-        };
-
-        foreach (Vector3 pos in puntosExactos)
-        {
-            GameObject nuevoPortal = Instantiate(portalEnemigoPrefab, pos, Quaternion.identity);
-            portalesActivos.Add(nuevoPortal); 
-        }
-    }
-
-    public void DesactivarPortalesComunes()
-    {
-        foreach (GameObject portal in portalesActivos)
-        {
-            if (portal != null) portal.SetActive(false); 
-        }
-        portalesActivos.Clear(); 
-    }
-
-    void Awake()
-    {
-        Instance = this; 
-    }
-
+    #region Corrutinas y UI
     System.Collections.IEnumerator AnimacionPopUp()
     {
         Vector3 escalaOriginal = Vector3.one;
@@ -430,6 +333,20 @@ public class MapManager : MonoBehaviour
             textoProgresoMuertes.transform.localScale = Vector3.Lerp(Vector3.one * 1.4f, escalaOriginal, t);
             yield return null;
         }
+    }
+
+    System.Collections.IEnumerator ManejarPopupInstrucciones(float tiempo)
+    {
+        popupInstrucciones.SetActive(true);
+        yield return new WaitForSeconds(tiempo);
+        popupInstrucciones.SetActive(false);
+    }
+
+    System.Collections.IEnumerator ManejarPopupLapida(float tiempo)
+    {
+        popupLapidaInvocada.SetActive(true);
+        yield return new WaitForSeconds(tiempo);
+        popupLapidaInvocada.SetActive(false);
     }
 
     System.Collections.IEnumerator SecuenciaSpawnBoss(GameObject portal)
@@ -444,45 +361,25 @@ public class MapManager : MonoBehaviour
         Destroy(portal); 
     }
 
-    public void ColapsarMapa()
+    void ActualizarTextoProgreso()
     {
-        bossDerrotado = true;
-        RecordarEventoCompletado(); 
-
-        if (nivelBucle < 4)
+        if (textoProgresoMuertes != null)
         {
-            nivelBucle++; 
-            SessionData.round = 1; 
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
-        else
-        {
-            GameOverEvent winEvent = new GameOverEvent
-            {
-                level = nivelBucle,
-                time = Mathf.FloorToInt(GameTimer.tiempoTotal),
-                win = true 
-            };
-
-            
-            AnalyticsService.Instance.RecordEvent(winEvent);
-            Debug.Log("[Analytics] ¡Victoria registrada!");
-
-            SceneManager.LoadScene("GameOver"); 
+            int muertesVisuales = Mathf.Min(enemigosMuertosActuales, enemigosParaJefe);
+            textoProgresoMuertes.text = "Matados: " + muertesVisuales + " / " + enemigosParaJefe;
         }
     }
-    void RecordarEventoCompletado()
+
+    public void SpawnearPortalBoss()
     {
-        LevelCompleteEvent levelComplete = new LevelCompleteEvent
+        if (portalBossPrefab != null)
         {
-            level = SessionData.level,
-            round = SessionData.round,
-            time = Mathf.FloorToInt(GameTimer.tiempoTotal)
-        };
-        Debug.Log($"[Analytics] Enviando evento: Nivel={levelComplete.level}, Ronda={levelComplete.round}, Tiempo={levelComplete.time}");
+            if (popupLapidaInvocada != null) popupLapidaInvocada.SetActive(false);
 
-        AnalyticsService.Instance.RecordEvent(levelComplete);
-
-        
+            GameObject portal = Instantiate(portalBossPrefab, alturaPortalBoss, Quaternion.identity);
+            portal.transform.localScale = Vector3.one * 5f; 
+            StartCoroutine(SecuenciaSpawnBoss(portal));
+        }
     }
+    #endregion
 }
