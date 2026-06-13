@@ -525,7 +525,7 @@ MonoBehaviour:
   enemyRenderer: {fileID: 0}
   flashDuration: 0.2
   healthBar: {fileID: 6940792153036196235}
-  probabilidadDrop: 35
+  probabilidadDrop: 75
   prefabDropVida: {fileID: 6385839727874418933, guid: 3249ff7a91e8d4b4dad708989be0ec1f, type: 3}
   prefabDropEscudo: {fileID: 3184387657182790489, guid: 23529e97538f6594c9d675702d9ccd2f, type: 3}
   prefabDropBalas: {fileID: 1474640402716526875, guid: 7ae7eb568e709fa43a4916ad208e07e1, type: 3}

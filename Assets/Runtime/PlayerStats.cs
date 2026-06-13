@@ -82,13 +82,10 @@ public class PlayerStats : MonoBehaviour
     {
         Debug.Log("El jugador ha muerto. Enviando evento GameOver y pasando a la pantalla...");
 
-        SessionData.win = false; 
-
         GameOverEvent gameOverEvent = new GameOverEvent
         {
             level = SessionData.level,
             time = Mathf.FloorToInt(GameTimer.tiempoTotal), 
-            win = SessionData.win,
             avatar = SessionData.avatar,
             weapon = SessionData.weapon,
             enemy = SessionData.enemy 

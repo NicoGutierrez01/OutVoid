@@ -8,7 +8,6 @@ public class StaticVariables : MonoBehaviour
         public static int round = 1;
         public static int time = 0; 
 
-        public static bool win = false;
         public static string avatar = "Default"; 
         public static string weapon = "Revolver";
         public static string enemy = "Ninguno"; 

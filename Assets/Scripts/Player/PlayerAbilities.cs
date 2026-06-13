@@ -26,10 +26,10 @@ public class PlayerAbilities : MonoBehaviour
     public bool canDash = true;
 
     [Header("Melee")]
-public float meleeDamage = 35f;
-public float meleeRange = 2f;
-public float meleeCooldown = 0.5f;
-public bool canMelee = true;
+    public float meleeDamage = 35f;
+    public float meleeRange = 2f;
+    public float meleeCooldown = 0.5f;
+    public bool canMelee = true;
 
     [Header("Configuración Habilidades")]
     public GameObject dynamitePrefab;
@@ -130,7 +130,7 @@ public bool canMelee = true;
         if (auraIzquierda != null) auraIzquierda.SetActive(true);
 
         float originalDamage = weaponScript.damage;
-        weaponScript.damage *= 1.5f;
+        weaponScript.damage *= 1.2f;
         weaponScript.isUltActive = true;
 
         yield return new WaitForSeconds(ultDuration);
@@ -149,7 +149,6 @@ public bool canMelee = true;
     {
         canDash = false;
 
-        // Aumenta el FOV al comenzar el dash
         if (playerCamera != null)
             playerCamera.SetDashFOV(10f);
 
@@ -165,7 +164,6 @@ public bool canMelee = true;
 
             yield return new WaitForSeconds(dashDuration);
 
-            // Restaura el FOV al terminar el dash
             if (playerCamera != null)
                 playerCamera.ResetFOV();
 
@@ -195,29 +193,29 @@ public bool canMelee = true;
         canDash = true;
     }
     IEnumerator UseMelee()
-{
-    canMelee = false;
-
-    Ray ray = new Ray(cam.position, cam.forward);
-    RaycastHit hit;
-
-    if (Physics.Raycast(ray, out hit, meleeRange))
     {
-        EnemyHealth enemy = hit.transform.GetComponent<EnemyHealth>();
-        if (enemy != null)
-            enemy.TakeDamage(meleeDamage);
+        canMelee = false;
 
-        Boss boss = hit.transform.GetComponent<Boss>();
-        if (boss != null)
-            boss.TakeDamage(meleeDamage);
+        Ray ray = new Ray(cam.position, cam.forward);
+        RaycastHit hit;
 
-        MiniCube minion = hit.transform.GetComponent<MiniCube>();
-        if (minion != null)
-            minion.TakeDamage(meleeDamage);
+        if (Physics.Raycast(ray, out hit, meleeRange))
+        {
+            EnemyHealth enemy = hit.transform.GetComponent<EnemyHealth>();
+            if (enemy != null)
+                enemy.TakeDamage(meleeDamage);
+
+            Boss boss = hit.transform.GetComponent<Boss>();
+            if (boss != null)
+                boss.TakeDamage(meleeDamage);
+
+            MiniCube minion = hit.transform.GetComponent<MiniCube>();
+            if (minion != null)
+                minion.TakeDamage(meleeDamage);
+        }
+
+        yield return new WaitForSeconds(meleeCooldown);
+
+        canMelee = true;
     }
-
-    yield return new WaitForSeconds(meleeCooldown);
-
-    canMelee = true;
-}
 }
