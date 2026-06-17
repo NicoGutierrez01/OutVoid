@@ -4,7 +4,7 @@ Out-Void es una experiencia FPS (First Person Shooter) Roguelike para un jugador
 Tecnologías Utilizadas
 Motor: Unity
 
-Lenguajes: C#, C++
+Lenguajes: C#
 
 Control de Versiones: Git
 
