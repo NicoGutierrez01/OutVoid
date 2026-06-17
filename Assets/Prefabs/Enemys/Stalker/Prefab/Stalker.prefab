@@ -522,8 +522,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   agent: {fileID: 0}
   maxHealth: 90
-  enemyRenderer: {fileID: 0}
-  flashDuration: 0.2
+  flashDuration: 0.05
   healthBar: {fileID: 6940792153036196235}
   probabilidadDrop: 75
   prefabDropVida: {fileID: 6385839727874418933, guid: 3249ff7a91e8d4b4dad708989be0ec1f, type: 3}

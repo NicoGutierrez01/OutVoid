@@ -43,14 +43,12 @@ public class PlayerHUD : MonoBehaviour
             healthSlider.value = player.currentHealth;
         }
 
-        // --- CAMBIO ACÁ: Sumamos vida + escudo para el texto numérico ---
         float vidaTotal = player.currentHealth + player.currentShield;
         
         healthText.text = " " + vidaTotal.ToString("F0");
         
         if (vidaTotal < 30) healthText.color = Color.red;
         else healthText.color = Color.white;
-        // ----------------------------------------------------------------
 
         ActualizarEscudoVisual();
 
@@ -66,7 +64,6 @@ public class PlayerHUD : MonoBehaviour
             else ammoText.color = Color.white;
         }
 
-        // --- LÓGICA DE TEXTO DE RONDAS Y NIVELES ---
         if (textoObjetivo != null && MapManager.Instance != null)
         {
             int ronda = MapManager.Instance.rondaActual;

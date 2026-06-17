@@ -100,7 +100,6 @@ public class WeaponSystem : MonoBehaviour
             if (enemy != null)
             {
                 enemy.TakeDamage(damage);
-                if (tieneFuego && Random.value <= 0.25f) enemy.Quemar();
             }
 
             Boss boss = hit.transform.GetComponent<Boss>();
