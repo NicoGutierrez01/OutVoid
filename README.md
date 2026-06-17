@@ -11,7 +11,7 @@ Control de Versiones: Git
 Características Principales
 Generación Procedimental: Biomas generados de forma aleatoria para asegurar una experiencia de juego única en cada partida.
 
-Sistema de Combate: Lógica de enemigos y mecánicas core implementadas en C# y C++.
+Sistema de Combate: Lógica de enemigos y mecánicas core implementadas en C#.
 
 Optimización: Enfoque en el mantenimiento de tasas de cuadros estables y fluidez de juego.
 
