@@ -376,7 +376,6 @@ MonoBehaviour:
   attackRange: 2.5
   explosionRadius: 8
   tiempoParaExplotar: 2.5
-  kamikazeRenderer: {fileID: -7511558181221131132, guid: 978e52d21204d3747a23420b50b095b8, type: 3}
   particulasExplosion: {fileID: 8677464401101943085, guid: e191a57195ec41248a00e9d78c5da308, type: 3}
   capaObstaculos:
     serializedVersion: 2
@@ -396,8 +395,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   agent: {fileID: 0}
   maxHealth: 70
-  enemyRenderer: {fileID: -7511558181221131132, guid: 978e52d21204d3747a23420b50b095b8, type: 3}
-  flashDuration: 0.2
+  flashDuration: 0.05
   healthBar: {fileID: 361033141033522978}
   probabilidadDrop: 75
   prefabDropVida: {fileID: 6385839727874418933, guid: 3249ff7a91e8d4b4dad708989be0ec1f, type: 3}

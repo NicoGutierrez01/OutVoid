@@ -21,7 +21,6 @@ public class ItemRecurso : MonoBehaviour
 
     void AplicarRecurso(GameObject player)
     {
-        // ACTUALIZADO: Buscamos PlayerStats en lugar de PlayerMovement
         var stats = player.GetComponent<PlayerStats>();
         var weapon = player.GetComponent<WeaponSystem>();
         var hud = Object.FindAnyObjectByType<PlayerHUD>(); 

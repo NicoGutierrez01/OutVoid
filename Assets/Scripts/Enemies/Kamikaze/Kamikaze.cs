@@ -16,10 +16,8 @@ public class Kamikaze : MonoBehaviour
     public float tiempoParaExplotar = 3f;
 
     [Header("Efectos Visuales")]
-    public Renderer kamikazeRenderer; 
+    private SkinnedMeshRenderer[] renderers;
     public GameObject particulasExplosion; 
-    private MaterialPropertyBlock propBlock;
-    private Color originalColor;
 
     [Header("Seguridad NavMesh")]
     public LayerMask capaObstaculos; 
@@ -30,13 +28,11 @@ public class Kamikaze : MonoBehaviour
 
     public bool estaVivo = true;
 
-    void Awake() 
-    { 
-        propBlock = new MaterialPropertyBlock(); 
-    }
 
     void Start()
     {
+        renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
+
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         agent.enabled = false;
 
@@ -49,9 +45,6 @@ public class Kamikaze : MonoBehaviour
             playerTransform = p.transform;
             playerScript = p.GetComponentInParent<PlayerStats>();
         }
-
-        if (kamikazeRenderer != null) 
-            originalColor = kamikazeRenderer.sharedMaterial.color;
     }
 
     void Update()
@@ -88,22 +81,24 @@ public class Kamikaze : MonoBehaviour
     {
         float tiempoPasado = 0f;
         float velocidadParpadeo = 0.3f; 
-        bool colorBlanco = false;
+        bool brilloActivo = false;
 
         while (tiempoPasado < tiempoParaExplotar)
         {
-            if (kamikazeRenderer != null)
-            {
-                propBlock.SetColor("_Color", colorBlanco ? originalColor : Color.white);
-                kamikazeRenderer.SetPropertyBlock(propBlock);
-            }
-            colorBlanco = !colorBlanco; 
+            Color colorEmision = brilloActivo ? Color.white * 8f : Color.black;
 
+            foreach (var r in renderers)
+            {
+                r.material.SetColor("_EmissionColor", colorEmision);
+            }
+            
+            brilloActivo = !brilloActivo; 
             yield return new WaitForSeconds(velocidadParpadeo);
             tiempoPasado += velocidadParpadeo;
-
             velocidadParpadeo = Mathf.Max(0.05f, velocidadParpadeo * 0.85f);
         }
+
+        foreach (var r in renderers) r.material.SetColor("_EmissionColor", Color.black);
 
         if (particulasExplosion != null)
         {
@@ -119,6 +114,7 @@ public class Kamikaze : MonoBehaviour
                 if (player != null) player.TakeDamage(damgeAmount);
             }
         }
+
         Destroy(gameObject);
     }
 

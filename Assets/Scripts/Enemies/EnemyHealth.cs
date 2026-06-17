@@ -9,11 +9,9 @@ public class EnemyHealth : MonoBehaviour
     public float maxHealth = 100f;
     private float currentHealth;
     
-    [Header("Efectos Visuales")]
-    public Renderer enemyRenderer; 
+    [Header("Efectos Visuales")] 
     public float flashDuration = 0.1f;
-    private Color originalColor;
-    private MaterialPropertyBlock propBlock;
+    private SkinnedMeshRenderer[] renderers; 
 
     [Header("UI y Drops de Recursos")]
     public Slider healthBar;
@@ -29,10 +27,11 @@ public class EnemyHealth : MonoBehaviour
 
     private bool isDead = false;
 
-    void Awake() { propBlock = new MaterialPropertyBlock(); }
-
     void Start()
     {
+        // Cada enemigo busca sus propios renderers al spawnear
+        renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
+        
         maxHealth = maxHealth + ((MapManager.nivelBucle - 1) * 25f);
         currentHealth = maxHealth;
 
@@ -44,23 +43,15 @@ public class EnemyHealth : MonoBehaviour
         }
 
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
-        if (enemyRenderer != null) originalColor = enemyRenderer.sharedMaterial.color;
     }
 
-    public void Quemar() { StartCoroutine(EfectoFuego()); }
-
-    IEnumerator EfectoFuego()
+    IEnumerator FlashWhiteRoutine()
     {
-        float damagePerTick = maxHealth * 0.25f / 3f; 
-        for (int i = 0; i < 3; i++)
-        {
-            propBlock.SetColor("_Color", new Color(1f, 0.5f, 0f)); 
-            enemyRenderer.SetPropertyBlock(propBlock);
-            TakeDamage(damagePerTick);
-            yield return new WaitForSeconds(1f);
-        }
-        propBlock.SetColor("_Color", originalColor);
-        enemyRenderer.SetPropertyBlock(propBlock);
+        EncenderBrillo(Color.white * 5f); 
+        
+        yield return new WaitForSeconds(flashDuration);
+
+        ApagarBrillo();
     }
 
     public void TakeDamage(float amount)
@@ -68,15 +59,36 @@ public class EnemyHealth : MonoBehaviour
         if (isDead) return;
         currentHealth -= amount;
 
+        StartCoroutine(FlashWhiteRoutine());
+
         if (currentHealth > 0)
         {
             StartCoroutine(StunRoutine());
         }
+        
         if (healthBar != null) healthBar.value = currentHealth;
+        
         if (currentHealth <= 0)
         {
             isDead = true;
+            if(healthBar != null) healthBar.gameObject.SetActive(false);
             Die();
+        }
+    }
+
+    void EncenderBrillo(Color colorBase) 
+    {
+        foreach (var r in renderers) 
+        {
+            if (r != null) r.material.SetColor("_EmissionColor", colorBase);
+        }
+    }
+
+    void ApagarBrillo() 
+    {
+        foreach (var r in renderers) 
+        {
+            if (r != null) r.material.SetColor("_EmissionColor", Color.black);
         }
     }
 
@@ -85,49 +97,26 @@ public class EnemyHealth : MonoBehaviour
         if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
         {
             agent.isStopped = true;
-
             Animator anim = GetComponentInChildren<Animator>();
-            if (anim != null && !anim.GetBool("isDead")) 
-            {
-                anim.SetTrigger("Stun");
-            }
+            if (anim != null && !anim.GetBool("isDead")) anim.SetTrigger("Stun");
             
             yield return new WaitForSeconds(0.3f);
 
             if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
-            {
                 agent.isStopped = false;
-            }
         }
-    }
-
-    IEnumerator FlashRed()
-    {
-        propBlock.SetColor("_Color", Color.red);
-        enemyRenderer.SetPropertyBlock(propBlock);
-        yield return new WaitForSeconds(flashDuration);
-        propBlock.SetColor("_Color", originalColor);
-        enemyRenderer.SetPropertyBlock(propBlock);
     }
 
     void Die()
     {
-        NavMeshAgent agent = GetComponent<NavMeshAgent>();
-        if (agent != null)
-        {
-            agent.isStopped = true;
-            agent.enabled = false;
-        }
-
+        if (agent != null) { agent.isStopped = true; agent.enabled = false; }
+        Collider col = GetComponent<Collider>();
+        if (col != null) col.isTrigger = true;
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null) rb.isKinematic = true;
 
         Animator anim = GetComponentInChildren<Animator>();
-        if (anim != null) 
-        {
-            anim.SetBool("isMoving", false); 
-            anim.SetTrigger("Die");
-        }
+        if (anim != null) { anim.SetBool("isMoving", false); anim.SetTrigger("Die"); }
 
         if (AdministradorDeProgreso.Instancia != null)
         {
@@ -135,20 +124,14 @@ public class EnemyHealth : MonoBehaviour
             AdministradorDeProgreso.Instancia.puntosTotales += Random.Range(120, 350); 
         }
         
-        if (healthPerKillActive && playerScript != null) 
-        {
-            playerScript.maxHealth += 1f; 
-            playerScript.Heal(1f); 
-        }
+        if (healthPerKillActive && playerScript != null) { playerScript.maxHealth += 1f; playerScript.Heal(1f); }
 
         if (Random.value * 100 <= probabilidadDrop)
         {
             Vector3 posicionSpawn = transform.position;
             RaycastHit hit;
             if (Physics.Raycast(transform.position, Vector3.down, out hit, 500f))
-            {
                 posicionSpawn = hit.point + Vector3.up * 0.5f; 
-            }
 
             float dropRoll = Random.Range(1, 101);
             GameObject recursoAElegir = null;
