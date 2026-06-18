@@ -5,7 +5,8 @@ using System.Collections;
 public class WeaponSystem : MonoBehaviour
 {
     [Header("Configuración de Disparo")]
-    public float damage = 500f;
+    public float damage = 20f;
+    private bool r2EstabaPresionado = false;
     public float range = 100f; 
     public Transform cam; 
 
@@ -48,27 +49,51 @@ public class WeaponSystem : MonoBehaviour
     }
 
     void Update()
+    
     {
+       bool r2RecienPresionado = false;
+
+if (Gamepad.current != null)
+{
+    bool r2Presionado = Gamepad.current.rightTrigger.ReadValue() > 0.5f;
+
+    r2RecienPresionado = r2Presionado && !r2EstabaPresionado;
+    r2EstabaPresionado = r2Presionado;
+}
         if (recargando) return;
 
-        if (Mouse.current.leftButton.wasPressedThisFrame && Time.time >= proximoTiempoDisparo)
-        {
-            if (balasActuales > 0 || isUltActive)
-            {
-                Disparar();
-                float cadenciaActual = isUltActive ? fireRate * 0.75f : fireRate;
-                proximoTiempoDisparo = Time.time + cadenciaActual; 
-            }
-            else if (!recargando && balasReserva > 0)
-            {
-                StartCoroutine(RutinaRecarga());
-            }
-        }
+if (
+    (
+        (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        || r2RecienPresionado
+    )
+    && Time.time >= proximoTiempoDisparo
+)
+{
+    if (balasActuales > 0 || isUltActive)
+    {
+        Disparar();
 
-        if (Keyboard.current.rKey.wasPressedThisFrame && balasActuales < balasMaximas && balasReserva > 0 && !recargando)
-        {
-            StartCoroutine(RutinaRecarga());
-        }
+        float cadenciaActual = isUltActive ? fireRate * 0.75f : fireRate;
+        proximoTiempoDisparo = Time.time + cadenciaActual;
+    }
+    else if (!recargando && balasReserva > 0)
+    {
+        StartCoroutine(RutinaRecarga());
+    }
+}
+
+        if (
+    (Keyboard.current.rKey.wasPressedThisFrame ||
+     Gamepad.current != null && Gamepad.current.buttonWest.wasPressedThisFrame)
+    &&
+    balasActuales < balasMaximas &&
+    balasReserva > 0 &&
+    !recargando
+)
+{
+    StartCoroutine(RutinaRecarga());
+}   
     }
 
     void Disparar()
@@ -100,6 +125,7 @@ public class WeaponSystem : MonoBehaviour
             if (enemy != null)
             {
                 enemy.TakeDamage(damage);
+
             }
 
             Boss boss = hit.transform.GetComponent<Boss>();
