@@ -1,55 +1,64 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.UI;
+using System; 
 
 public class AbilitiesHUD : MonoBehaviour
 {
     [Header("Referencias del Player")]
     public PlayerAbilities playerAbilities;
 
-    [Header("UI Dash")]
-    public Image imgDash;
-    public TextMeshProUGUI txtDash;
+    [Serializable]
+    public struct HabilidadUI
+    {
+        public GameObject slotBase;       
+        public GameObject objetoActivo; 
+        public GameObject objetoDesactivado;
+        public TextMeshProUGUI txtCooldown; 
+    }
 
-    [Header("UI Bomb")]
-    public Image imgBomba;
-    public TextMeshProUGUI txtBomba;
-
-    [Header("UI Ulti")]
-    public Image imgUlti;
-    public TextMeshProUGUI txtUlti;
-
-    private Color colorListo = Color.white;
-    private Color colorCooldown = new Color(0.3f, 0.3f, 0.3f, 0.7f);
+    [Header("Configuración de Slots")]
+    public HabilidadUI UI_Dash;
+    public HabilidadUI UI_Bomba;
+    public HabilidadUI UI_Ulti;
 
     void Update()
     {
         if (playerAbilities == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
-if (p != null) playerAbilities = p.GetComponentInChildren<PlayerAbilities>();
+            if (p != null) playerAbilities = p.GetComponentInChildren<PlayerAbilities>();
 
             if (playerAbilities == null) return; 
         }
 
-        ActualizarSlot(playerAbilities.canDash, playerAbilities.dashCooldownTimer, imgDash, txtDash, "Dash", "Shift");
-        ActualizarSlot(playerAbilities.canUseE, playerAbilities.dynamiteCooldownTimer, imgBomba, txtBomba, "Bomb", "E");
-        ActualizarSlot(playerAbilities.canUseQ, playerAbilities.ultCooldownTimer, imgUlti, txtUlti, "Ulti", "Q");
+        ActualizarSlot(playerAbilities.canDash, playerAbilities.dashCooldownTimer, UI_Dash);
+        ActualizarSlot(playerAbilities.canUseE, playerAbilities.dynamiteCooldownTimer, UI_Bomba);
+        ActualizarSlot(playerAbilities.canUseQ, playerAbilities.ultCooldownTimer, UI_Ulti);
     }
 
-    void ActualizarSlot(bool listo, float tiempoRestante, Image img, TextMeshProUGUI texto, string nombreHabilidad, string tecla)
+    void ActualizarSlot(bool listo, float tiempoRestante, HabilidadUI ui)
     {
+        if (ui.objetoActivo == null || ui.objetoDesactivado == null) return;
+
         if (listo)
         {
-            img.color = colorListo;
-            // Usamos \n para hacer el salto de línea y agregamos la tecla entre paréntesis
-            texto.text = nombreHabilidad + "\n(" + tecla + ")";
+            ui.objetoActivo.SetActive(true);
+            ui.objetoDesactivado.SetActive(false);
+            
+            if (ui.txtCooldown != null)
+            {
+                ui.txtCooldown.text = ""; 
+            }
         }
         else
         {
-            img.color = colorCooldown;
-            // Durante el cooldown mostramos el número, hacemos salto de línea y mantenemos la tecla visible
-            texto.text = Mathf.CeilToInt(tiempoRestante).ToString() + "\n(" + tecla + ")";
+            ui.objetoActivo.SetActive(false);
+            ui.objetoDesactivado.SetActive(true);
+            
+            if (ui.txtCooldown != null)
+            {
+                ui.txtCooldown.text = Mathf.CeilToInt(tiempoRestante).ToString();
+            }
         }
     }
 }
