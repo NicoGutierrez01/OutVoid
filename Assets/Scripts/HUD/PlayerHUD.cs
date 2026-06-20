@@ -8,21 +8,35 @@ public class PlayerHUD : MonoBehaviour
     public PlayerStats player;
     public WeaponSystem weapon;
 
-    [Header("UI Vida y Escudo")]
+    [Header("UI Vida Dinámica (Diseño Sliced)")]
     public TextMeshProUGUI healthText;
-    public Slider healthSlider;       
-    public RectTransform shieldBar;    
+    public RectTransform rtForeground; 
+    public RectTransform rtShield;   
+    private Image imgForeground;      
+
+    [Header("Configuración de Colores")]
+    public Color colorVidaNormal = Color.green;
+    public Color colorVidaBaja = Color.red;
 
     [Header("UI Munición")]
     public TextMeshProUGUI ammoText;
 
-    [Header("Objetivos")]
-    public TextMeshProUGUI textoObjetivo;
+    [Header("Objetivos (Dividido en dos componentes)")]
+    public TextMeshProUGUI textoRonda;      
+    public TextMeshProUGUI textoDescripcion; 
 
     [Header("Pop-up de Items")]
     public GameObject popupObjeto; 
     public TextMeshProUGUI popupTexto;
     public float tiempoVisible = 2f;
+
+    void Start()
+    {
+        if (rtForeground != null)
+        {
+            imgForeground = rtForeground.GetComponent<Image>();
+        }
+    }
 
     void Update()
     {
@@ -37,20 +51,58 @@ public class PlayerHUD : MonoBehaviour
             if (player == null || weapon == null) return; 
         }
 
-        if (healthSlider != null)
+        if (rtForeground != null)
         {
-            healthSlider.maxValue = player.maxHealth;
-            healthSlider.value = player.currentHealth;
+            float porcentajeVida = player.currentHealth / player.maxHealth;
+            porcentajeVida = Mathf.Clamp01(porcentajeVida);
+
+            rtForeground.anchorMin = new Vector2(0, 0);
+            rtForeground.anchorMax = new Vector2(porcentajeVida, 1);
+            rtForeground.offsetMin = Vector2.zero;
+            rtForeground.offsetMax = Vector2.zero;
+
+            if (imgForeground != null)
+            {
+                if (player.currentHealth <= 50f)
+                {
+                    imgForeground.color = colorVidaBaja;
+                }
+                else
+                {
+                    imgForeground.color = colorVidaNormal;
+                }
+            }
+        }
+
+        if (rtShield != null)
+        {
+            if (player.currentShield > 0)
+            {
+                rtShield.gameObject.SetActive(true);
+
+                float porcentajeEscudo = player.currentShield / player.maxHealth;
+                float puntoIzquierdo = 1f - porcentajeEscudo;
+
+                rtShield.anchorMin = new Vector2(Mathf.Clamp01(puntoIzquierdo), 0); 
+                rtShield.anchorMax = new Vector2(1f, 1);
+
+                rtShield.offsetMin = Vector2.zero;
+                rtShield.offsetMax = Vector2.zero;
+            }
+            else
+            {
+                rtShield.gameObject.SetActive(false);
+            }
         }
 
         float vidaTotal = player.currentHealth + player.currentShield;
-        
-        healthText.text = " " + vidaTotal.ToString("F0");
-        
-        if (vidaTotal < 30) healthText.color = Color.red;
-        else healthText.color = Color.white;
-
-        ActualizarEscudoVisual();
+        if (healthText != null)
+        {
+            healthText.text = " " + vidaTotal.ToString("F0");
+            
+            if (vidaTotal < 30) healthText.color = Color.red;
+            else healthText.color = Color.white;
+        }
 
         if (weapon.recargando)
         {
@@ -64,57 +116,53 @@ public class PlayerHUD : MonoBehaviour
             else ammoText.color = Color.white;
         }
 
-        if (textoObjetivo != null && MapManager.Instance != null)
+        if (MapManager.Instance != null)
         {
             int ronda = MapManager.Instance.rondaActual;
 
             if (MapManager.nivelBucle >= 4)
             {
-                textoObjetivo.text = "¡BATALLA FINAL! Acaba con el Jefe.";
-                textoObjetivo.color = Color.red;
+                if (textoRonda != null)
+                {
+                    textoRonda.text = "¡ALERTA!";
+                    textoRonda.color = Color.red;
+                }
+                if (textoDescripcion != null)
+                {
+                    textoDescripcion.text = "¡BATALLA FINAL!\nAcaba con el Jefe.";
+                    textoDescripcion.color = Color.red;
+                }
             }
             else if (ronda >= 4)
             {
-                textoObjetivo.text = "¡BATALLA DE JEFE! Busca la tumba y sobrevive.";
-                textoObjetivo.color = Color.red;
+                if (textoRonda != null)
+                {
+                    textoRonda.text = "¡JEFE!";
+                    textoRonda.color = Color.red;
+                }
+                if (textoDescripcion != null)
+                {
+                    textoDescripcion.text = "Busca la tumba\ny sobrevive.";
+                    textoDescripcion.color = Color.red;
+                }
             }
             else
             {
-                int muertos = MapManager.Instance.enemigosMuertosActuales;
-                int meta = MapManager.Instance.enemigosParaJefe;
+                // Estado normal reflejado en la imagen image_6999e1.png
+                if (textoRonda != null)
+                {
+                    textoRonda.text = $"Ronda {ronda}/3";
+                    textoRonda.color = Color.white;
+                }
+                if (textoDescripcion != null)
+                {
+                    int muertos = MapManager.Instance.enemigosMuertosActuales;
+                    int meta = MapManager.Instance.enemigosParaJefe;
 
-                textoObjetivo.text = $"OBJETIVO (Ronda {ronda}/3): Mata enemigos ({muertos} / {meta})";
-                textoObjetivo.color = Color.white;
+                    textoDescripcion.text = $"Mata enemigos\n{muertos} / {meta}";
+                    textoDescripcion.color = Color.white;
+                }
             }
-        }
-    }
-    void ActualizarEscudoVisual()
-    {
-        if (shieldBar == null || healthSlider == null) return;
-
-        float totalActual = player.currentHealth + player.currentShield;
-        
-        healthSlider.maxValue = player.maxHealth + player.currentShield;
-        healthSlider.value = player.currentHealth;
-
-        if (player.currentShield > 0)
-        {
-            shieldBar.gameObject.SetActive(true);
-
-            float totalBarra = player.maxHealth + player.currentShield;
-            float inicioEscudo = player.currentHealth / totalBarra;
-            float finEscudo = (player.currentHealth + player.currentShield) / totalBarra;
-
-            shieldBar.anchorMin = new Vector2(inicioEscudo, 0); 
-            shieldBar.anchorMax = new Vector2(finEscudo, 1);
-
-            shieldBar.offsetMin = Vector2.zero;
-            shieldBar.offsetMax = Vector2.zero;
-        }
-        else
-        {
-            healthSlider.maxValue = player.maxHealth;
-            shieldBar.gameObject.SetActive(false);
         }
     }
 
