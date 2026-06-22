@@ -71,13 +71,13 @@ public class PlayerAbilities : MonoBehaviour
         }
     }
 
-  public void UpdateInput(CharacterInput input)
-{
-    if (input.AbilityE && canUseE) StartCoroutine(UseDynamite());
-    if (input.Ultimate && canUseQ && !isUltActive) StartCoroutine(HandleUltimate());
-    if (input.Dash && canDash) StartCoroutine(GhostDash());
-    if (input.Melee && canMelee) StartCoroutine(UseMelee());
-}
+    public void UpdateInput(CharacterInput input)
+    {
+        if (input.AbilityE && canUseE) StartCoroutine(UseDynamite());
+        if (input.Ultimate && canUseQ && !isUltActive) StartCoroutine(HandleUltimate());
+        if (input.Dash && canDash) StartCoroutine(GhostDash());
+        if (input.Melee && canMelee) StartCoroutine(UseMelee());
+    }
 
     IEnumerator UseDynamite()
     {
@@ -94,28 +94,27 @@ public class PlayerAbilities : MonoBehaviour
 
         canUseE = true;
     }
-void ThrowDynamite()
-{
-    GameObject dyn = Instantiate(dynamitePrefab, muzzle.position, Quaternion.identity);
-
-    Rigidbody rb = dyn.GetComponent<Rigidbody>();
-
-    if (rb != null)
+    void ThrowDynamite()
     {
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
+        GameObject dyn = Instantiate(dynamitePrefab, muzzle.position, Quaternion.identity);
 
-        Vector3 dir = (cam.forward + Vector3.up * 0.2f).normalized;
+        Rigidbody rb = dyn.GetComponent<Rigidbody>();
 
-Vector3 inheritedVelocity = playerCharacter != null ? playerCharacter.GetComponent<Rigidbody>()?.linearVelocity ?? Vector3.zero : Vector3.zero;
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
 
-rb.linearVelocity = inheritedVelocity;
+            Vector3 dir = (cam.forward + Vector3.up * 0.2f).normalized;
 
-rb.AddForce(cam.forward * throwForce, ForceMode.Impulse);
-        // 🔥 CLAVE: limitar rotación inicial
-        rb.maxAngularVelocity = 2f;
+            Vector3 inheritedVelocity = playerCharacter != null ? playerCharacter.GetComponent<Rigidbody>()?.linearVelocity ?? Vector3.zero : Vector3.zero;
+
+            rb.linearVelocity = inheritedVelocity;
+
+            rb.AddForce(cam.forward * throwForce, ForceMode.Impulse);
+                rb.maxAngularVelocity = 2f;
+        }
     }
-}
 
     IEnumerator HandleUltimate()
     {
