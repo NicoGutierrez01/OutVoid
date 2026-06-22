@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.UI; 
+using UnityEngine.UI;
+using Unity.VisualScripting;
 
 public class PlayerHUD : MonoBehaviour
 {
@@ -20,6 +21,17 @@ public class PlayerHUD : MonoBehaviour
 
     [Header("UI Munición")]
     public TextMeshProUGUI ammoText;
+    public Image hit;
+    public Image hit2;
+    public Image hit3;
+    public Image bulletYellow;
+    public float durationHit = 0.1f;
+
+    [Header("UI Damage")]
+    public Image imageDamage;
+    [Range(0f, 1f)]
+    public float alfaMaximo = 0.8f;
+    public float umbralVida = 45f;
 
     [Header("Objetivos (Dividido en dos componentes)")]
     public TextMeshProUGUI textoRonda;      
@@ -106,8 +118,7 @@ public class PlayerHUD : MonoBehaviour
 
         if (weapon.recargando)
         {
-            ammoText.text = "Recargando";
-            ammoText.color = Color.yellow;
+            ammoText.text = "0" +  " / " + weapon.balasReserva;
         }
         else
         {
@@ -148,7 +159,6 @@ public class PlayerHUD : MonoBehaviour
             }
             else
             {
-                // Estado normal reflejado en la imagen image_6999e1.png
                 if (textoRonda != null)
                 {
                     textoRonda.text = $"Ronda {ronda}/3";
@@ -164,11 +174,36 @@ public class PlayerHUD : MonoBehaviour
                 }
             }
         }
+
+        if (imageDamage != null && player != null)
+            {
+                if (player.maxHealth > 0 && player.currentHealth <= player.maxHealth)
+                {
+                    if (player.currentHealth >= umbralVida)
+                    {
+                        Color c = imageDamage.color;
+                        if (c.a != 0f) 
+                        {
+                            c.a = 0f;
+                            imageDamage.color = c;
+                        }
+                    }
+                    else 
+                    {
+                        float cercaniaAMuerte = 1f - (player.currentHealth / umbralVida);
+                        float alphaFinal = cercaniaAMuerte * alfaMaximo;
+
+                        Color c = imageDamage.color;
+                        c.a = Mathf.Clamp01(alphaFinal);
+                        imageDamage.color = c;
+                    }
+                }
+            }
     }
 
     public void MostrarItemRecogido(string nombreItem)
     {
-        StopAllCoroutines(); 
+        StopCoroutine(nameof(EfectoPopup));
         StartCoroutine(EfectoPopup(nombreItem));
     }
 
@@ -180,5 +215,26 @@ public class PlayerHUD : MonoBehaviour
         yield return new WaitForSeconds(tiempoVisible);
         
         popupObjeto.SetActive(false);
+    }
+
+    public void MostrarHitmarker()
+    {
+        StopCoroutine(nameof(EfectoHitmarker)); 
+        StartCoroutine(EfectoHitmarker());
+    }
+
+    private System.Collections.IEnumerator EfectoHitmarker()
+    {
+        if (hit != null) hit.gameObject.SetActive(true);
+        if (hit2 != null) hit2.gameObject.SetActive(true);
+        if (hit3 != null) hit3.gameObject.SetActive(true);
+        if (bulletYellow != null) bulletYellow.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(durationHit);
+
+        if (hit != null) hit.gameObject.SetActive(false);
+        if (hit2 != null) hit2.gameObject.SetActive(false);
+        if (hit3 != null) hit3.gameObject.SetActive(false);
+        if (bulletYellow != null) bulletYellow.gameObject.SetActive(false);
     }
 }
