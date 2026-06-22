@@ -14,8 +14,7 @@ public class WeaponSystem : MonoBehaviour
     public int balasMaximas = 6;
     [HideInInspector] 
     public int balasActuales;
-    
-    // NUEVO: Balas de reserva
+
     public int balasReserva = 24; 
     
     public float tiempoRecarga = 1.5f;
@@ -31,6 +30,12 @@ public class WeaponSystem : MonoBehaviour
     [Header("Cadencia de Tiro")]
     public float fireRate = 0.25f; 
     private float proximoTiempoDisparo = 0f;
+    public ParticleSystem muzzleFlash;
+    public ParticleSystem muzzleFlashIzquierda;
+
+    [Header("Efectos de Impacto (Partículas)")]
+    public GameObject prefabImpactoRobot; 
+    public GameObject prefabImpactoEntorno;
 
     [Header("Mejoras")]
     public bool tieneFuego = false;
@@ -49,51 +54,50 @@ public class WeaponSystem : MonoBehaviour
     }
 
     void Update()
-    
     {
-       bool r2RecienPresionado = false;
+        bool r2RecienPresionado = false;
 
-if (Gamepad.current != null)
-{
-    bool r2Presionado = Gamepad.current.rightTrigger.ReadValue() > 0.5f;
+        if (Gamepad.current != null)
+        {
+            bool r2Presionado = Gamepad.current.rightTrigger.ReadValue() > 0.5f;
 
-    r2RecienPresionado = r2Presionado && !r2EstabaPresionado;
-    r2EstabaPresionado = r2Presionado;
-}
-        if (recargando) return;
-
-if (
-    (
-        (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-        || r2RecienPresionado
-    )
-    && Time.time >= proximoTiempoDisparo
-)
-{
-    if (balasActuales > 0 || isUltActive)
-    {
-        Disparar();
-
-        float cadenciaActual = isUltActive ? fireRate * 0.75f : fireRate;
-        proximoTiempoDisparo = Time.time + cadenciaActual;
-    }
-    else if (!recargando && balasReserva > 0)
-    {
-        StartCoroutine(RutinaRecarga());
-    }
-}
+            r2RecienPresionado = r2Presionado && !r2EstabaPresionado;
+            r2EstabaPresionado = r2Presionado;
+        }
+                if (recargando) return;
 
         if (
-    (Keyboard.current.rKey.wasPressedThisFrame ||
-     Gamepad.current != null && Gamepad.current.buttonWest.wasPressedThisFrame)
-    &&
-    balasActuales < balasMaximas &&
-    balasReserva > 0 &&
-    !recargando
-)
-{
-    StartCoroutine(RutinaRecarga());
-}   
+            (
+                (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+                || r2RecienPresionado
+            )
+            && Time.time >= proximoTiempoDisparo
+        )
+        {
+            if (balasActuales > 0 || isUltActive)
+            {
+                Disparar();
+
+                float cadenciaActual = isUltActive ? fireRate * 0.75f : fireRate;
+                proximoTiempoDisparo = Time.time + cadenciaActual;
+            }
+            else if (!recargando && balasReserva > 0)
+            {
+                StartCoroutine(RutinaRecarga());
+            }
+        }
+
+        if (
+            (Keyboard.current.rKey.wasPressedThisFrame ||
+            Gamepad.current != null && Gamepad.current.buttonWest.wasPressedThisFrame)
+            &&
+            balasActuales < balasMaximas &&
+            balasReserva > 0 &&
+            !recargando
+        )
+        {
+            StartCoroutine(RutinaRecarga());
+        }   
     }
 
     void Disparar()
@@ -102,14 +106,23 @@ if (
 
         if (isUltActive && gunAnimIzquierda != null)
         {
-            if (dispararDerecha) EjecutarAnimacion(gunAnim);
-            else EjecutarAnimacion(gunAnimIzquierda);
+            if (dispararDerecha) 
+            {
+                EjecutarAnimacion(gunAnim);
+                if (muzzleFlash != null) muzzleFlash.Play();
+            }
+            else 
+            {
+                EjecutarAnimacion(gunAnimIzquierda);
+                if (muzzleFlashIzquierda != null) muzzleFlashIzquierda.Play();
+            }
             
             dispararDerecha = !dispararDerecha;
         }
         else
         {
             EjecutarAnimacion(gunAnim);
+            if (muzzleFlash != null) muzzleFlash.Play();
         }
 
         if (cam == null) return;
@@ -121,11 +134,27 @@ if (
         {
             if (hit.transform.CompareTag("Player")) return;
 
+            if (hit.transform.CompareTag("Enemigo") || hit.transform.CompareTag("MinionBoss")) 
+            {
+                if (prefabImpactoRobot != null)
+                {
+                    GameObject chispas = Instantiate(prefabImpactoRobot, hit.point, Quaternion.LookRotation(hit.normal));
+                    Destroy(chispas, 1.5f); 
+                }
+            }
+            else 
+            {
+                if (prefabImpactoEntorno != null)
+                {
+                    GameObject polvo = Instantiate(prefabImpactoEntorno, hit.point, Quaternion.LookRotation(hit.normal));
+                    Destroy(polvo, 1.5f);
+                }
+            }
+
             EnemyHealth enemy = hit.transform.GetComponent<EnemyHealth>();
             if (enemy != null)
             {
                 enemy.TakeDamage(damage);
-
             }
 
             Boss boss = hit.transform.GetComponent<Boss>();
