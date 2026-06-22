@@ -23,13 +23,13 @@ public class EnemyHealth : MonoBehaviour
 
     private PlayerStats playerScript; 
     private WeaponSystem weaponScript;
+    private PlayerHUD playerHUDScript;
     public static bool healthPerKillActive = false; 
 
     private bool isDead = false;
 
     void Start()
     {
-        // Cada enemigo busca sus propios renderers al spawnear
         renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
         
         maxHealth = maxHealth + ((MapManager.nivelBucle - 1) * 25f);
@@ -40,6 +40,7 @@ public class EnemyHealth : MonoBehaviour
         {
             playerScript = playerObj.GetComponentInChildren<PlayerStats>();
             weaponScript = playerObj.GetComponentInChildren<WeaponSystem>();
+            playerHUDScript = Object.FindFirstObjectByType<PlayerHUD>();
         }
 
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
@@ -60,6 +61,8 @@ public class EnemyHealth : MonoBehaviour
         currentHealth -= amount;
 
         StartCoroutine(FlashWhiteRoutine());
+
+        if (playerHUDScript != null) playerHUDScript.MostrarHitmarker();
 
         if (currentHealth > 0)
         {

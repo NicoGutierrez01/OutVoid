@@ -22,6 +22,11 @@ public class PlayerStats : MonoBehaviour
 
     private PlayerHUD _hud;
 
+    private void Awake()
+    {
+        currentHealth = maxHealth;
+    }
+
     public void Initialize()
     {
         _hud = Object.FindAnyObjectByType<PlayerHUD>();
