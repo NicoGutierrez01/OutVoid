@@ -636,7 +636,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &308814863
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1680,6 +1680,7 @@ GameObject:
   - component: {fileID: 688099532}
   - component: {fileID: 688099531}
   - component: {fileID: 688099530}
+  - component: {fileID: 688099533}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -1748,6 +1749,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &688099533
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688099529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 629140eee66744172a6595f02eda7cf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FirstSelectedButton
+  firstButton: {fileID: 588536834}
 --- !u!1 &751841255
 GameObject:
   m_ObjectHideFlags: 0
@@ -2832,6 +2846,7 @@ GameObject:
   - component: {fileID: 1394453997}
   - component: {fileID: 1394453999}
   - component: {fileID: 1394453998}
+  - component: {fileID: 1394454000}
   m_Layer: 5
   m_Name: Panel Opciones
   m_TagString: Untagged
@@ -2901,6 +2916,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1394453996}
   m_CullTransparentMesh: 1
+--- !u!114 &1394454000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1394453996}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0f84456e4dab4c0b94cd5c8ea7df24e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoSelectOnEnable
+  defaultSelection: {fileID: 2068002106}
 --- !u!1 &1439151856
 GameObject:
   m_ObjectHideFlags: 0
@@ -3429,6 +3457,7 @@ GameObject:
   - component: {fileID: 1719235753}
   - component: {fileID: 1719235755}
   - component: {fileID: 1719235754}
+  - component: {fileID: 1719235756}
   m_Layer: 5
   m_Name: Panel Principal
   m_TagString: Untagged
@@ -3497,6 +3526,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1719235752}
   m_CullTransparentMesh: 1
+--- !u!114 &1719235756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1719235752}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0f84456e4dab4c0b94cd5c8ea7df24e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoSelectOnEnable
+  defaultSelection: {fileID: 588536832}
 --- !u!1 &2006404998
 GameObject:
   m_ObjectHideFlags: 0
@@ -3716,6 +3758,7 @@ GameObject:
   - component: {fileID: 2071556118}
   - component: {fileID: 2071556120}
   - component: {fileID: 2071556119}
+  - component: {fileID: 2071556121}
   m_Layer: 5
   m_Name: Panel_Consentimiento
   m_TagString: Untagged
@@ -3783,6 +3826,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2071556117}
   m_CullTransparentMesh: 1
+--- !u!114 &2071556121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2071556117}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0f84456e4dab4c0b94cd5c8ea7df24e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoSelectOnEnable
+  defaultSelection: {fileID: 842779215}
 --- !u!1 &2092116619
 GameObject:
   m_ObjectHideFlags: 0

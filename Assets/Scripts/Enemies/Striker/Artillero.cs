@@ -54,8 +54,11 @@ public class Artillero : MonoBehaviour
 
             if (distance > attackRange)
             {
-                agent.isStopped = false;
-                agent.SetDestination(playerTransform.position);
+                if (agent.isOnNavMesh)
+{
+    agent.isStopped = false;
+    agent.SetDestination(playerTransform.position);
+}
                 
                 if (estadoActualAnim != 0)
                 {
