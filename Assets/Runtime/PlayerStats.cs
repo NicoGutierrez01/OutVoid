@@ -91,9 +91,6 @@ public class PlayerStats : MonoBehaviour
         {
             level = SessionData.level,
             time = Mathf.FloorToInt(GameTimer.tiempoTotal), 
-            avatar = SessionData.avatar,
-            weapon = SessionData.weapon,
-            enemy = SessionData.enemy 
         };
 
         AnalyticsService.Instance.RecordEvent(gameOverEvent);

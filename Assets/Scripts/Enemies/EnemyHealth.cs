@@ -45,7 +45,6 @@ public class EnemyHealth : MonoBehaviour
 
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
     }
-
     IEnumerator FlashWhiteRoutine()
     {
         EncenderBrillo(Color.white * 5f); 
