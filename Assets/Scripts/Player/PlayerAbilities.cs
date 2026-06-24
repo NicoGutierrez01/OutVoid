@@ -9,12 +9,10 @@ public class PlayerAbilities : MonoBehaviour
 
     [Header("Referencias")]
     public Transform cam;
-    
     public PlayerCharacter playerCharacter;
     public PlayerCamera playerCamera;
 
     private PlayerStats moveScript;
-    
     private WeaponSystem weaponScript;
 
     [Header("Cooldowns")]
@@ -30,6 +28,7 @@ public class PlayerAbilities : MonoBehaviour
     public float meleeRange = 2f;
     public float meleeCooldown = 0.5f;
     public bool canMelee = true;
+    private bool usarHit2 = false;
 
     [Header("Configuración Habilidades")]
     public GameObject dynamitePrefab;
@@ -44,14 +43,14 @@ public class PlayerAbilities : MonoBehaviour
     public float ghostSpeedMultiplier = 1.3f;
 
     [Header("Configuración Akimbo (Q)")]
-    public GameObject revolverIzquierdo;
+    [Tooltip("Arrastrá acá el GameObject completo de la mano izquierda de tu compañero")]
+    public GameObject revolverIzquierdo; 
     public GameObject auraDerecha;
     public GameObject auraIzquierda;
 
     void Start()
     {
-        if (playerCamera == null)
-            playerCamera = FindAnyObjectByType<PlayerCamera>();
+        if (playerCamera == null) playerCamera = FindAnyObjectByType<PlayerCamera>();
 
         moveScript = GetComponentInParent<PlayerStats>();
         if (moveScript == null) moveScript = FindAnyObjectByType<PlayerStats>();
@@ -83,7 +82,6 @@ public class PlayerAbilities : MonoBehaviour
     {
         canUseE = false;
         ThrowDynamite();
-
         dynamiteCooldownTimer = dynamiteCooldown;
 
         while (dynamiteCooldownTimer > 0)
@@ -91,37 +89,31 @@ public class PlayerAbilities : MonoBehaviour
             dynamiteCooldownTimer -= Time.deltaTime;
             yield return null;
         }
-
         canUseE = true;
     }
+
     void ThrowDynamite()
     {
         GameObject dyn = Instantiate(dynamitePrefab, muzzle.position, Quaternion.identity);
-
         Rigidbody rb = dyn.GetComponent<Rigidbody>();
 
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
-
             Vector3 dir = (cam.forward + Vector3.up * 0.2f).normalized;
-
             Vector3 inheritedVelocity = playerCharacter != null ? playerCharacter.GetComponent<Rigidbody>()?.linearVelocity ?? Vector3.zero : Vector3.zero;
 
             rb.linearVelocity = inheritedVelocity;
-
             rb.AddForce(cam.forward * throwForce, ForceMode.Impulse);
-                rb.maxAngularVelocity = 2f;
+            rb.maxAngularVelocity = 2f;
         }
     }
 
     IEnumerator HandleUltimate()
     {
         canUseQ = false;
-
         StartCoroutine(ActivateUlt());
-
         ultCooldownTimer = ultCooldown;
 
         while (ultCooldownTimer > 0)
@@ -129,7 +121,6 @@ public class PlayerAbilities : MonoBehaviour
             ultCooldownTimer -= Time.deltaTime;
             yield return null;
         }
-
         canUseQ = true;
     }
 
@@ -137,7 +128,15 @@ public class PlayerAbilities : MonoBehaviour
     {
         isUltActive = true;
 
-        if (revolverIzquierdo != null) revolverIzquierdo.SetActive(true);
+        if (revolverIzquierdo != null) 
+        {
+            revolverIzquierdo.SetActive(true);
+            if(weaponScript != null && weaponScript.gunAnimIzquierda != null)
+            {
+                weaponScript.EjecutarAnimacion(weaponScript.gunAnimIzquierda, "Start");
+            }
+        }
+        
         if (auraDerecha != null) auraDerecha.SetActive(true);
         if (auraIzquierda != null) auraIzquierda.SetActive(true);
 
@@ -150,6 +149,7 @@ public class PlayerAbilities : MonoBehaviour
         weaponScript.damage = originalDamage;
         weaponScript.isUltActive = false;
 
+        // Desactivamos la mano izquierda al terminar la ráfaga
         if (revolverIzquierdo != null) revolverIzquierdo.SetActive(false);
         if (auraDerecha != null) auraDerecha.SetActive(false);
         if (auraIzquierda != null) auraIzquierda.SetActive(false);
@@ -160,14 +160,10 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator GhostDash()
     {
         canDash = false;
-
-        if (playerCamera != null)
-            playerCamera.SetDashFOV(10f);
+        if (playerCamera != null) playerCamera.SetDashFOV(10f);
 
         moveScript.isGhostMode = true;
-
-        if (weaponScript != null)
-            weaponScript.enabled = false;
+        if (weaponScript != null) weaponScript.enabled = false;
 
         if (playerCharacter != null)
         {
@@ -176,37 +172,43 @@ public class PlayerAbilities : MonoBehaviour
 
             yield return new WaitForSeconds(dashDuration);
 
-            if (playerCamera != null)
-                playerCamera.ResetFOV();
-
+            if (playerCamera != null) playerCamera.ResetFOV();
             playerCharacter.walkSpeed = velocidadNormal;
         }
         else
         {
             yield return new WaitForSeconds(dashDuration);
-
-            if (playerCamera != null)
-                playerCamera.ResetFOV();
+            if (playerCamera != null) playerCamera.ResetFOV();
         }
 
         moveScript.isGhostMode = false;
-
-        if (weaponScript != null)
-            weaponScript.enabled = true;
+        if (weaponScript != null) weaponScript.enabled = true;
 
         dashCooldownTimer = dashCooldown;
-
         while (dashCooldownTimer > 0)
         {
             dashCooldownTimer -= Time.deltaTime;
             yield return null;
         }
-
         canDash = true;
     }
+
     IEnumerator UseMelee()
     {
         canMelee = false;
+
+        if (weaponScript != null)
+        {
+            string triggerElegido = usarHit2 ? "Hit2" : "Hit";
+            
+            weaponScript.EjecutarAnimacion(weaponScript.gunAnim, triggerElegido);
+            if (isUltActive && weaponScript.gunAnimIzquierda != null)
+            {
+                weaponScript.EjecutarAnimacion(weaponScript.gunAnimIzquierda, triggerElegido);
+            }
+
+            usarHit2 = !usarHit2; 
+        }
 
         Ray ray = new Ray(cam.position, cam.forward);
         RaycastHit hit;
@@ -214,20 +216,16 @@ public class PlayerAbilities : MonoBehaviour
         if (Physics.Raycast(ray, out hit, meleeRange))
         {
             EnemyHealth enemy = hit.transform.GetComponent<EnemyHealth>();
-            if (enemy != null)
-                enemy.TakeDamage(meleeDamage);
+            if (enemy != null) enemy.TakeDamage(meleeDamage);
 
             Boss boss = hit.transform.GetComponent<Boss>();
-            if (boss != null)
-                boss.TakeDamage(meleeDamage);
+            if (boss != null) boss.TakeDamage(meleeDamage);
 
             MiniCube minion = hit.transform.GetComponent<MiniCube>();
-            if (minion != null)
-                minion.TakeDamage(meleeDamage);
+            if (minion != null) minion.TakeDamage(meleeDamage);
         }
 
         yield return new WaitForSeconds(meleeCooldown);
-
         canMelee = true;
     }
 }

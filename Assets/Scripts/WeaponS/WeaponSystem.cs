@@ -14,9 +14,7 @@ public class WeaponSystem : MonoBehaviour
     public int balasMaximas = 6;
     [HideInInspector] 
     public int balasActuales;
-
     public int balasReserva = 24; 
-    
     public float tiempoRecarga = 1.5f;
     public bool recargando = false;
 
@@ -60,11 +58,11 @@ public class WeaponSystem : MonoBehaviour
         if (Gamepad.current != null)
         {
             bool r2Presionado = Gamepad.current.rightTrigger.ReadValue() > 0.5f;
-
             r2RecienPresionado = r2Presionado && !r2EstabaPresionado;
             r2EstabaPresionado = r2Presionado;
         }
-                if (recargando) return;
+
+        if (recargando) return;
 
         if (
             (
@@ -77,13 +75,20 @@ public class WeaponSystem : MonoBehaviour
             if (balasActuales > 0 || isUltActive)
             {
                 Disparar();
-
                 float cadenciaActual = isUltActive ? fireRate * 0.75f : fireRate;
                 proximoTiempoDisparo = Time.time + cadenciaActual;
             }
-            else if (!recargando && balasReserva > 0)
+            else if (!recargando)
             {
-                StartCoroutine(RutinaRecarga());
+                if (balasReserva > 0)
+                {
+                    StartCoroutine(RutinaRecarga());
+                }
+                else
+                {
+                    ReproducirNoBullet();
+                    proximoTiempoDisparo = Time.time + fireRate; 
+                }
             }
         }
 
@@ -108,12 +113,12 @@ public class WeaponSystem : MonoBehaviour
         {
             if (dispararDerecha) 
             {
-                EjecutarAnimacion(gunAnim);
+                EjecutarAnimacion(gunAnim, "Shoot");
                 if (muzzleFlash != null) muzzleFlash.Play();
             }
             else 
             {
-                EjecutarAnimacion(gunAnimIzquierda);
+                EjecutarAnimacion(gunAnimIzquierda, "Shoot");
                 if (muzzleFlashIzquierda != null) muzzleFlashIzquierda.Play();
             }
             
@@ -121,7 +126,7 @@ public class WeaponSystem : MonoBehaviour
         }
         else
         {
-            EjecutarAnimacion(gunAnim);
+            EjecutarAnimacion(gunAnim, "Shoot");
             if (muzzleFlash != null) muzzleFlash.Play();
         }
 
@@ -152,10 +157,7 @@ public class WeaponSystem : MonoBehaviour
             }
 
             EnemyHealth enemy = hit.transform.GetComponent<EnemyHealth>();
-            if (enemy != null)
-            {
-                enemy.TakeDamage(damage);
-            }
+            if (enemy != null) enemy.TakeDamage(damage);
 
             Boss boss = hit.transform.GetComponent<Boss>();
             if (boss != null)
@@ -178,24 +180,34 @@ public class WeaponSystem : MonoBehaviour
         }
     }
 
-    void EjecutarAnimacion(Animator anim)
+    void ReproducirNoBullet()
+    {
+        EjecutarAnimacion(gunAnim, "NoBullet");
+        if (isUltActive && gunAnimIzquierda != null)
+        {
+            EjecutarAnimacion(gunAnimIzquierda, "NoBullet");
+        }
+    }
+
+    public void EjecutarAnimacion(Animator anim, string triggerName)
     {
         if (anim != null)
         {
-            anim.ResetTrigger("ShootTrigger");
-            anim.SetTrigger("ShootTrigger");
+            anim.ResetTrigger(triggerName);
+            anim.SetTrigger(triggerName);
         }
     }
 
     IEnumerator RutinaRecarga()
     {
         recargando = true;
-        if (gunAnim != null) gunAnim.SetTrigger("ReloadTrigger");
+        
+        EjecutarAnimacion(gunAnim, "Recharge");
+        if (isUltActive && gunAnimIzquierda != null) EjecutarAnimacion(gunAnimIzquierda, "Recharge");
 
         yield return new WaitForSeconds(tiempoRecarga);
 
         int balasFaltantes = balasMaximas - balasActuales;
-
         int balasARecargar = Mathf.Min(balasFaltantes, balasReserva);
 
         balasActuales += balasARecargar;
