@@ -52,7 +52,7 @@ public class Stalker : MonoBehaviour
 
     void Update()
     {
-        if (!hasLanded || (anim != null && anim.GetBool("isDead"))) return;
+        if (!hasLanded || agent == null || !agent.enabled) return;
 
         teleportTimer += Time.deltaTime;
 

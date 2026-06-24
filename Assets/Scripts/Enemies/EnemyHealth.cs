@@ -21,6 +21,10 @@ public class EnemyHealth : MonoBehaviour
     public GameObject prefabDropEscudo;
     public GameObject prefabDropBalas;
 
+    [Header("Efecto de Explosión al Morir")]
+    [Tooltip("Arrastrá acá el prefab de partículas de explosión/chispas que quieras que suelte")]
+    public GameObject prefabParticulasMuerte; 
+
     private PlayerStats playerScript; 
     private WeaponSystem weaponScript;
     private PlayerHUD playerHUDScript;
@@ -45,12 +49,11 @@ public class EnemyHealth : MonoBehaviour
 
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
     }
+
     IEnumerator FlashWhiteRoutine()
     {
         EncenderBrillo(Color.white * 5f); 
-        
         yield return new WaitForSeconds(flashDuration);
-
         ApagarBrillo();
     }
 
@@ -111,14 +114,23 @@ public class EnemyHealth : MonoBehaviour
 
     void Die()
     {
-        if (agent != null) { agent.isStopped = true; agent.enabled = false; }
-        Collider col = GetComponent<Collider>();
-        if (col != null) col.isTrigger = true;
-        Rigidbody rb = GetComponent<Rigidbody>();
-        if (rb != null) rb.isKinematic = true;
+        if (agent != null) 
+        {
+            if (agent.isActiveAndEnabled && agent.isOnNavMesh) agent.isStopped = true;
+            agent.enabled = false; 
+        }
 
-        Animator anim = GetComponentInChildren<Animator>();
-        if (anim != null) { anim.SetBool("isMoving", false); anim.SetTrigger("Die"); }
+        Kamikaze kami = GetComponent<Kamikaze>();
+        if (kami != null) { kami.estaVivo = false; kami.enabled = false; }
+
+        Stalker stalker = GetComponent<Stalker>();
+        if (stalker != null) stalker.enabled = false; 
+
+        Artillero artillero = GetComponent<Artillero>();
+        if (artillero != null) artillero.enabled = false; 
+
+        Collider[] todosLosColliders = GetComponentsInChildren<Collider>();
+        foreach (Collider c in todosLosColliders) c.isTrigger = true;
 
         if (AdministradorDeProgreso.Instancia != null)
         {
@@ -165,14 +177,37 @@ public class EnemyHealth : MonoBehaviour
             if (recursoAElegir != null) Instantiate(recursoAElegir, posicionSpawn, Quaternion.identity);
         }
 
-        if (MapManager.Instance != null) MapManager.Instance.RegistrarMuerte();
+        try
+        {
+            if (MapManager.Instance != null) MapManager.Instance.RegistrarMuerte();
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log("Error en MapManager al registrar muerte: " + e.Message);
+        }
 
-        StartCoroutine(EsperarYDestruir(2.0f));
+        StartCoroutine(RutinaMuerteExplosiva());
     }
 
-    IEnumerator EsperarYDestruir(float tiempo)
+    IEnumerator RutinaMuerteExplosiva()
     {
-        yield return new WaitForSeconds(tiempo);
+        if (prefabParticulasMuerte != null)
+        {
+            GameObject fx = Instantiate(prefabParticulasMuerte, transform.position + Vector3.up * 1f, Quaternion.identity);
+            Destroy(fx, 2.0f); 
+        }
+
+        if (renderers != null)
+        {
+            foreach (var r in renderers)
+            {
+                if (r != null) r.enabled = false;
+            }
+        }
+
+        if (healthBar != null) healthBar.gameObject.SetActive(false);
+
+        yield return null;
         Destroy(gameObject);
     }
 }
