@@ -436,12 +436,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f75ae4efc2367c42a60a1e115d8512e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  target: {fileID: 0}
   agent: {fileID: 0}
-  maxHealth: 120
+  maxHealth: 50
   flashDuration: 0.05
   healthBar: {fileID: 1808428069667592721}
-  probabilidadDrop: 75
+  probabilidadDrop: 80
   prefabDropVida: {fileID: 6385839727874418933, guid: 3249ff7a91e8d4b4dad708989be0ec1f, type: 3}
   prefabDropEscudo: {fileID: 3184387657182790489, guid: 23529e97538f6594c9d675702d9ccd2f, type: 3}
   prefabDropBalas: {fileID: 1474640402716526875, guid: 7ae7eb568e709fa43a4916ad208e07e1, type: 3}
