@@ -11,6 +11,8 @@ public class GameOver : MonoBehaviour
     public TextMeshProUGUI textoMejoras;
     public TextMeshProUGUI textoTitulo;
 
+    
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.None;
