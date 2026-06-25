@@ -380,6 +380,12 @@ MonoBehaviour:
   capaObstaculos:
     serializedVersion: 2
     m_Bits: 0
+  anguloVision: 90
+  rangoCercaniaCiega: 20
+  capaObstaculosVision:
+    serializedVersion: 2
+    m_Bits: 0
+  radioPatrulla: 15
   estaVivo: 1
 --- !u!114 &5188010951378959755
 MonoBehaviour:

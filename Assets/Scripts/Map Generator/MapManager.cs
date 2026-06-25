@@ -11,18 +11,8 @@ using static EventManager;
 public class MapManager : MonoBehaviour
 {
     #region Variables y Referencias
-    [Header("Ajustes del Mapa")]
-    public int gridWidth = 5; public int gridheaight = 5;
-    public float tileSize = 50f;
-    public GameObject tileBaseLiso, tileBaseRugoso;
-    public List<GameObject> tilesDunes, tilesRifts;
-    public GameObject prefabAnilloMontañas;
-    public Vector3 positionMontains;
-
-    [Header("Probabilidades")]
-    [Range(0f, 1f)] public float chanceRugoso = 0.8f;
-    [Range(0f, 1f)] public float chanceDunes = 0.4f;
-    [Range(0f, 1f)] public float chanceRifts = 0.1f;
+    [Header("Nuevo Sistema de Escenario")]
+    public GameObject mapaPrefab; 
 
     [Header("Player & Enemigos")]
     public GameObject playerPrefab, portalEnemigoPrefab;
@@ -52,9 +42,38 @@ public class MapManager : MonoBehaviour
     public MejoraData[] mejorasComunes, mejorasRaras, mejorasEpicas;
 
     private List<GameObject> portalesActivos = new List<GameObject>();
-    private bool[,] mapaDeGrietas;
     private NavMeshSurface navSurface;
     public static MapManager Instance;
+
+    private Vector3[] spawnPointsPlayer = new Vector3[]
+    {
+        new Vector3(-50f, -13f, 65f),
+        new Vector3(-210f, -13f, -60f),
+        new Vector3(65f, -13f, -55f)
+    };
+
+    private Vector3[] spawnPointsPortales = new Vector3[]
+    {
+        new Vector3(-110f, 0f, -30f),
+        new Vector3(-200f, 0f, -30f),
+        new Vector3(-200f, 0f, -100f),
+        new Vector3(-140f, 0f, 90f),
+        new Vector3(-45f, 0f, 50f),
+        new Vector3(-30f, 0f, -29f),
+        new Vector3(90f, 0f, -45f),
+        new Vector3(180f, 0f, -90f),
+        new Vector3(55f, 0f, -120f),
+        new Vector3(89f, 0f, 11f),
+    };
+
+    [Header("Sistema de Decoración del Desierto")]
+    public List<GameObject> prefabsArboles;
+    public List<GameObject> prefabsCactus;
+    public GameObject prefabPasto;
+    [Space(5)]
+    public int cantidadArboles = 15;
+    public int cantidadCactus = 25;
+    public int cantidadPasto = 40;
     #endregion
 
     #region Ciclo de Vida
@@ -67,14 +86,15 @@ public class MapManager : MonoBehaviour
     {
         bossDerrotado = false;
         navSurface = GetComponent<NavMeshSurface>();
-        mapaDeGrietas = new bool[gridWidth, gridheaight];
 
         if (nivelBucle >= 4) 
         {
             InicializarNivelBoss();
         }
         else 
-        InicializarRondaNormal();
+        {
+            InicializarRondaNormal();
+        }
 
         AnalyticsBridge.EnviarLevelStart(SessionData.level, rondaActual);
     }
@@ -83,13 +103,15 @@ public class MapManager : MonoBehaviour
     #region Logica del Loop de Juego
     public void RegistrarMuerte()
     {
-        if (rondaActual >= 4) return;
+        if (rondaActual >= 4) return; 
+
         enemigosMuertosActuales++;
         ActualizarTextoProgreso();
 
         if (enemigosMuertosActuales >= enemigosParaJefe)
         {
             AnalyticsBridge.EnviarLevelComplete(SessionData.level, rondaActual);
+            
             if (rondaActual < 3)
             {
                 AvanzarRonda();
@@ -116,10 +138,14 @@ public class MapManager : MonoBehaviour
         rondaActual = 1;
         SessionData.level = nivelBucle;
         SessionData.round = rondaActual;
+        
         ConfigurarRonda();
-        GenerarMapa();
+        GenerarMapa(); 
         ActualizarNavMesh();
         SpawnearElementosDeJuego();
+        PoblarEscenarioConDecoracion();
+        
+        if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));
     }
 
     private void InicializarNivelBoss()
@@ -128,17 +154,22 @@ public class MapManager : MonoBehaviour
         SessionData.level = nivelBucle;
         SessionData.round = rondaActual;
         enemigosParaJefe = 0;
-        GenerarMapa();
+        
+        GenerarMapa(); 
         ActualizarNavMesh();
-        Instantiate(playerPrefab, new Vector3(2 * tileSize, 2f, 2 * tileSize), Quaternion.identity);
+        
+        int randomIndexPlayer = Random.Range(0, spawnPointsPlayer.Length);
+        Instantiate(playerPrefab, spawnPointsPlayer[randomIndexPlayer], Quaternion.identity);
+        
         SpawnearPortalBoss();
     }
 
-    public void ColapsarMapa()
+    public void AvanzarSiguienteNivel()
     {
-        foreach (Transform child in transform) {
-            Destroy(child.gameObject);
-        }
+        AnalyticsBridge.EnviarLevelComplete(SessionData.level, 4);
+
+        nivelBucle++; 
+        SessionData.level = nivelBucle;
 
         if (nivelBucle > 4) 
         {
@@ -149,6 +180,15 @@ public class MapManager : MonoBehaviour
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
+
+    public void ColapsarMapa()
+    {
+        foreach (Transform child in transform) {
+            Destroy(child.gameObject);
+        }
+
+        AvanzarSiguienteNivel();
+    }
     #endregion
 
     #region Generacion y Helpers
@@ -156,6 +196,7 @@ public class MapManager : MonoBehaviour
     { 
         enemigosMuertosActuales = 0; 
         enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10); 
+        ActualizarTextoProgreso();
     }                                               
 
     void SpawnearLapida()                                                           
@@ -172,9 +213,28 @@ public class MapManager : MonoBehaviour
         
         AnalyticsBridge.EnviarLevelStart(SessionData.level, 4);
 
-        lapidaInstanciada = Instantiate(lapidaPrefab, posicionLapida, Quaternion.identity);
+        int randomIndex = Random.Range(0, spawnPointsPlayer.Length);
+        Vector3 coordenadaElegida = spawnPointsPlayer[randomIndex];
+        Vector3 puntoDesdeElCielo = new Vector3(coordenadaElegida.x, 50f, coordenadaElegida.z);
+        Vector3 posicionLapidaSegura = coordenadaElegida; 
+
+        RaycastHit hit;
+        if (Physics.Raycast(puntoDesdeElCielo, Vector3.down, out hit, 100f))
+        {
+            posicionLapidaSegura = hit.point + Vector3.up * 0.1f; 
+            alturaPortalBoss = hit.point + Vector3.up * 40f;
+        }
+        else
+        {
+            alturaPortalBoss = posicionLapidaSegura + Vector3.up * 40f;
+        }
+
+        lapidaInstanciada = Instantiate(lapidaPrefab, posicionLapidaSegura, Quaternion.identity);
         DesactivarPortalesComunes();
+        
+        if (popupLapidaInvocada != null) StartCoroutine(ManejarPopupLapida(4f));
     }
+
     void SpawnearMejoraMenor()
     {
         if (prefabContenedorMejora == null) return;
@@ -188,7 +248,7 @@ public class MapManager : MonoBehaviour
             
             Vector3 spawnPos = posInicial; 
             RaycastHit hit;
-            if (Physics.Raycast(posInicial, Vector3.down, out hit, 10f, capaSuelo))
+            if (Physics.Raycast(posInicial, Vector3.down, out hit, 15f, capaSuelo))
             {
                 spawnPos = hit.point + Vector3.up * 0.5f; 
             }
@@ -230,25 +290,30 @@ public class MapManager : MonoBehaviour
 
     void SpawnearElementosDeJuego()
     {
-        Vector3 posPlayer = new Vector3(2* tileSize, 2f, 2 * tileSize);
+        int randomIndexPlayer = Random.Range(0, spawnPointsPlayer.Length);
+        Vector3 posPlayer = spawnPointsPlayer[randomIndexPlayer];
         Instantiate(playerPrefab, posPlayer, Quaternion.identity);
+        
         SpawnearPortales();
     }
 
     void SpawnearPortales()
     {
-        Vector3[] puntosExactos = new Vector3[]
-        {
-            new Vector3(25f, 15f, 25f),   
-            new Vector3(25f, 15f, 175f),  
-            new Vector3(175f, 15f, 175f), 
-            new Vector3(175f, 15f, 25f)   
-        };
+        int cantidadAIntercalar = 4;
+        List<int> indicesDisponibles = new List<int>();
+        for (int i = 0; i < spawnPointsPortales.Length; i++) indicesDisponibles.Add(i);
 
-        foreach (Vector3 pos in puntosExactos)
+        for (int i = 0; i < cantidadAIntercalar; i++)
         {
-            GameObject nuevoPortal = Instantiate(portalEnemigoPrefab, pos, Quaternion.identity);
-            portalesActivos.Add(nuevoPortal); 
+            if (indicesDisponibles.Count == 0) break;
+
+            int randomIndexList = Random.Range(0, indicesDisponibles.Count);
+            int portalIndexElegido = indicesDisponibles[randomIndexList];
+            indicesDisponibles.RemoveAt(randomIndexList);
+
+            Vector3 posPortal = spawnPointsPortales[portalIndexElegido];
+            GameObject nuevoPortal = Instantiate(portalEnemigoPrefab, posPortal, Quaternion.identity);
+            portalesActivos.Add(nuevoPortal);
         }
     }
 
@@ -263,61 +328,76 @@ public class MapManager : MonoBehaviour
 
     void GenerarMapa()
     {
-        for (int x = 0; x < gridWidth; x++)
+        if (mapaPrefab != null)
         {
-            for (int z = 0; z < gridheaight; z++)
-            {
-                Vector3 pos = new Vector3(x * tileSize, 0, z * tileSize);
-                GameObject prefabAInstanciar = SeleccionarTileInterno(x, z);
-                
-                float[] rotaciones = { 0f, 90f, 180f, 270f };
-                float rotY = rotaciones[Random.Range(0, rotaciones.Length)];
+            GameObject nuevoMapa = Instantiate(mapaPrefab, Vector3.zero, Quaternion.identity);
+            nuevoMapa.transform.parent = this.transform;
+        }
+    }
 
-                GameObject nuevoTile = Instantiate(prefabAInstanciar, pos, Quaternion.identity);
-                nuevoTile.transform.localRotation = Quaternion.Euler(-90, rotY, 0);
-                nuevoTile.transform.parent = this.transform;
+    void PoblarEscenarioConDecoracion()
+    {
+        SpawnearObjetoDecorativo(prefabsArboles, cantidadArboles, "Árbol");
+        SpawnearObjetoDecorativo(prefabsCactus, cantidadCactus, "Cactus");
+
+        if (prefabPasto != null)
+        {
+            List<GameObject> listaPasto = new List<GameObject> { prefabPasto };
+            SpawnearObjetoDecorativo(listaPasto, cantidadPasto, "Pasto");
+        }
+    }
+
+    void SpawnearObjetoDecorativo(List<GameObject> poolPrefabs, int cantidad, string tipoNombre)
+    {
+        if (poolPrefabs == null || poolPrefabs.Count == 0) return;
+
+        GameObject objetoSuelo = GameObject.Find("Ground_Baked.001");
+        if (objetoSuelo == null)
+        {
+            Debug.LogError("No se encontró 'Ground_Baked.001' para calcular los límites de decoración.");
+            return;
+        }
+
+        MeshCollider sueloCollider = objetoSuelo.GetComponent<MeshCollider>();
+        if (sueloCollider == null)
+        {
+            Debug.LogError("'Ground_Baked.001' no tiene un MeshCollider para calcular las dimensiones.");
+            return;
+        }
+
+        Bounds limitesSuelo = sueloCollider.bounds;
+
+        int creados = 0;
+        int intentos = 0;
+        int intentosMaximos = cantidad * 15; 
+
+        while (creados < cantidad && intentos < intentosMaximos)
+        {
+            intentos++;
+
+            float randomX = Random.Range(limitesSuelo.min.x, limitesSuelo.max.x);
+            float randomZ = Random.Range(limitesSuelo.min.z, limitesSuelo.max.z);
+
+            Vector3 origenRaycast = new Vector3(randomX, limitesSuelo.max.y + 30f, randomZ);
+
+            RaycastHit hit;
+            if (Physics.Raycast(origenRaycast, Vector3.down, out hit, 150f))
+            {
+                if (hit.collider.name == "Ground_Baked.001")
+                {
+                    GameObject prefabElegido = poolPrefabs[Random.Range(0, poolPrefabs.Count)];
+                    
+                    Vector3 rotacionOriginal = prefabElegido.transform.rotation.eulerAngles;
+                    Quaternion rotacionFinal = Quaternion.Euler(rotacionOriginal.x, Random.Range(0f, 360f), rotacionOriginal.z);
+
+                    GameObject deco = Instantiate(prefabElegido, hit.point, rotacionFinal);
+                    deco.transform.parent = this.transform; 
+                    
+                    creados++;
+                }
             }
         }
-
-        if (prefabAnilloMontañas != null)
-        {
-            GameObject limites = Instantiate(prefabAnilloMontañas, positionMontains, Quaternion.identity);
-            limites.transform.parent = this.transform;
-        }
-    }
-
-    GameObject SeleccionarTileInterno(int x, int z)
-    {
-        float valorAleatorio = Random.value;
-        bool esCentroPlayer = (x == 2 && z == 2);
-        bool esBajoPortal = (x == 1 && z == 1) || (x == 4 && z == 1) || (x == 1 && z == 4) || (x == 4 && z == 4);
-
-        if (esCentroPlayer || esBajoPortal)
-        {
-            return (Random.value < chanceRugoso) ? tileBaseRugoso : tileBaseLiso;
-        }
-
-        if (valorAleatorio < chanceRifts && !HayGrietaCerca(x, z))
-        {
-            mapaDeGrietas[x, z] = true;
-            return tilesRifts[Random.Range(0, tilesRifts.Count)];
-        }
-        else if (valorAleatorio < chanceDunes + chanceRifts)
-        {
-            return tilesDunes[Random.Range(0, tilesDunes.Count)];
-        }
-        else
-        {
-            return (Random.value < chanceRugoso) ? tileBaseRugoso : tileBaseLiso;
-        }
-    }
-
-    bool HayGrietaCerca(int x, int z)
-    {
-        if (x > 0 && mapaDeGrietas[x - 1, z]) return true;
-        if (z > 0 && mapaDeGrietas[x, z - 1]) return true;
-        if (x > 0 && z > 0 && mapaDeGrietas[x - 1, z - 1]) return true;
-        return false;
+        Debug.Log($"[Decoración] Se instanciaron {creados} / {cantidad} objetos de tipo {tipoNombre} distribuidos por el mapa.");
     }
     #endregion
 
@@ -337,13 +417,22 @@ public class MapManager : MonoBehaviour
 
     System.Collections.IEnumerator ManejarPopupInstrucciones(float tiempo)
     {
+        if (popupInstrucciones == null) yield break;
         popupInstrucciones.SetActive(true);
+
+        var textoComponente = popupInstrucciones.GetComponentInChildren<TextMeshProUGUI>();
+        if (textoComponente != null)
+        {
+            textoComponente.text = $"LEVEL {nivelBucle} - RONDA {rondaActual}";
+        }
+
         yield return new WaitForSeconds(tiempo);
         popupInstrucciones.SetActive(false);
     }
 
     System.Collections.IEnumerator ManejarPopupLapida(float tiempo)
     {
+        if (popupLapidaInvocada == null) yield break;
         popupLapidaInvocada.SetActive(true);
         yield return new WaitForSeconds(tiempo);
         popupLapidaInvocada.SetActive(false);
@@ -365,8 +454,15 @@ public class MapManager : MonoBehaviour
     {
         if (textoProgresoMuertes != null)
         {
-            int muertesVisuales = Mathf.Min(enemigosMuertosActuales, enemigosParaJefe);
-            textoProgresoMuertes.text = "Matados: " + muertesVisuales + " / " + enemigosParaJefe;
+            if (rondaActual == 4)
+            {
+                textoProgresoMuertes.text = "¡Derrota al Jefe!";
+            }
+            else
+            {
+                int muertesVisuales = Mathf.Min(enemigosMuertosActuales, enemigosParaJefe);
+                textoProgresoMuertes.text = $"Matados: {muertesVisuales} / {enemigosParaJefe}";
+            }
         }
     }
 

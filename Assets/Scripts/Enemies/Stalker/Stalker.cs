@@ -137,7 +137,7 @@ public class Stalker : MonoBehaviour
             if (angulo <= anguloVision / 2f)
             {
                 RaycastHit hit;
-                Vector3 origenRaycast = transform.position + Vector3.up * 1f; 
+                Vector3 origenRaycast = transform.position + Vector3.up * 1f;
                 Vector3 destinoRaycast = playerTransform.position + Vector3.up * 1f;
 
                 if (Physics.Linecast(origenRaycast, destinoRaycast, out hit, capaObstaculosVision))
@@ -146,7 +146,7 @@ public class Stalker : MonoBehaviour
                 }
                 else
                 {
-                    return true; 
+                    return true;
                 }
             }
         }

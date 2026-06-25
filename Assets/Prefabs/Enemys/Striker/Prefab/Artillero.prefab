@@ -394,7 +394,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   anguloVision: 90
-  rangoCercaniaCiega: 3.5
+  rangoCercaniaCiega: 20
   capaObstaculosVision:
     serializedVersion: 2
     m_Bits: 0

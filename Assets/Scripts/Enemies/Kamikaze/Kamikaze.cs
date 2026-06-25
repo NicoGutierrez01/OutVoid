@@ -127,7 +127,7 @@ public class Kamikaze : MonoBehaviour
 
         if (distancia <= rangoCercaniaCiega) return true;
 
-        if (distancia <= 15f) 
+        if (distancia <= 15f)
         {
             Vector3 direccionAlJugador = (playerTransform.position - transform.position).normalized;
             float angulo = Vector3.Angle(transform.forward, direccionAlJugador);
@@ -135,7 +135,7 @@ public class Kamikaze : MonoBehaviour
             if (angulo <= anguloVision / 2f)
             {
                 RaycastHit hit;
-                Vector3 origenRaycast = transform.position + Vector3.up * 1f; 
+                Vector3 origenRaycast = transform.position + Vector3.up * 1f;
                 Vector3 destinoRaycast = playerTransform.position + Vector3.up * 1f;
 
                 if (Physics.Linecast(origenRaycast, destinoRaycast, out hit, capaObstaculosVision))
@@ -144,7 +144,7 @@ public class Kamikaze : MonoBehaviour
                 }
                 else
                 {
-                    return true; 
+                    return true;
                 }
             }
         }
