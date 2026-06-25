@@ -94,6 +94,7 @@ public class PlayerAbilities : MonoBehaviour
 
     void ThrowDynamite()
     {
+            MusicManager.Instance.PlayThrowingDynamite();
         GameObject dyn = Instantiate(dynamitePrefab, muzzle.position, Quaternion.identity);
         Rigidbody rb = dyn.GetComponent<Rigidbody>();
 
@@ -127,7 +128,7 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator ActivateUlt()
     {
         isUltActive = true;
-
+        MusicManager.Instance.PlayUltimate();
         if (revolverIzquierdo != null) 
         {
             revolverIzquierdo.SetActive(true);
@@ -160,6 +161,7 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator GhostDash()
     {
         canDash = false;
+        MusicManager.Instance.PlayDash();
         if (playerCamera != null) playerCamera.SetDashFOV(10f);
 
         moveScript.isGhostMode = true;
@@ -196,6 +198,7 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator UseMelee()
     {
         canMelee = false;
+            MusicManager.Instance.PlayMelee();
 
         if (weaponScript != null)
         {

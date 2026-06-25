@@ -55,7 +55,7 @@ public class Boss : MonoBehaviour
     {
         maxHealth = maxHealth + ((MapManager.nivelBucle - 1) * 1300f);
         currentHealth = maxHealth;
-        
+            MusicManager.Instance.PlayBossMusic();
         posicionInicial = transform.position;
         
         GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -216,6 +216,7 @@ public class Boss : MonoBehaviour
     {
         isDead = true;
         this.enabled = false; 
+        MusicManager.Instance.StopBossMusic();
 
         if (bossHealthBarGlobal != null) bossHealthBarGlobal.gameObject.SetActive(false);
 

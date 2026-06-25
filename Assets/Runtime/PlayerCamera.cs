@@ -16,7 +16,8 @@ public class PlayerCamera : MonoBehaviour
     [SerializeField] private float multiplicadorWebGL = 0.02f;
 
     private float currentSensitivity;
-
+private float pitch;
+private float yaw;
     private Camera cam;
     private float defaultFOV;
     private float targetFOV;
@@ -33,8 +34,12 @@ public class PlayerCamera : MonoBehaviour
         defaultFOV = cam.fieldOfView;
         targetFOV = defaultFOV;
 
-        transform.position = target.position;
-        transform.eulerAngles = _eulerAngles = target.eulerAngles;
+     transform.position = target.position;
+
+yaw = target.eulerAngles.y;
+pitch = 0f;
+
+transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
 
         ActualizarSensibilidad();
     }
@@ -52,11 +57,16 @@ public class PlayerCamera : MonoBehaviour
         Debug.Log($"[CÁMARA] Sensibilidad aplicada: {currentSensitivity}");
     }
 
-    public void UpdateRotation(CameraInput input)
-    {
-        _eulerAngles += new Vector3(-input.Look.y, input.Look.x) * currentSensitivity;
-        transform.eulerAngles = _eulerAngles;
-    }
+public void UpdateRotation(CameraInput input)
+{
+    yaw += input.Look.x * currentSensitivity;
+
+    pitch -= input.Look.y * currentSensitivity;
+
+    pitch = Mathf.Clamp(pitch, -85f, 85f);
+
+    transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
+}
 
     public void UpdatePosition(Transform target)
     {

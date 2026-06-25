@@ -14,6 +14,7 @@ public class Dynamite : MonoBehaviour
 
     void Explotar()
     {
+MusicManager.Instance.PlayExplosion();
         Debug.Log("¡BOOM! La dinamita desaparece y hace daño en área.");
 
         Collider[] objetosAlrededor = Physics.OverlapSphere(transform.position, radioExplosion);

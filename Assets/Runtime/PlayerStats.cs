@@ -56,6 +56,7 @@ public class PlayerStats : MonoBehaviour
         if (isGhostMode) return;
 
         regenTimer = 0f;
+        MusicManager.Instance.PlayTakingDamage();
 
         if (currentShield > 0)
         {

@@ -87,6 +87,7 @@ public class WeaponSystem : MonoBehaviour
                 else
                 {
                     ReproducirNoBullet();
+                    MusicManager.Instance.PlayOutOfAmmo();
                     proximoTiempoDisparo = Time.time + fireRate; 
                 }
             }
@@ -108,6 +109,7 @@ public class WeaponSystem : MonoBehaviour
     void Disparar()
     {
         if (!isUltActive) balasActuales--;
+            MusicManager.Instance.PlayShoot();
 
         if (isUltActive && gunAnimIzquierda != null)
         {
@@ -201,7 +203,7 @@ public class WeaponSystem : MonoBehaviour
     IEnumerator RutinaRecarga()
     {
         recargando = true;
-        
+    MusicManager.Instance.PlayReload();        
         EjecutarAnimacion(gunAnim, "Recharge");
         if (isUltActive && gunAnimIzquierda != null) EjecutarAnimacion(gunAnimIzquierda, "Recharge");
 

@@ -39,7 +39,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private KinematicCharacterMotor motor;
     [SerializeField] private Transform root;
     [SerializeField] private Transform cameraTarget;
-
+private float stepTimer;
+public float stepInterval = 0.4f;
     [Space]
     [SerializeField] public float walkSpeed = 12f;
     [SerializeField] private float crouchSpeed = 7f;
@@ -251,6 +252,21 @@ else if (!_requestedCrouch && wasRequestingCrouch)
                 _state.Acceleration = moveVelocity - currentVelocity;
                 
                 currentVelocity = moveVelocity;
+                // FOOTSTEPS (WALK SFX)
+if (_state.Grounded && groundedMovement.sqrMagnitude > 0.1f)
+{
+    stepTimer -= deltaTime;
+
+    if (stepTimer <= 0f)
+    {
+        MusicManager.Instance.PlayWalk();
+        stepTimer = stepInterval;
+    }
+}
+else
+{
+    stepTimer = 0f;
+}
             }
 
             // SLIDE
@@ -384,6 +400,7 @@ else if (!_requestedCrouch && wasRequestingCrouch)
             if ((grounded || canCoyoteJump) || jumpsUsed < maxJumps)
 {
     jumpsUsed++;
+    MusicManager.Instance.PlayJump();
 
     _requestedJump = false;
     _requestedCrouch = false;
@@ -434,6 +451,7 @@ else if (!_requestedCrouch && wasRequestingCrouch)
         if (_requestedCrouch && _state.Stance is Stance.Stand)
         {
             _state.Stance = Stance.Crouch;
+            MusicManager.Instance.PlayCrouch();
 
             motor.SetCapsuleDimensions
             (
