@@ -17,4 +17,7 @@ public class ItemMejoraData : ScriptableObject
 
     [Header("Visual Provisonal")]
     public Color colorProvisorio = Color.white;
+
+    [Header("Visual")]
+    public Mesh mallaEspecial;
 }

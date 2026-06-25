@@ -30,6 +30,13 @@ public class Boss : MonoBehaviour
     public GameObject minionPrefab;
     public float cadenciaSpawn = 8f; 
     public int maxMinionsActivos = 4;
+
+    [Header("Animaciones y Explosión")]
+    public Animator anim;
+    [Tooltip("Arrastrá acá las partículas de explosión épica para cuando termine de morir")]
+    public GameObject prefabExplosionFinal;
+    [Tooltip("Cuánto dura la animación de muerte antes de explotar (en segundos)")]
+    public float tiempoAnimacionMuerte = 2.0f;
     
     private Transform player;
     private float timerAtaque;
@@ -37,8 +44,12 @@ public class Boss : MonoBehaviour
     
     private Slider bossHealthBarGlobal;
     private TextMeshProUGUI textoVidaBoss; 
+    private bool isDead = false;
 
-    void Awake() { propBlock = new MaterialPropertyBlock(); }
+    void Awake() 
+    { 
+        propBlock = new MaterialPropertyBlock(); 
+    }
 
     void Start()
     {
@@ -49,6 +60,8 @@ public class Boss : MonoBehaviour
         
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         if (p != null) player = p.transform;
+
+        if (anim == null) anim = GetComponentInChildren<Animator>();
 
         if (bossRenderer != null) originalColor = bossRenderer.sharedMaterial.color;
 
@@ -79,6 +92,8 @@ public class Boss : MonoBehaviour
 
     void Update()
     {
+        if (isDead) return;
+
         ManejarMovimientoOscilatorio();
         
         if (player != null)
@@ -115,6 +130,8 @@ public class Boss : MonoBehaviour
     {
         if (bombaPrefab != null && puntoDisparo != null)
         {
+            if (anim != null) anim.SetTrigger("Shoot");
+
             GameObject bomba = Instantiate(bombaPrefab, puntoDisparo.position, Quaternion.identity);
             Rigidbody rb = bomba.GetComponent<Rigidbody>();
 
@@ -143,6 +160,8 @@ public class Boss : MonoBehaviour
 
     public void TakeDamage(float amount)
     {
+        if (isDead) return;
+
         currentHealth -= amount;
         
         if (bossHealthBarGlobal != null)
@@ -171,13 +190,17 @@ public class Boss : MonoBehaviour
         float damagePerTick = maxHealth * 0.05f; 
         for (int i = 0; i < 3; i++)
         {
+            if (isDead) break;
             propBlock.SetColor("_Color", new Color(1f, 0.5f, 0f)); 
             bossRenderer.SetPropertyBlock(propBlock);
             TakeDamage(damagePerTick);
             yield return new WaitForSeconds(1f);
         }
-        propBlock.SetColor("_Color", originalColor);
-        bossRenderer.SetPropertyBlock(propBlock);
+        if (!isDead)
+        {
+            propBlock.SetColor("_Color", originalColor);
+            bossRenderer.SetPropertyBlock(propBlock);
+        }
     }
 
     IEnumerator FlashRed()
@@ -191,25 +214,37 @@ public class Boss : MonoBehaviour
 
     void Die()
     {
-        AnalyticsBridge.EnviarLevelComplete(MapManager.nivelBucle, 4);
+        isDead = true;
+        this.enabled = false; 
 
-        MapManager.nivelBucle++; 
-        
-        MapManager.Instance.rondaActual = 1;
+        if (bossHealthBarGlobal != null) bossHealthBarGlobal.gameObject.SetActive(false);
 
-        if (MapManager.Instance != null)
+        if (anim != null) anim.SetTrigger("Dead");
+
+        StartCoroutine(RutinaMuerteBoss());
+    }
+
+    IEnumerator RutinaMuerteBoss()
+    {
+        yield return new WaitForSeconds(tiempoAnimacionMuerte);
+
+        if (prefabExplosionFinal != null)
         {
-            MapManager.Instance.ColapsarMapa();
+            GameObject fx = Instantiate(prefabExplosionFinal, transform.position, Quaternion.identity);
+            Destroy(fx, 3f);
         }
 
+        if (bossRenderer != null) bossRenderer.enabled = false;
+
+        AnalyticsBridge.EnviarLevelComplete(MapManager.nivelBucle, 4);
+
         BossLootSpawner lootSpawner = GetComponent<BossLootSpawner>();
-        
         if (lootSpawner != null)
         {
             Debug.Log("Intentando spawnear loot del Boss");
             lootSpawner.SpawnearRecompensas();
         }
 
-        Destroy(gameObject, 0.5f);
+        Destroy(gameObject);
     }
 }

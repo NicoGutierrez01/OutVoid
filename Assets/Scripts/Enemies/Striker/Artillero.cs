@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 public class Artillero : MonoBehaviour
 {
@@ -20,7 +21,18 @@ public class Artillero : MonoBehaviour
     public LayerMask capaObstaculos; 
     private float tiempoTrabado = 0f;
 
+    [Header("Sistema de Visión Avanzado")]
+    public float anguloVision = 90f;      
+    public float rangoCercaniaCiega = 3.5f; 
+    public LayerMask capaObstaculosVision;  
+
+    [Header("Patrulla Pasiva (Wander)")]
+    public float radioPatrulla = 10f;      
+    public float tiempoEntrePuntos = 5f;    
+    private float timerPatrulla = 0f;
+
     private bool haAterrizado = false;
+    private bool isAlerted = false; 
     private Animator anim;
 
     private int estadoActualAnim = -1; 
@@ -43,7 +55,21 @@ public class Artillero : MonoBehaviour
     {
         if (haAterrizado && agent.enabled && agent.isOnNavMesh && playerTransform != null)
         {
-            if (agent.velocity.sqrMagnitude < 0.2f && !agent.isStopped)
+            if (!isAlerted)
+            {
+                if (CheckVisionYProximidad())
+                {
+                    isAlerted = true;
+                    SetAnimState(false, true); 
+                }
+                else
+                {
+                    ManejarPatrullaPasiva();
+                    return; 
+                }
+            }
+
+            if (agent.velocity.sqrMagnitude < 0.3f && !agent.isStopped)
             {
                 tiempoTrabado += Time.deltaTime;
                 if (tiempoTrabado > 10f) Destroy(gameObject);
@@ -55,14 +81,14 @@ public class Artillero : MonoBehaviour
             if (distance > attackRange)
             {
                 if (agent.isOnNavMesh)
-{
-    agent.isStopped = false;
-    agent.SetDestination(playerTransform.position);
-}
+                {
+                    agent.isStopped = false;
+                    agent.SetDestination(playerTransform.position);
+                }
                 
                 if (estadoActualAnim != 0)
                 {
-                    SetAnimState(true, false);
+                    SetAnimState(true, false); 
                     estadoActualAnim = 0;
                 }
             }
@@ -73,17 +99,99 @@ public class Artillero : MonoBehaviour
                 
                 if (estadoActualAnim != 1)
                 {
-                    SetAnimState(false, true);
+                    SetAnimState(false, true); 
                     estadoActualAnim = 1;
                 }
 
                 if (Time.time >= nextShotTime)
                 {
-                    Disparar();
-                    nextShotTime = Time.time + timeBetweenShots;
+                    if (ShotManager.Instance != null)
+                    {
+                        if (ShotManager.Instance.SolicitarPermisoParaDisparar())
+                        {
+                            EjecutarDisparoYRecarga();
+                        }
+                    }
+                    else
+                    {
+                        EjecutarDisparoYRecarga();
+                    }
                 }
             }
         }
+    }
+
+    void EjecutarDisparoYRecarga()
+    {
+        if (anim != null) anim.SetTrigger("Shoot");
+        
+        Disparar();
+
+        nextShotTime = Time.time + timeBetweenShots;
+
+        StartCoroutine(RutinaAnimacionRecarga());
+    }
+
+    IEnumerator RutinaAnimacionRecarga()
+    {
+        yield return new WaitForSeconds(0.2f);
+        if (anim != null) anim.SetTrigger("Recharge");
+    }
+
+    void ManejarPatrullaPasiva()
+    {
+        timerPatrulla += Time.deltaTime;
+
+        if (timerPatrulla >= tiempoEntrePuntos || agent.remainingDistance <= agent.stoppingDistance + 0.5f)
+        {
+            Vector3 puntoAleatorio = Random.insideUnitSphere * radioPatrulla + transform.position;
+            NavMeshHit hit;
+
+            if (NavMesh.SamplePosition(puntoAleatorio, out hit, radioPatrulla, NavMesh.AllAreas))
+            {
+                agent.isStopped = false;
+                agent.SetDestination(hit.position);
+            }
+            timerPatrulla = 0f;
+        }
+
+        bool moviendose = agent.velocity.sqrMagnitude > 0.1f;
+        SetAnimState(moviendose, false); 
+        
+        if (moviendose) estadoActualAnim = 0;
+        else estadoActualAnim = -1;
+    }
+
+    bool CheckVisionYProximidad()
+    {
+        if (playerTransform == null) return false;
+
+        float distancia = Vector3.Distance(transform.position, playerTransform.position);
+
+        if (distancia <= rangoCercaniaCiega) return true;
+
+        if (distancia <= attackRange)
+        {
+            Vector3 direccionAlJugador = (playerTransform.position - transform.position).normalized;
+            float angulo = Vector3.Angle(transform.forward, direccionAlJugador);
+
+            if (angulo <= anguloVision / 2f)
+            {
+                RaycastHit hit;
+                Vector3 origenRaycast = transform.position + Vector3.up * 1f;
+                Vector3 destinoRaycast = playerTransform.position + Vector3.up * 1f;
+
+                if (Physics.Linecast(origenRaycast, destinoRaycast, out hit, capaObstaculosVision))
+                {
+                    if (hit.transform.CompareTag("Player")) return true;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     void SetAnimState(bool walking, bool aiming)
@@ -98,7 +206,7 @@ public class Artillero : MonoBehaviour
     void MirarAlJugador()
     {
         Vector3 direccion = (playerTransform.position - transform.position).normalized;
-        direccion.y = 0; 
+        direccion.y = 0;
         Quaternion rotacionMirar = Quaternion.LookRotation(direccion);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotacionMirar, Time.deltaTime * 5f);
     }

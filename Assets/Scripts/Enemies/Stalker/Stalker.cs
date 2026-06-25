@@ -29,6 +29,16 @@ public class Stalker : MonoBehaviour
     public float attackCooldown = 1.5f;
     private float attackTimer = 0f;
 
+    [Header("Sistema de Visión Avanzado")]
+    public float anguloVision = 90f;        
+    public float rangoCercaniaCiega = 3.5f; 
+    public LayerMask capaObstaculosVision;  
+
+    [Header("Sistema de Patrulla Pasiva")]
+    public float radioPatrulla = 12f;       
+    private float tiempoSiguientePunto = 0f;
+    private float esperaEnPunto = 2f;       
+
     private bool hasLanded = false;
 
     void Start()
@@ -54,6 +64,20 @@ public class Stalker : MonoBehaviour
     {
         if (!hasLanded || agent == null || !agent.enabled) return;
 
+        if (!isAlerted)
+        {
+            if (CheckVisionYProximidad())
+            {
+                isAlerted = true;
+                agent.isStopped = false;
+            }
+            else
+            {
+                ManejarPatrullaPasiva();
+                return; 
+            }
+        }
+
         teleportTimer += Time.deltaTime;
 
         switch (currentState)
@@ -70,17 +94,70 @@ public class Stalker : MonoBehaviour
         }
     }
 
+    void ManejarPatrullaPasiva()
+    {
+        if (anim != null) anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.1f);
+
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.5f)
+        {
+            if (Time.time >= tiempoSiguientePunto)
+            {
+                Vector3 puntoAleatorio = ObtenerPuntoAleatorioNavMesh(transform.position, radioPatrulla);
+                agent.SetDestination(puntoAleatorio);
+                tiempoSiguientePunto = Time.time + esperaEnPunto + Random.Range(0f, 1.5f);
+            }
+        }
+    }
+
+    Vector3 ObtenerPuntoAleatorioNavMesh(Vector3 centro, float radio)
+    {
+        Vector3 dirAleatoria = Random.insideUnitSphere * radio;
+        dirAleatoria += centro;
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(dirAleatoria, out hit, radio, NavMesh.AllAreas))
+        {
+            return hit.position;
+        }
+        return centro;
+    }
+
+    bool CheckVisionYProximidad()
+    {
+        if (playerTransform == null) return false;
+
+        float distancia = Vector3.Distance(transform.position, playerTransform.position);
+
+        if (distancia <= rangoCercaniaCiega) return true;
+
+        if (distancia <= agroRange)
+        {
+            Vector3 direccionAlJugador = (playerTransform.position - transform.position).normalized;
+            float angulo = Vector3.Angle(transform.forward, direccionAlJugador);
+
+            if (angulo <= anguloVision / 2f)
+            {
+                RaycastHit hit;
+                Vector3 origenRaycast = transform.position + Vector3.up * 1f; 
+                Vector3 destinoRaycast = playerTransform.position + Vector3.up * 1f;
+
+                if (Physics.Linecast(origenRaycast, destinoRaycast, out hit, capaObstaculosVision))
+                {
+                    if (hit.transform.CompareTag("Player")) return true;
+                }
+                else
+                {
+                    return true; 
+                }
+            }
+        }
+        return false;
+    }
+
     void ChaseBehavior()
     {
         if (playerTransform == null || agent == null || !agent.isActiveAndEnabled || !agent.isOnNavMesh) return;
 
         float dist = Vector3.Distance(transform.position, playerTransform.position);
-
-        if (!isAlerted)
-        {
-            if (dist <= agroRange) isAlerted = true;
-            else return; 
-        }
 
         agent.SetDestination(playerTransform.position);
         anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.1f);

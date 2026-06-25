@@ -156,9 +156,9 @@ public class MapManager : MonoBehaviour
     { 
         enemigosMuertosActuales = 0; 
         enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10); 
-    }
+    }                                               
 
-    void SpawnearLapida()
+    void SpawnearLapida()                                                           
     {
         if (lapidaInstanciada != null) return; 
 
