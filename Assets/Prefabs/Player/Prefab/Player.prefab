@@ -252,7 +252,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -346,7 +346,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2523786170000727653
 Transform:
   m_ObjectHideFlags: 0
@@ -601,6 +601,7 @@ MonoBehaviour:
   motor: {fileID: 6495852188040846631}
   root: {fileID: 776891707974602014}
   cameraTarget: {fileID: 7045548413959980449}
+  stepInterval: 0.4
   walkSpeed: 16
   crouchSpeed: 7
   walkResponse: 16
