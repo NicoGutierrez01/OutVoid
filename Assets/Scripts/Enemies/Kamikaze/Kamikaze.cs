@@ -23,11 +23,21 @@ public class Kamikaze : MonoBehaviour
     public LayerMask capaObstaculos; 
     private float tiempoTrabado = 0f;
 
+    [Header("Sistema de Visión Avanzado")]
+    public float anguloVision = 90f;        
+    public float rangoCercaniaCiega = 3.5f; 
+    public LayerMask capaObstaculosVision;  
+
+    [Header("Sistema de Patrulla Pasiva")]
+    public float radioPatrulla = 15f;      
+    private float tiempoSiguientePunto = 0f;
+    private float esperaEnPunto = 3f;       
+
     private bool haAterrizado = false;
     private bool estaExplotando = false; 
+    private bool isAlerted = false; 
 
     public bool estaVivo = true;
-
 
     void Start()
     {
@@ -53,6 +63,20 @@ public class Kamikaze : MonoBehaviour
 
         if (haAterrizado && agent.enabled && agent.isOnNavMesh && playerTransform != null)
         {
+            if (!isAlerted)
+            {
+                if (CheckVisionYProximidad())
+                {
+                    isAlerted = true;
+                    agent.isStopped = false;
+                }
+                else
+                {
+                    ManejarPatrullaPasiva();
+                    return; 
+                }
+            }
+
             if (agent.velocity.sqrMagnitude < 0.2f)
             {
                 tiempoTrabado += Time.deltaTime;
@@ -61,12 +85,70 @@ public class Kamikaze : MonoBehaviour
             else { tiempoTrabado = 0f; }
 
             agent.SetDestination(playerTransform.position);
-
             anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.1f);
 
             float distance = Vector3.Distance(transform.position, playerTransform.position);
             if (distance <= attackRange) EmpezarExplosion();
         }
+    }
+
+    void ManejarPatrullaPasiva()
+    {
+        anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.1f);
+
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.5f)
+        {
+            if (Time.time >= tiempoSiguientePunto)
+            {
+                Vector3 puntoAleatorio = ObtenerPuntoAleatorioNavMesh(transform.position, radioPatrulla);
+                agent.SetDestination(puntoAleatorio);
+                tiempoSiguientePunto = Time.time + esperaEnPunto + Random.Range(0f, 2f); 
+            }
+        }
+    }
+
+    Vector3 ObtenerPuntoAleatorioNavMesh(Vector3 centro, float radio)
+    {
+        Vector3 dirAleatoria = Random.insideUnitSphere * radio;
+        dirAleatoria += centro;
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(dirAleatoria, out hit, radio, NavMesh.AllAreas))
+        {
+            return hit.position;
+        }
+        return centro; 
+    }
+
+    bool CheckVisionYProximidad()
+    {
+        if (playerTransform == null) return false;
+
+        float distancia = Vector3.Distance(transform.position, playerTransform.position);
+
+        if (distancia <= rangoCercaniaCiega) return true;
+
+        if (distancia <= 15f) 
+        {
+            Vector3 direccionAlJugador = (playerTransform.position - transform.position).normalized;
+            float angulo = Vector3.Angle(transform.forward, direccionAlJugador);
+
+            if (angulo <= anguloVision / 2f)
+            {
+                RaycastHit hit;
+                Vector3 origenRaycast = transform.position + Vector3.up * 1f; 
+                Vector3 destinoRaycast = playerTransform.position + Vector3.up * 1f;
+
+                if (Physics.Linecast(origenRaycast, destinoRaycast, out hit, capaObstaculosVision))
+                {
+                    if (hit.transform.CompareTag("Player")) return true;
+                }
+                else
+                {
+                    return true; 
+                }
+            }
+        }
+        return false;
     }
 
     void EmpezarExplosion()
@@ -138,7 +220,5 @@ public class Kamikaze : MonoBehaviour
                 }
             }
         }
-        
     }
-    
 }

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 public enum RarezaMejora { Comun, Rara, Epica }
-public enum TipoStat { VidaMaxima, Armadura, Velocidad, Recarga } // Agregá los que necesites
+public enum TipoStat { VidaMaxima, Armadura, Velocidad, Recarga, DobleSalto } 
 
 [CreateAssetMenu(fileName = "NuevaMejora", menuName = "Out-Void/Mejora Menor")]
 public class MejoraData : ScriptableObject
@@ -13,7 +13,7 @@ public class MejoraData : ScriptableObject
 
     [Header("Visuales (Low Poly)")]
     public Mesh malla; 
-    public Color colorBaliza = Color.white; // El color del pilar de luz
+    public Color colorBaliza = Color.white; 
 
     [Header("Efecto Mecánico")]
     public TipoStat statAMejorar;
