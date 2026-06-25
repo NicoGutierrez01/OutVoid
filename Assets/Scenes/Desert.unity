@@ -2895,7 +2895,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 2
+    m_Type: 1
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -3586,22 +3586,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ba6b767489101f4b8c87b8f30fbb22f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
-  gridWidth: 5
-  gridheaight: 5
-  tileSize: 50
-  tileBaseLiso: {fileID: 6226567793167771704, guid: 772695b0f8aa0cf4d85757396d41a554, type: 3}
-  tileBaseRugoso: {fileID: 4096641420164149665, guid: 65ef4198e308c654795976957ffcf09b, type: 3}
-  tilesDunes:
-  - {fileID: 3163912006725789500, guid: e171f85532e59584182683a6190c6f42, type: 3}
-  - {fileID: 1208283857416154126, guid: 677846ae785cdf04fbc6c07abee82681, type: 3}
-  tilesRifts:
-  - {fileID: 4277867309165001975, guid: cb909e187990f864e8bba3342b83922f, type: 3}
-  - {fileID: 6606069336780013, guid: 9c4230c63a2f8fd4dacb851e7aeffc97, type: 3}
-  "prefabAnilloMonta\xF1as": {fileID: 8721591565453229149, guid: b87a8666dcbb3fd40bad1f04d167e9c3, type: 3}
-  positionMontains: {x: 100, y: 7, z: 100}
-  chanceRugoso: 0.6
-  chanceDunes: 0.4
-  chanceRifts: 0.2
+  mapaPrefab: {fileID: 7914907432012892536, guid: d36462ee6b3ead64c90e73a76be60192, type: 3}
   playerPrefab: {fileID: 663390133554984710, guid: 1c42ed567325a4898965abdee55fa808, type: 3}
   portalEnemigoPrefab: {fileID: 2148023456166452146, guid: ecc1c68241d7b764d96464dbb4fbfa87, type: 3}
   capaSuelo:
@@ -3626,6 +3611,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ce7041853a391564e9cd32920708b1ce, type: 2}
   mejorasEpicas:
   - {fileID: 11400000, guid: 69cb924d41c16b04d92679faeec3610c, type: 2}
+  prefabsArboles:
+  - {fileID: 6554328710291321494, guid: d35a37cd401117046937e655b7069cc6, type: 3}
+  - {fileID: 6963621031325828773, guid: 878eca668dbce0e42a685d5f023f9d55, type: 3}
+  prefabsCactus:
+  - {fileID: 8775978792791231413, guid: 7ffe4924f6901284ab1d3dcedea29c39, type: 3}
+  - {fileID: 1687128777873670659, guid: 08ea27e48771e95409b53b44c1e73e05, type: 3}
+  prefabPasto: {fileID: 6439883145149483738, guid: 7eff52fd4ae45a64ba32bbd92a7b3ca2, type: 3}
+  cantidadArboles: 50
+  cantidadCactus: 75
+  cantidadPasto: 150
 --- !u!4 &1479725374
 Transform:
   m_ObjectHideFlags: 0

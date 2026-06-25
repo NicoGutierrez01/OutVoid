@@ -237,7 +237,14 @@ public class Boss : MonoBehaviour
 
         if (bossRenderer != null) bossRenderer.enabled = false;
 
-        AnalyticsBridge.EnviarLevelComplete(MapManager.nivelBucle, 4);
+        if (MapManager.Instance != null)
+        {
+            MapManager.Instance.AvanzarSiguienteNivel();
+        }
+        else
+        {
+            AnalyticsBridge.EnviarLevelComplete(MapManager.nivelBucle, 4);
+        }
 
         BossLootSpawner lootSpawner = GetComponent<BossLootSpawner>();
         if (lootSpawner != null)

@@ -508,6 +508,12 @@ MonoBehaviour:
   attackRange: 2.5
   damageAmount: 25
   attackCooldown: 1.5
+  anguloVision: 90
+  rangoCercaniaCiega: 20
+  capaObstaculosVision:
+    serializedVersion: 2
+    m_Bits: 0
+  radioPatrulla: 12
 --- !u!114 &3668805834345022174
 MonoBehaviour:
   m_ObjectHideFlags: 0
