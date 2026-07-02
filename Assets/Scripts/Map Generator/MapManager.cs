@@ -11,6 +11,9 @@ using static EventManager;
 public class MapManager : MonoBehaviour
 {
     #region Variables y Referencias
+    [Header("Nueva Pantalla de Carga Interna (Evita congelamientos)")]
+    public GameObject panelCargaEscena;
+    public UnityEngine.UI.Slider barraCargaEscena;
     [Header("Nuevo Sistema de Escenario")]
     public GameObject mapaPrefab; 
 
@@ -87,16 +90,67 @@ public class MapManager : MonoBehaviour
         bossDerrotado = false;
         navSurface = GetComponent<NavMeshSurface>();
 
+        if (panelCargaEscena != null) panelCargaEscena.SetActive(true);
+        if (barraCargaEscena != null) barraCargaEscena.value = 0.1f;
+
+        StartCoroutine(SecuenciaDeGeneracionAsincrona());
+
+        AnalyticsBridge.EnviarLevelStart(SessionData.level, rondaActual);
+    }
+    #endregion
+
+    #region Generación Asíncrona Controlada
+    System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
+    {
+        yield return new WaitForSeconds(0.1f); 
+
         if (nivelBucle >= 4) 
         {
-            InicializarNivelBoss();
+            rondaActual = 4;
+            SessionData.level = nivelBucle;
+            SessionData.round = rondaActual;
+            enemigosParaJefe = 0;
+            
+            GenerarMapa(); 
+            if (barraCargaEscena != null) barraCargaEscena.value = 0.4f;
+            yield return null;
+
+            ActualizarNavMesh();
+            if (barraCargaEscena != null) barraCargaEscena.value = 0.8f;
+            yield return null;
+            
+            int randomIndexPlayer = Random.Range(0, spawnPointsPlayer.Length);
+            Instantiate(playerPrefab, spawnPointsPlayer[randomIndexPlayer], Quaternion.identity);
+            
+            SpawnearPortalBoss();
         }
         else 
         {
-            InicializarRondaNormal();
+            rondaActual = 1;
+            SessionData.level = nivelBucle;
+            SessionData.round = rondaActual;
+            ConfigurarRonda();
+
+            GenerarMapa(); 
+            if (barraCargaEscena != null) barraCargaEscena.value = 0.3f;
+            yield return null;
+
+            ActualizarNavMesh();
+            if (barraCargaEscena != null) barraCargaEscena.value = 0.6f;
+            yield return null;
+
+            SpawnearElementosDeJuego();
+            if (barraCargaEscena != null) barraCargaEscena.value = 0.7f;
+            yield return null;
+
+            PoblarEscenarioConDecoracion();
+            if (barraCargaEscena != null) barraCargaEscena.value = 0.95f;
+            yield return new WaitForSeconds(0.2f); 
         }
 
-        AnalyticsBridge.EnviarLevelStart(SessionData.level, rondaActual);
+        if (panelCargaEscena != null) panelCargaEscena.SetActive(false);
+        
+        if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));
     }
     #endregion
 
@@ -293,6 +347,12 @@ public class MapManager : MonoBehaviour
         int randomIndexPlayer = Random.Range(0, spawnPointsPlayer.Length);
         Vector3 posPlayer = spawnPointsPlayer[randomIndexPlayer];
         Instantiate(playerPrefab, posPlayer, Quaternion.identity);
+
+        GameObject camCarga = GameObject.Find("Camera_Carga");
+        if (camCarga != null)
+        {
+            camCarga.SetActive(false);
+        }
         
         SpawnearPortales();
     }

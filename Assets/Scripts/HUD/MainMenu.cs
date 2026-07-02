@@ -9,13 +9,11 @@ public class MainMenu : MonoBehaviour
     [Header("Paneles del Menú")]
     public GameObject panelPrincipal;
     public GameObject panelOpciones;
-    public GameObject panelCarga;
     public GameObject panelConsentimiento; 
 
     public Animator anim;
 
-    [Header("Pantalla de Carga")]
-    public Slider barraDeCarga;
+    [Header("Escena de Juego")]
     public string nombreEscenaJuego = "Desert"; 
 
     [Header("Opciones - Sensibilidad")]
@@ -25,7 +23,7 @@ public class MainMenu : MonoBehaviour
     [Header("Botón Salir")]
     public GameObject botonSalir;
 
-void Start()
+    void Start()
     {
         int aceptoAnalytics = PlayerPrefs.GetInt("AnalyticsConsent", 0);
 
@@ -41,7 +39,6 @@ void Start()
         }
 
         if (panelOpciones != null) panelOpciones.SetActive(false);
-        if (panelCarga != null) panelCarga.SetActive(false);
 
         float sensibilidadGuardada = PlayerPrefs.GetFloat("SensibilidadMouse", 1f);
         if (sliderSensibilidad != null)
@@ -64,41 +61,10 @@ void Start()
     public void EmpezarJuego()
     {
         GameTimer.tiempoTotal = 0f; 
-
         MapManager.nivelBucle = 1;
 
-        panelPrincipal.SetActive(false);
-        panelCarga.SetActive(true);
-        
-        StartCoroutine(CargarEscenaAsincrona());
-    }
-
-    IEnumerator CargarEscenaAsincrona()
-    {
-        AsyncOperation operacion = SceneManager.LoadSceneAsync(nombreEscenaJuego);
-
-        operacion.allowSceneActivation = false; 
-
-        float progresoVisual = 0f;
-
-        while (!operacion.isDone)
-        {
-            float progresoReal = Mathf.Clamp01(operacion.progress / 0.9f);
-
-            progresoVisual = Mathf.MoveTowards(progresoVisual, progresoReal, 0.5f * Time.deltaTime);
-            
-            if (barraDeCarga != null)
-            {
-                barraDeCarga.value = progresoVisual;
-            }
-
-            if (progresoVisual >= 1f)
-            {
-                operacion.allowSceneActivation = true;
-            }
-
-            yield return null; 
-        }
+        // Carga directa e inmediata de la escena del juego
+        SceneManager.LoadScene(nombreEscenaJuego);
     }
 
     public void AbrirOpciones()
@@ -110,7 +76,6 @@ void Start()
     public void CerrarOpciones()
     {
         PlayerPrefs.Save(); 
-        
         panelOpciones.SetActive(false);
         panelPrincipal.SetActive(true);
     }

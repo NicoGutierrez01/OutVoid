@@ -237,20 +237,23 @@ public class Boss : MonoBehaviour
 
         if (bossRenderer != null) bossRenderer.enabled = false;
 
-        if (MapManager.Instance != null)
-        {
-            MapManager.Instance.AvanzarSiguienteNivel();
-        }
-        else
-        {
-            AnalyticsBridge.EnviarLevelComplete(MapManager.nivelBucle, 4);
-        }
-
         BossLootSpawner lootSpawner = GetComponent<BossLootSpawner>();
         if (lootSpawner != null)
         {
-            Debug.Log("Intentando spawnear loot del Boss");
+            Debug.Log("Spawneando las 3 mejoras del Boss en el mapa.");
             lootSpawner.SpawnearRecompensas();
+        }
+        else
+        {
+            if (MapManager.Instance != null)
+            {
+                MapManager.Instance.AvanzarSiguienteNivel();
+            }
+        }
+
+        if (MapManager.Instance == null)
+        {
+            AnalyticsBridge.EnviarLevelComplete(MapManager.nivelBucle, 4);
         }
 
         Destroy(gameObject);
