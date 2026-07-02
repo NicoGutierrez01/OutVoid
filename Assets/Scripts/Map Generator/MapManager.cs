@@ -249,7 +249,7 @@ public class MapManager : MonoBehaviour
     void ConfigurarRonda() 
     { 
         enemigosMuertosActuales = 0; 
-        enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10); 
+        enemigosParaJefe = (1 * rondaActual) + ((nivelBucle - 1) * 10); 
         ActualizarTextoProgreso();
     }                                               
 

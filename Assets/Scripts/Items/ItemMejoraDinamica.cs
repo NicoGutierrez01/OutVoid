@@ -14,13 +14,11 @@ public class ItemMejoraDinamica : MonoBehaviour
     {
         data = datosAsignados;
 
-        // Elimina el visual anterior si existe
         if (visualInstanciado != null)
         {
             Destroy(visualInstanciado);
         }
 
-        // Instancia el prefab asignado a la mejora
         if (puntoVisual != null && data.prefabVisual != null)
         {
             visualInstanciado = Instantiate(data.prefabVisual, puntoVisual);
@@ -30,7 +28,6 @@ public class ItemMejoraDinamica : MonoBehaviour
             visualInstanciado.transform.localScale = Vector3.one;
         }
 
-        // Cambia el color de la luz
         if (luzBaliza != null)
         {
             luzBaliza.color = data.colorBaliza;

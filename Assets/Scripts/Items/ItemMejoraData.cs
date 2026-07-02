@@ -21,4 +21,5 @@ public class ItemMejoraData : ScriptableObject
 
     [Header("Visual")]
     public GameObject mallaEspecial;
+    
 }
