@@ -15,7 +15,7 @@ MonoBehaviour:
   nombreMejora: MasBalasCargador
   descripcion: "\t\t\t\t\t\t\t\t"
   rareza: 1
-  malla: {fileID: 0}
+  prefabVisual: {fileID: 8588061054967466627, guid: 8b222146fa41a324789772470d2d6e3d, type: 3}
   colorBaliza: {r: 0, g: 1, b: 0, a: 1}
   statAMejorar: 3
   valorSuma: 2

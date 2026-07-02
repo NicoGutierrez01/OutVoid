@@ -14,10 +14,11 @@ public class ItemMejoraData : ScriptableObject
     public RarezaItem rareza;
     public int nivelMaximo = 3; 
     public TipoEfecto efecto;
+    
 
     [Header("Visual Provisonal")]
     public Color colorProvisorio = Color.white;
 
     [Header("Visual")]
-    public Mesh mallaEspecial;
+    public GameObject mallaEspecial;
 }

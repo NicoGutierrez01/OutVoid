@@ -18,3 +18,4 @@ MonoBehaviour:
   nivelMaximo: 1
   efecto: 0
   colorProvisorio: {r: 1, g: 1, b: 1, a: 1}
+  mallaEspecial: {fileID: 152753561844906315, guid: 48e52d8d352ce0548a5574c7e827370e, type: 3}

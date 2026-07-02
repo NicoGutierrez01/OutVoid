@@ -15,7 +15,7 @@ MonoBehaviour:
   nombreMejora: DobleSalto
   descripcion: 
   rareza: 2
-  malla: {fileID: 0}
-  colorBaliza: {r: 1, g: 0, b: 1, a: 1}
+  prefabVisual: {fileID: 7063743252289416628, guid: f9368726f996fae4a9cedf84c01a2ff0, type: 3}
+  colorBaliza: {r: 1, g: 0, b: 0.047468662, a: 1}
   statAMejorar: 2
   valorSuma: 1

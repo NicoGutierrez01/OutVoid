@@ -15,7 +15,7 @@ MonoBehaviour:
   nombreMejora: Botas Ligeras
   descripcion: 
   rareza: 0
-  malla: {fileID: 0}
-  colorBaliza: {r: 1, g: 1, b: 1, a: 1}
+  prefabVisual: {fileID: 8588061054967466627, guid: 8b222146fa41a324789772470d2d6e3d, type: 3}
+  colorBaliza: {r: 0.25146616, g: 1, b: 0, a: 1}
   statAMejorar: 2
   valorSuma: 1.5
