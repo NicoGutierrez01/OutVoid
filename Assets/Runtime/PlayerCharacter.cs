@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum CrouchInput
 {
-    None, Toggle
+    None, Hold
 }
 
 public enum Stance
@@ -26,8 +26,12 @@ public struct CharacterInput
     public Quaternion Rotation;
     public Vector2 Move;
     public bool Jump;
+    public bool Melee;
     public bool JumpSustain;
     public CrouchInput Crouch;
+    public bool Dash;
+    public bool Ultimate;
+    public bool AbilityE;
 }
 
 public class PlayerCharacter : MonoBehaviour, ICharacterController
@@ -35,9 +39,10 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private KinematicCharacterMotor motor;
     [SerializeField] private Transform root;
     [SerializeField] private Transform cameraTarget;
-
+private float stepTimer;
+public float stepInterval = 0.4f;
     [Space]
-    [SerializeField] private float walkSpeed = 20f;
+    [SerializeField] public float walkSpeed = 12f;
     [SerializeField] private float crouchSpeed = 7f;
     [SerializeField] private float walkResponse = 25f;
     [SerializeField] private float crouchResponse = 20f;
@@ -48,6 +53,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     [SerializeField] private float jumpSustainGravity = 0.4f;
     [SerializeField] private float gravity = -90f;
+    [SerializeField] private int maxJumps = 1;
 
     [Space]
     [SerializeField] private float slideStartSpeed = 25f;
@@ -88,17 +94,27 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private float _timeSinceJumpRequest;
     private bool _ungroundedDueToJump;
 
+    private int jumpsUsed = 0;
+
+
     private Collider[] _uncrouchOverlapResults;
 
-    public void Initialize()
+void Awake()
+{
+    motor.CharacterController = this;
+}
+
+public void Initialize()
+{
+    _state.Stance = Stance.Stand;
+    _lastState = _state;
+    _uncrouchOverlapResults = new Collider[8];
+
+    if (AdministradorDeProgreso.Instancia != null)
     {
-        _state.Stance = Stance.Stand;
-        _lastState = _state;
-
-        _uncrouchOverlapResults = new Collider[8];
-
-        motor.CharacterController = this;
+        walkSpeed *= AdministradorDeProgreso.Instancia.multiplicadorVelocidad;
     }
+}
 
     public void UpdateInput(CharacterInput input)
     {
@@ -115,17 +131,13 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         _requestedSustainedJump = input.JumpSustain;
         var wasRequestingCrouch = _requestedCrouch;
-        _requestedCrouch = input.Crouch switch
-        {
-            CrouchInput.Toggle => !_requestedCrouch,
-            CrouchInput.None => _requestedCrouch,
-            _ => _requestedCrouch
-        };
-        if (_requestedCrouch && !wasRequestingCrouch)
-        _requestedCrouchInAir = !_state.Grounded;
-        else if 
-        (!_requestedCrouch && wasRequestingCrouch)
-        _requestedCrouchInAir = false;
+
+_requestedCrouch = input.Crouch == CrouchInput.Hold;
+
+if (_requestedCrouch && !wasRequestingCrouch)
+    _requestedCrouchInAir = !_state.Grounded;
+else if (!_requestedCrouch && wasRequestingCrouch)
+    _requestedCrouchInAir = false;
     
             
     }
@@ -169,6 +181,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
                     _timeSinceUngrounded = 0f;
                     _ungroundedDueToJump = false;
+                    jumpsUsed = 0;
 
                var groundedMovement =
                 motor.GetDirectionTangentToSurface
@@ -202,8 +215,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     effectiveSlideStartSpeed = 0f;
                     _requestedCrouchInAir = false;
                 }
-                var slideSpeed =
-                    Mathf.Max(effectiveSlideStartSpeed, currentVelocity.magnitude);
+               var slideSpeed =
+    Mathf.Min(currentVelocity.magnitude, slideStartSpeed);
 
                 currentVelocity =
                     motor.GetDirectionTangentToSurface
@@ -239,6 +252,21 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 _state.Acceleration = moveVelocity - currentVelocity;
                 
                 currentVelocity = moveVelocity;
+                // FOOTSTEPS (WALK SFX)
+if (_state.Grounded && groundedMovement.sqrMagnitude > 0.1f)
+{
+    stepTimer -= deltaTime;
+
+    if (stepTimer <= 0f)
+    {
+        MusicManager.Instance.PlayWalk();
+        stepTimer = stepInterval;
+    }
+}
+else
+{
+    stepTimer = 0f;
+}
             }
 
             // SLIDE
@@ -369,27 +397,28 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             var grounded = motor.GroundingStatus.IsStableOnGround;
             var canCoyoteJump = _timeSinceUngrounded < coyoteTime && !_ungroundedDueToJump;
 
-            if (grounded || canCoyoteJump)
-            {          
-            
-            _requestedJump = false;
-            _requestedCrouch = false;
-            _requestedCrouchInAir = false;
+            if ((grounded || canCoyoteJump) || jumpsUsed < maxJumps)
+{
+    jumpsUsed++;
+    MusicManager.Instance.PlayJump();
 
+    _requestedJump = false;
+    _requestedCrouch = false;
+    _requestedCrouchInAir = false;
 
-            motor.ForceUnground(0f);
-            _ungroundedDueToJump = true;
+    motor.ForceUnground(0f);
+    _ungroundedDueToJump = true;
 
-            var currentVerticalSpeed =
-                Vector3.Dot(currentVelocity, motor.CharacterUp);
+    var currentVerticalSpeed =
+        Vector3.Dot(currentVelocity, motor.CharacterUp);
 
-            var targetVerticalSpeed =
-                Mathf.Max(currentVerticalSpeed, jumpSpeed);
+    var targetVerticalSpeed =
+        Mathf.Max(currentVerticalSpeed, jumpSpeed);
 
-            currentVelocity +=
-                motor.CharacterUp *
-                (targetVerticalSpeed - currentVerticalSpeed);
-        }
+    currentVelocity +=
+        motor.CharacterUp *
+        (targetVerticalSpeed - currentVerticalSpeed);
+}
         else
             {
                 _timeSinceJumpRequest += deltaTime;
@@ -422,6 +451,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         if (_requestedCrouch && _state.Stance is Stance.Stand)
         {
             _state.Stance = Stance.Crouch;
+            MusicManager.Instance.PlayCrouch();
 
             motor.SetCapsuleDimensions
             (
