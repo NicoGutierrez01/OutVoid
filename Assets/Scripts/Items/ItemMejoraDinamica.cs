@@ -5,18 +5,32 @@ public class ItemMejoraDinamica : MonoBehaviour
     private MejoraData data;
 
     [Header("Referencias Internas")]
-    public MeshFilter meshFilter;
-    public Light luzBaliza; 
+    public Transform puntoVisual;
+    public Light luzBaliza;
+
+    private GameObject visualInstanciado;
 
     public void ConfigurarItem(MejoraData datosAsignados)
     {
         data = datosAsignados;
 
-        if (meshFilter != null && data.malla != null)
+        // Elimina el visual anterior si existe
+        if (visualInstanciado != null)
         {
-            meshFilter.mesh = data.malla;
+            Destroy(visualInstanciado);
         }
 
+        // Instancia el prefab asignado a la mejora
+        if (puntoVisual != null && data.prefabVisual != null)
+        {
+            visualInstanciado = Instantiate(data.prefabVisual, puntoVisual);
+
+            visualInstanciado.transform.localPosition = Vector3.zero;
+            visualInstanciado.transform.localRotation = Quaternion.identity;
+            visualInstanciado.transform.localScale = Vector3.one;
+        }
+
+        // Cambia el color de la luz
         if (luzBaliza != null)
         {
             luzBaliza.color = data.colorBaliza;
@@ -36,14 +50,16 @@ public class ItemMejoraDinamica : MonoBehaviour
     private void AplicarMejora(GameObject jugador)
     {
         PlayerStats stats = jugador.GetComponentInChildren<PlayerStats>();
+
         if (stats != null)
         {
             switch (data.statAMejorar)
             {
                 case TipoStat.VidaMaxima:
                     stats.maxHealth += data.valorSuma;
-                    stats.Heal(data.valorSuma); 
+                    stats.Heal(data.valorSuma);
                     break;
+
                 case TipoStat.Armadura:
                     break;
             }
@@ -53,6 +69,7 @@ public class ItemMejoraDinamica : MonoBehaviour
     private void MostrarMensaje()
     {
         PlayerHUD hud = FindAnyObjectByType<PlayerHUD>();
+
         if (hud != null)
         {
             hud.MostrarItemRecogido($"{data.nombreMejora} ({data.rareza})\n{data.descripcion}");
