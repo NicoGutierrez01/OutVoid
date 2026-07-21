@@ -25,4 +25,4 @@ ProjectSettings/: Configuración específica del entorno del proyecto.
 Estado del Proyecto
 Actualmente en desarrollo activo. Enfocado en la implementación de nuevas funcionalidades y optimización del código existente.
 
-Desarrollado por Nicolas Gutierrez, Agustin Sala, Patricio Giussani
+Desarrollado por Nicolas Gutierrez, Agustin Sala, Patricio Giussani, Valentin Carello
