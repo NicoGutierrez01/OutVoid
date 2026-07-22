@@ -9,11 +9,16 @@ public class Kamikaze : MonoBehaviour
     public PlayerStats playerScript;
     public Animator anim;
 
+    [Header("Configuración de Movimiento y Velocidad")]
+    public float velocidadPatrulla = 3.5f;   
+    public float velocidadPersecucion = 7f;    
+
     [Header("Configuración de Ataque")]
     public float damgeAmount = 30f;
     public float attackRange = 2.5f;
     public float explosionRadius = 4f;
-    public float tiempoParaExplotar = 3f;
+    [Tooltip("Tiempo total en segundos que tarda en explotar desde que entra en rango")]
+    public float tiempoParaExplotar = 1.2f; 
 
     [Header("Efectos Visuales")]
     private SkinnedMeshRenderer[] renderers;
@@ -69,9 +74,11 @@ public class Kamikaze : MonoBehaviour
                 {
                     isAlerted = true;
                     agent.isStopped = false;
+                    agent.speed = velocidadPersecucion;
                 }
                 else
                 {
+                    agent.speed = velocidadPatrulla;
                     ManejarPatrullaPasiva();
                     return; 
                 }
@@ -85,16 +92,23 @@ public class Kamikaze : MonoBehaviour
             else { tiempoTrabado = 0f; }
 
             agent.SetDestination(playerTransform.position);
-            anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.1f);
+            
+            if (anim != null)
+            {
+                anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.1f);
+            }
 
             float distance = Vector3.Distance(transform.position, playerTransform.position);
-            if (distance <= attackRange) EmpezarExplosion();
+            if (distance <= attackRange)
+            {
+                EmpezarExplosion();
+            }
         }
     }
 
     void ManejarPatrullaPasiva()
     {
-        anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.1f);
+        if (anim != null) anim.SetBool("isMoving", agent.velocity.sqrMagnitude > 0.1f);
 
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.5f)
         {
@@ -154,15 +168,25 @@ public class Kamikaze : MonoBehaviour
     void EmpezarExplosion()
     {
         estaExplotando = true;
-        agent.isStopped = true;
-        anim.SetTrigger("Explode");
+
+        if (anim != null) anim.SetTrigger("Explode");
+
+        Vector3 direccionCarga = transform.forward;
+        Vector3 destinoCarga = transform.position + direccionCarga * 8f; 
+        
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.SetDestination(destinoCarga);
+            agent.speed = velocidadPersecucion;
+        }
+
         StartCoroutine(RutinaExplosion());
     }
 
     IEnumerator RutinaExplosion()
     {
         float tiempoPasado = 0f;
-        float velocidadParpadeo = 0.3f; 
+        float velocidadParpadeo = 0.15f; 
         bool brilloActivo = false;
 
         while (tiempoPasado < tiempoParaExplotar)
@@ -171,16 +195,25 @@ public class Kamikaze : MonoBehaviour
 
             foreach (var r in renderers)
             {
-                r.material.SetColor("_EmissionColor", colorEmision);
+                if (r != null && r.material.HasProperty("_EmissionColor"))
+                {
+                    r.material.SetColor("_EmissionColor", colorEmision);
+                }
             }
             
             brilloActivo = !brilloActivo; 
             yield return new WaitForSeconds(velocidadParpadeo);
             tiempoPasado += velocidadParpadeo;
-            velocidadParpadeo = Mathf.Max(0.05f, velocidadParpadeo * 0.85f);
+            velocidadParpadeo = Mathf.Max(0.03f, velocidadParpadeo * 0.8f);
         }
 
-        foreach (var r in renderers) r.material.SetColor("_EmissionColor", Color.black);
+        foreach (var r in renderers)
+        {
+            if (r != null && r.material.HasProperty("_EmissionColor"))
+            {
+                r.material.SetColor("_EmissionColor", Color.black);
+            }
+        }
 
         if (particulasExplosion != null)
         {
