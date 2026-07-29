@@ -47,6 +47,7 @@ public class ItemMejoraDinamica : MonoBehaviour
     private void AplicarMejora(GameObject jugador)
     {
         PlayerStats stats = jugador.GetComponentInChildren<PlayerStats>();
+        PlayerCharacter character = jugador.GetComponentInChildren<PlayerCharacter>();
 
         if (stats != null)
         {
@@ -58,6 +59,13 @@ public class ItemMejoraDinamica : MonoBehaviour
                     break;
 
                 case TipoStat.Armadura:
+                    break;
+
+                case TipoStat.DobleSalto:
+                    if (character != null)
+                    {
+                        character.AgregarSaltoExtra((int)data.valorSuma);
+                    }
                     break;
             }
         }
