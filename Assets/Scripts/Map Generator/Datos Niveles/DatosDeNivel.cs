@@ -9,6 +9,7 @@ public class DatosDeNivel : ScriptableObject
     public LayerMask capaSuelo;
 
     [Header("Jugador")]
+    public GameObject playerPrefab;
     public Vector3[] spawnPointsPlayer;
 
     [Header("Spawns y Enemigos del Nivel")]
