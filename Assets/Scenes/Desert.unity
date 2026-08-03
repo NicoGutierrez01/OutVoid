@@ -4038,6 +4038,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ba6b767489101f4b8c87b8f30fbb22f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
+  ordenDeNiveles:
+  - Desert
+  - Forest
   datosNivelActual: {fileID: 11400000, guid: e6db02546bfee364bbbe99a923296d42, type: 2}
   objetivoActual: 0
   enemigosParaJefe: 25
@@ -4045,7 +4048,7 @@ MonoBehaviour:
   tiempoDefensa: 60
   tiempoDefensaActual: 0
   rondaActual: 1
-  maxRondas: 3
+  maxRondas: 4
   retrasoSpawnBoss: 2
   panelCargaEscena: {fileID: 1094834790}
   barraCargaEscena: {fileID: 1005934888}

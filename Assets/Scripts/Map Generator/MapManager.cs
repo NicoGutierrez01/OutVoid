@@ -39,7 +39,7 @@ public class MapManager : MonoBehaviour
     public static int nivelBucle = 1;
     public static bool bossDerrotado = false;
     public int rondaActual = 1;
-    public int maxRondas = 3;
+    public int maxRondas = 4;
     public float retrasoSpawnBoss = 2f;
 
     [Header("UI y Pantallas de Carga")]
