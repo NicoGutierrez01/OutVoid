@@ -397,11 +397,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainMenu
   panelPrincipal: {fileID: 1719235752}
   panelOpciones: {fileID: 1394453996}
-  panelCarga: {fileID: 36972945}
   panelConsentimiento: {fileID: 2071556117}
   anim: {fileID: 0}
-  barraDeCarga: {fileID: 881760080}
-  nombreEscenaJuego: Desert
+  nombreEscenaJuego: Forest
   sliderSensibilidad: {fileID: 515582660}
   textoSensibilidad: {fileID: 326366570}
   botonSalir: {fileID: 308814862}

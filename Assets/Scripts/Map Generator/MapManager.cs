@@ -55,6 +55,7 @@ public class MapManager : MonoBehaviour
     public MejoraData[] mejorasRaras;
     public MejoraData[] mejorasEpicas;
 
+    private GameObject zonaDefensaInstanciada;
     private GameObject lapidaInstanciada;
     private Vector3 alturaPortalBossDinamica; 
     private List<GameObject> portalesActivos = new List<GameObject>();
@@ -74,7 +75,14 @@ public class MapManager : MonoBehaviour
         bossDerrotado = false;
         navSurface = GetComponent<NavMeshSurface>();
 
-        objetivoActual = TipoObjetivo.EliminarEnemigos;
+        if (nivelBucle == 1)
+        {
+            objetivoActual = TipoObjetivo.EliminarEnemigos;
+        }
+        else if (nivelBucle == 2)
+        {
+            objetivoActual = TipoObjetivo.DefenderZona;
+        }
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(true);
         if (barraCargaEscena != null) barraCargaEscena.value = 0;
@@ -82,6 +90,31 @@ public class MapManager : MonoBehaviour
         StartCoroutine(SecuenciaDeGeneracionAsincrona());
 
         AnalyticsBridge.EnviarLevelStart(SessionData.level, rondaActual);
+    }
+
+    void Update()
+    {
+        if (objetivoActual == TipoObjetivo.DefenderZona && rondaActual < maxRondas)
+        {
+            if (ZonaDefensa.jugadorEnZona)
+            {
+                tiempoDefensaActual -= Time.deltaTime; 
+
+                if (tiempoDefensaActual < 0) 
+                {
+                    tiempoDefensaActual = 0;
+                }
+
+                ActualizarTextoProgreso();
+
+                if (tiempoDefensaActual <= 0)
+                {
+                    ZonaDefensa.jugadorEnZona = false; 
+                    
+                    CompletarObjetivoRonda();
+                }
+            }
+        }
     }
     #endregion
 
@@ -248,12 +281,31 @@ public class MapManager : MonoBehaviour
         if (objetivoActual == TipoObjetivo.EliminarEnemigos)
         {
             enemigosMuertosActuales = 0; 
-            enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10); 
+            enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10);
+            
+            if (zonaDefensaInstanciada != null) 
+            {
+                Destroy(zonaDefensaInstanciada);
+            }
         }
         else if (objetivoActual == TipoObjetivo.DefenderZona)
         {
-            tiempoDefensaActual = tiempoDefensa;
+            tiempoDefensaActual = tiempoDefensa + ((rondaActual - 1) * 30f);
+            
+            if (zonaDefensaInstanciada == null && datosNivelActual != null && datosNivelActual.zonaDefensaPrefab != null)
+            {
+                Vector3 posicionZona = Vector3.zero;
+                
+                if (datosNivelActual.spawnPointsZonas != null && datosNivelActual.spawnPointsZonas.Length > 0)
+                {
+                    posicionZona = datosNivelActual.spawnPointsZonas[Random.Range(0, datosNivelActual.spawnPointsZonas.Length)];
+                }
+                
+                zonaDefensaInstanciada = Instantiate(datosNivelActual.zonaDefensaPrefab, posicionZona, Quaternion.identity);
+                zonaDefensaInstanciada.transform.parent = this.transform; 
+            }
         }
+        
         ActualizarTextoProgreso();
     }
 
@@ -485,18 +537,18 @@ public class MapManager : MonoBehaviour
     {
         if (textoProgresoMuertes != null)
         {
-            if (rondaActual == maxRondas)
+            if (rondaActual >= maxRondas) 
             {
-                textoProgresoMuertes.text = "¡Derrota al Jefe!";
+                textoProgresoMuertes.text = "¡Derrota\nal Jefe!";
             }
             else if (objetivoActual == TipoObjetivo.EliminarEnemigos)
             {
                 int muertesVisuales = Mathf.Min(enemigosMuertosActuales, enemigosParaJefe);
-                textoProgresoMuertes.text = $"Enemigos: {muertesVisuales} / {enemigosParaJefe}";
+                textoProgresoMuertes.text = $"Mata enemigos\n{muertesVisuales} / {enemigosParaJefe}";
             }
             else if (objetivoActual == TipoObjetivo.DefenderZona)
             {
-                textoProgresoMuertes.text = $"Sobrevive: {Mathf.CeilToInt(tiempoDefensaActual)}s";
+                textoProgresoMuertes.text = $"Defiende la zona\n{Mathf.CeilToInt(tiempoDefensaActual)}s";
             }
         }
     }

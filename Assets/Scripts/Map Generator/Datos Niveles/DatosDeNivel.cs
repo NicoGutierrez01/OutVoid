@@ -29,6 +29,10 @@ public class DatosDeNivel : ScriptableObject
     public List<GameObject> prefabsDecoracionPrincipal;
     public int cantidadDecoracionPrincipal = 50; 
 
+    [Header("Objetivos Especiales")]
+    public GameObject zonaDefensaPrefab;
+    public Vector3[] spawnPointsZonas;
+
     public List<GameObject> prefabsDecoracionSecundaria;
     public int cantidadDecoracionSecundaria = 75;
 
