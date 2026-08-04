@@ -14,7 +14,7 @@ public class MainMenu : MonoBehaviour
     public Animator anim;
 
     [Header("Escena de Juego")]
-    public string nombreEscenaJuego = "Desert"; 
+    public string nombreEscenaJuego = "Forest"; 
 
     [Header("Opciones - Sensibilidad")]
     public Slider sliderSensibilidad;
@@ -61,9 +61,8 @@ public class MainMenu : MonoBehaviour
     public void EmpezarJuego()
     {
         GameTimer.tiempoTotal = 0f; 
-        MapManager.nivelBucle = 1;
+        MapManager.nivelBucle = 2;
 
-        // Carga directa e inmediata de la escena del juego
         SceneManager.LoadScene(nombreEscenaJuego);
     }
 

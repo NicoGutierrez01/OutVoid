@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b39d7b29f4c39444dba54c13bef3d3ea, type: 3}
+  m_Name: Nivel_Forest
+  m_EditorClassIdentifier: Assembly-CSharp::DatosDeNivel
+  mapaPrefab: {fileID: 7914907432012892536, guid: 30228d338501f9b4797a031dc9f16c39, type: 3}
+  capaSuelo:
+    serializedVersion: 2
+    m_Bits: 8
+  playerPrefab: {fileID: 663390133554984710, guid: 1c42ed567325a4898965abdee55fa808, type: 3}
+  spawnPointsPlayer:
+  - {x: -50, y: -13, z: 65}
+  - {x: -210, y: -13, z: -60}
+  - {x: 65, y: -13, z: -55}
+  portalEnemigoPrefab: {fileID: 2148023456166452146, guid: ecc1c68241d7b764d96464dbb4fbfa87, type: 3}
+  spawnPointsPortales:
+  - {x: -110, y: 0, z: -30}
+  - {x: -200, y: 0, z: -30}
+  - {x: -200, y: 0, z: -100}
+  - {x: -140, y: 0, z: 90}
+  - {x: -45, y: 0, z: 50}
+  - {x: -30, y: 0, z: -29}
+  - {x: 90, y: 0, z: -45}
+  - {x: 180, y: 0, z: -90}
+  - {x: 55, y: 0, z: -120}
+  - {x: 89, y: 0, z: 11}
+  spawnPointsLapida:
+  - {x: -50, y: -13, z: 65}
+  bossPrefab: {fileID: 2811968405897873640, guid: b450d5c152800f74fa93f4a754f8f5f6, type: 3}
+  portalBossPrefab: {fileID: 2148023456166452146, guid: 9c21d9309ee67ea4cb6833b8313b6223, type: 3}
+  lapidaPrefab: {fileID: 1640529776990550443, guid: 31cc64558ddc5e44b8b3e9833d1d9c1f, type: 3}
+  spawnPointsPortalBoss:
+  - {x: -50, y: 25, z: 65}
+  prefabsDecoracionPrincipal:
+  - {fileID: 6554328710291321494, guid: d35a37cd401117046937e655b7069cc6, type: 3}
+  - {fileID: 6963621031325828773, guid: 878eca668dbce0e42a685d5f023f9d55, type: 3}
+  cantidadDecoracionPrincipal: 15
+  zonaDefensaPrefab: {fileID: 4618040435622777381, guid: baecbdaaa4f923944a08e40217c484ed, type: 3}
+  spawnPointsZonas:
+  - {x: 120, y: -14, z: -58}
+  - {x: 92, y: -13.26, z: 0}
+  - {x: 92, y: -14, z: -43}
+  - {x: 120, y: -14, z: -58}
+  - {x: 155, y: -14, z: -61}
+  - {x: 165, y: -14, z: -109}
+  - {x: 98, y: -14, z: -143}
+  - {x: 58, y: -14, z: -143}
+  - {x: 27, y: -14, z: -102}
+  - {x: 1, y: -14, z: -102}
+  - {x: -37, y: -13.75, z: 13}
+  - {x: -37, y: -13.75, z: 50.88}
+  - {x: -18.1, y: -13.75, z: 78.89}
+  - {x: -78.1, y: -13.75, z: 75.8}
+  - {x: -143.06, y: -13.75, z: 57.6}
+  - {x: -143.06, y: -13.75, z: -6.9}
+  - {x: -148.6, y: -13.75, z: -35.7}
+  - {x: -118.84, y: -12.5, z: -76.7}
+  - {x: -126.2, y: -12.5, z: -113.7}
+  - {x: -210.2, y: -12.5, z: -100.2}
+  - {x: -210.2, y: -12.5, z: -57.5}
+  prefabsDecoracionSecundaria:
+  - {fileID: 8775978792791231413, guid: 7ffe4924f6901284ab1d3dcedea29c39, type: 3}
+  - {fileID: 1687128777873670659, guid: 08ea27e48771e95409b53b44c1e73e05, type: 3}
+  cantidadDecoracionSecundaria: 25
+  prefabDecoracionSuelo: {fileID: 6439883145149483738, guid: 7eff52fd4ae45a64ba32bbd92a7b3ca2, type: 3}
+  cantidadDecoracionSuelo: 40
