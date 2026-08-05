@@ -4052,9 +4052,9 @@ MonoBehaviour:
   retrasoSpawnBoss: 2
   panelCargaEscena: {fileID: 1094834790}
   barraCargaEscena: {fileID: 1005934888}
-  textoProgresoMuertes: {fileID: 0}
-  popupInstrucciones: {fileID: 0}
-  popupLapidaInvocada: {fileID: 0}
+  textoProgresoMuertes: {fileID: 1461506914}
+  popupInstrucciones: {fileID: 1312207454}
+  popupLapidaInvocada: {fileID: 2123949316}
   prefabContenedorMejora: {fileID: 3367296277196983850, guid: 275865f72f0706f4c90102cc567b09f2, type: 3}
   mejorasComunes:
   - {fileID: 11400000, guid: 15de0f1a984c49646865c816ba7b2ca8, type: 2}

@@ -179,7 +179,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be336a968bef7684e82b5f15c14dbca4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Boss
-  maxHealth: 3000
+  maxHealth: 3
   currentHealth: 0
   bossRenderer: {fileID: 0}
   flashDuration: 0.1

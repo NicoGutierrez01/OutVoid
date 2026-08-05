@@ -4161,8 +4161,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1355277754}
-  - component: {fileID: 1355277753}
   - component: {fileID: 1355277752}
+  - component: {fileID: 1355277755}
   m_Layer: 0
   m_Name: MapManager
   m_TagString: Untagged
@@ -4202,7 +4202,22 @@ MonoBehaviour:
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 0}
   m_BuildHeightMesh: 0
---- !u!114 &1355277753
+--- !u!4 &1355277754
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1355277751}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1355277755
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4219,18 +4234,18 @@ MonoBehaviour:
   - Forest
   datosNivelActual: {fileID: 11400000, guid: e3682b79926549244b1e21c548cd2731, type: 2}
   objetivoActual: 1
-  enemigosParaJefe: 25
+  enemigosParaJefe: 15
   enemigosMuertosActuales: 0
-  tiempoDefensa: 60
+  tiempoDefensa: 5
   tiempoDefensaActual: 0
   rondaActual: 1
   maxRondas: 4
   retrasoSpawnBoss: 2
   panelCargaEscena: {fileID: 590593432}
   barraCargaEscena: {fileID: 293913554}
-  textoProgresoMuertes: {fileID: 0}
-  popupInstrucciones: {fileID: 0}
-  popupLapidaInvocada: {fileID: 0}
+  textoProgresoMuertes: {fileID: 1069690550}
+  popupInstrucciones: {fileID: 531286357}
+  popupLapidaInvocada: {fileID: 486368760}
   prefabContenedorMejora: {fileID: 3367296277196983850, guid: 275865f72f0706f4c90102cc567b09f2, type: 3}
   mejorasComunes:
   - {fileID: 11400000, guid: 15de0f1a984c49646865c816ba7b2ca8, type: 2}
@@ -4238,21 +4253,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ce7041853a391564e9cd32920708b1ce, type: 2}
   mejorasEpicas:
   - {fileID: 11400000, guid: 69cb924d41c16b04d92679faeec3610c, type: 2}
---- !u!4 &1355277754
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1355277751}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1360100457
 GameObject:
   m_ObjectHideFlags: 0
