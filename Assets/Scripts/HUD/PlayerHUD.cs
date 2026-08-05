@@ -166,10 +166,18 @@ public class PlayerHUD : MonoBehaviour
                 }
                 if (textoDescripcion != null)
                 {
-                    int muertos = MapManager.Instance.enemigosMuertosActuales;
-                    int meta = MapManager.Instance.enemigosParaJefe;
-
-                    textoDescripcion.text = $"Mata enemigos\n{muertos} / {meta}";
+                    if (MapManager.Instance.objetivoActual == TipoObjetivo.EliminarEnemigos)
+                    {
+                        int muertos = MapManager.Instance.enemigosMuertosActuales;
+                        int meta = MapManager.Instance.enemigosParaJefe;
+                        textoDescripcion.text = $"Mata enemigos\n{muertos} / {meta}";
+                    }
+                    else if (MapManager.Instance.objetivoActual == TipoObjetivo.DefenderZona)
+                    {
+                        int tiempo = Mathf.CeilToInt(MapManager.Instance.tiempoDefensaActual);
+                        textoDescripcion.text = $"Defiende la zona\n{tiempo}s";
+                    }
+                    
                     textoDescripcion.color = Color.white;
                 }
             }

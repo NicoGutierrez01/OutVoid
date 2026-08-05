@@ -399,7 +399,7 @@ MonoBehaviour:
   panelOpciones: {fileID: 1394453996}
   panelConsentimiento: {fileID: 2071556117}
   anim: {fileID: 0}
-  nombreEscenaJuego: Forest
+  nombreEscenaJuego: Desert
   sliderSensibilidad: {fileID: 515582660}
   textoSensibilidad: {fileID: 326366570}
   botonSalir: {fileID: 308814862}

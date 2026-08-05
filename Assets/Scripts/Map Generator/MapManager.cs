@@ -60,6 +60,7 @@ public class MapManager : MonoBehaviour
     private Vector3 alturaPortalBossDinamica; 
     private List<GameObject> portalesActivos = new List<GameObject>();
     private NavMeshSurface navSurface;
+    private int ultimoIndiceZona;
     
     public static MapManager Instance;
     #endregion
@@ -82,6 +83,7 @@ public class MapManager : MonoBehaviour
         else if (nivelBucle == 2)
         {
             objetivoActual = TipoObjetivo.DefenderZona;
+            Debug.Log("El codigo funciona: el objetivo es defensa");
         }
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(true);
@@ -281,7 +283,7 @@ public class MapManager : MonoBehaviour
         if (objetivoActual == TipoObjetivo.EliminarEnemigos)
         {
             enemigosMuertosActuales = 0; 
-            enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10);
+            enemigosParaJefe = (1 * rondaActual) + ((nivelBucle - 1) * 10);
             
             if (zonaDefensaInstanciada != null) 
             {
@@ -290,19 +292,40 @@ public class MapManager : MonoBehaviour
         }
         else if (objetivoActual == TipoObjetivo.DefenderZona)
         {
-            tiempoDefensaActual = tiempoDefensa + ((rondaActual - 1) * 30f);
+            tiempoDefensaActual = tiempoDefensa + ((rondaActual - 1) * 5f);
+
+            if (zonaDefensaInstanciada != null)
+            {
+                Destroy(zonaDefensaInstanciada);
+                zonaDefensaInstanciada = null;
+            }
             
-            if (zonaDefensaInstanciada == null && datosNivelActual != null && datosNivelActual.zonaDefensaPrefab != null)
+            if (datosNivelActual != null && datosNivelActual.zonaDefensaPrefab != null)
             {
                 Vector3 posicionZona = Vector3.zero;
-                
+
                 if (datosNivelActual.spawnPointsZonas != null && datosNivelActual.spawnPointsZonas.Length > 0)
                 {
-                    posicionZona = datosNivelActual.spawnPointsZonas[Random.Range(0, datosNivelActual.spawnPointsZonas.Length)];
+                    int nuevoIndice;
+
+                    if (datosNivelActual.spawnPointsZonas.Length == 1)
+                    {
+                        nuevoIndice = 0;
+                    }
+                    else
+                    {
+                        do
+                        {
+                            nuevoIndice  = Random.Range(0, datosNivelActual.spawnPointsZonas.Length);
+                        }while (nuevoIndice == ultimoIndiceZona);
+                    }
+                    
+                    ultimoIndiceZona = nuevoIndice;
+                    posicionZona = datosNivelActual.spawnPointsZonas[nuevoIndice];
                 }
-                
+
                 zonaDefensaInstanciada = Instantiate(datosNivelActual.zonaDefensaPrefab, posicionZona, Quaternion.identity);
-                zonaDefensaInstanciada.transform.parent = this.transform; 
+                zonaDefensaInstanciada.transform.parent = this.transform;
             }
         }
         
@@ -414,6 +437,12 @@ public class MapManager : MonoBehaviour
     void SpawnearLapida()                                                           
     {
         if (lapidaInstanciada != null || datosNivelActual == null) return; 
+
+        if (zonaDefensaInstanciada != null)
+        {
+            Destroy(zonaDefensaInstanciada);
+            zonaDefensaInstanciada = null;
+        }
 
         if (nivelBucle < 4) 
         {
