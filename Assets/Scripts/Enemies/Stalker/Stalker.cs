@@ -69,7 +69,7 @@ public class Stalker : MonoBehaviour
 
         if (!isAlerted)
         {
-            if (CheckVisionYProximidad())
+            if (CheckVisionYProximidad() || ZonaDefensa.jugadorEnZona)
             {
                 isAlerted = true;
                 agent.isStopped = false;
