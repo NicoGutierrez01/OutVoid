@@ -175,7 +175,10 @@ public class PlayerHUD : MonoBehaviour
                     else if (MapManager.Instance.objetivoActual == TipoObjetivo.DefenderZona)
                     {
                         int tiempo = Mathf.CeilToInt(MapManager.Instance.tiempoDefensaActual);
-                        textoDescripcion.text = $"Defiende la zona\n{tiempo}s";
+                        int zonasTotales = MapManager.Instance.rondaActual;
+                        int zonasHechas = zonasTotales - MapManager.Instance.zonasRestantesEnRonda + 1;
+
+                        textoDescripcion.text = $"Defiende la zona ({zonasHechas}/{zonasTotales})\n{tiempo}s";
                     }
                     
                     textoDescripcion.color = Color.white;

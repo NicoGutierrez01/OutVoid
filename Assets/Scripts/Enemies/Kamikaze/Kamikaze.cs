@@ -70,7 +70,7 @@ public class Kamikaze : MonoBehaviour
         {
             if (!isAlerted)
             {
-                if (CheckVisionYProximidad())
+                if (CheckVisionYProximidad() || ZonaDefensa.jugadorEnZona)
                 {
                     isAlerted = true;
                     agent.isStopped = false;

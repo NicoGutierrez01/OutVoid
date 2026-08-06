@@ -61,14 +61,13 @@ public class Artillero : MonoBehaviour
         {
             if (!isAlerted)
             {
-                if (CheckVisionYProximidad())
+                if (CheckVisionYProximidad() || ZonaDefensa.jugadorEnZona)
                 {
                     isAlerted = true;
                     SetAnimState(false, true); 
                 }
                 else
                 {
-                    // Si no está en combate, que el NavMesh controle a dónde mira
                     agent.updateRotation = true;
                     agent.speed = velocidadAvance;
                     ManejarPatrullaPasiva();
@@ -76,10 +75,8 @@ public class Artillero : MonoBehaviour
                 }
             }
 
-            // EN COMBATE: Desactivamos la rotación del NavMesh para controlar la mirada manualmente
             agent.updateRotation = false;
 
-            // Detección de atasco
             if (agent.velocity.sqrMagnitude < 0.3f && !agent.isStopped)
             {
                 tiempoTrabado += Time.deltaTime;
@@ -89,7 +86,6 @@ public class Artillero : MonoBehaviour
 
             float distance = Vector3.Distance(transform.position, playerTransform.position);
 
-            // Si está reproduciendo la animación de disparo, lo frenamos un instante
             if (estaDisparando)
             {
                 agent.isStopped = true;
@@ -97,7 +93,6 @@ public class Artillero : MonoBehaviour
                 return;
             }
 
-            // Lógica Global de Disparo (Puede disparar estando lejos, cerca o huyendo)
             if (distance <= attackRange && Time.time >= nextShotTime)
             {
                 if (ShotManager.Instance == null || ShotManager.Instance.SolicitarPermisoParaDisparar())
@@ -106,7 +101,6 @@ public class Artillero : MonoBehaviour
                 }
             }
 
-            // 1. Si está muy lejos: Avanzar hacia el jugador
             if (distance > attackRange)
             {
                 agent.isStopped = false;
@@ -120,12 +114,11 @@ public class Artillero : MonoBehaviour
                     estadoActualAnim = 0;
                 }
             }
-            // 2. Si está demasiado cerca: Retroceder (Kiting) mirándote de frente
             else if (distance < retreatRange)
             {
                 Vector3 direccionAlejarse = (transform.position - playerTransform.position).normalized;
                 direccionAlejarse.y = 0;
-                // Calculamos un punto unos metros detrás de él
+
                 Vector3 destinoRetroceso = transform.position + direccionAlejarse * 3f; 
 
                 agent.isStopped = false;
@@ -134,13 +127,12 @@ public class Artillero : MonoBehaviour
                 
                 MirarAlJugador(12f);
 
-                if (estadoActualAnim != 2) // Usamos otro estado para forzar la animación
+                if (estadoActualAnim != 2) 
                 {
                     SetAnimState(true, true); 
                     estadoActualAnim = 2;
                 }
             }
-            // 3. En rango ideal de tiro: Frenar y Apuntar
             else
             {
                 agent.isStopped = true;

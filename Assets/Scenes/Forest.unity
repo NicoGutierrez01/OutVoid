@@ -4236,8 +4236,9 @@ MonoBehaviour:
   objetivoActual: 1
   enemigosParaJefe: 15
   enemigosMuertosActuales: 0
-  tiempoDefensa: 5
+  tiempoDefensa: 30
   tiempoDefensaActual: 0
+  zonasRestantesEnRonda: 1
   rondaActual: 1
   maxRondas: 4
   retrasoSpawnBoss: 2

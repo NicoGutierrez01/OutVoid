@@ -34,6 +34,7 @@ public class MapManager : MonoBehaviour
     [Header("Logica Objetivo 2: Defender Zona")]
     public float tiempoDefensa = 60f;
     public float tiempoDefensaActual = 0f;
+    public int zonasRestantesEnRonda = 1;
 
     [Header("Sistema de Rondas y Bucles")]
     public static int nivelBucle = 1;
@@ -107,13 +108,20 @@ public class MapManager : MonoBehaviour
                     tiempoDefensaActual = 0;
                 }
 
-                ActualizarTextoProgreso();
-
                 if (tiempoDefensaActual <= 0)
                 {
                     ZonaDefensa.jugadorEnZona = false; 
+                    zonasRestantesEnRonda--; 
                     
-                    CompletarObjetivoRonda();
+                    if (zonasRestantesEnRonda > 0)
+                    {
+                        MoverZonaAOtroPunto();
+                        tiempoDefensaActual = tiempoDefensa; 
+                    }
+                    else
+                    {
+                        CompletarObjetivoRonda();
+                    }
                 }
             }
         }
@@ -283,7 +291,7 @@ public class MapManager : MonoBehaviour
         if (objetivoActual == TipoObjetivo.EliminarEnemigos)
         {
             enemigosMuertosActuales = 0; 
-            enemigosParaJefe = (1 * rondaActual) + ((nivelBucle - 1) * 10);
+            enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10);
             
             if (zonaDefensaInstanciada != null) 
             {
@@ -292,44 +300,50 @@ public class MapManager : MonoBehaviour
         }
         else if (objetivoActual == TipoObjetivo.DefenderZona)
         {
-            tiempoDefensaActual = tiempoDefensa + ((rondaActual - 1) * 5f);
-
-            if (zonaDefensaInstanciada != null)
-            {
-                Destroy(zonaDefensaInstanciada);
-                zonaDefensaInstanciada = null;
-            }
+            zonasRestantesEnRonda = rondaActual; 
+            tiempoDefensaActual = tiempoDefensa; 
             
-            if (datosNivelActual != null && datosNivelActual.zonaDefensaPrefab != null)
-            {
-                Vector3 posicionZona = Vector3.zero;
-
-                if (datosNivelActual.spawnPointsZonas != null && datosNivelActual.spawnPointsZonas.Length > 0)
-                {
-                    int nuevoIndice;
-
-                    if (datosNivelActual.spawnPointsZonas.Length == 1)
-                    {
-                        nuevoIndice = 0;
-                    }
-                    else
-                    {
-                        do
-                        {
-                            nuevoIndice  = Random.Range(0, datosNivelActual.spawnPointsZonas.Length);
-                        }while (nuevoIndice == ultimoIndiceZona);
-                    }
-                    
-                    ultimoIndiceZona = nuevoIndice;
-                    posicionZona = datosNivelActual.spawnPointsZonas[nuevoIndice];
-                }
-
-                zonaDefensaInstanciada = Instantiate(datosNivelActual.zonaDefensaPrefab, posicionZona, Quaternion.identity);
-                zonaDefensaInstanciada.transform.parent = this.transform;
-            }
+            MoverZonaAOtroPunto();
         }
         
         ActualizarTextoProgreso();
+    }
+
+    void MoverZonaAOtroPunto()
+    {
+        if (zonaDefensaInstanciada != null)
+        {
+            Destroy(zonaDefensaInstanciada);
+            zonaDefensaInstanciada = null; 
+        }
+
+        if (datosNivelActual != null && datosNivelActual.zonaDefensaPrefab != null)
+        {
+            Vector3 posicionZona = Vector3.zero;
+            
+            if (datosNivelActual.spawnPointsZonas != null && datosNivelActual.spawnPointsZonas.Length > 0)
+            {
+                int nuevoIndice;
+
+                if (datosNivelActual.spawnPointsZonas.Length == 1)
+                {
+                    nuevoIndice = 0;
+                }
+                else
+                {
+                    do
+                    {
+                        nuevoIndice = Random.Range(0, datosNivelActual.spawnPointsZonas.Length);
+                    } while (nuevoIndice == ultimoIndiceZona);
+                }
+
+                ultimoIndiceZona = nuevoIndice; 
+                posicionZona = datosNivelActual.spawnPointsZonas[nuevoIndice];
+            }
+            
+            zonaDefensaInstanciada = Instantiate(datosNivelActual.zonaDefensaPrefab, posicionZona, Quaternion.identity);
+            zonaDefensaInstanciada.transform.parent = this.transform; 
+        }
     }
 
     public void SpawnearPortalBoss()
