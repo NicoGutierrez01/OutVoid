@@ -34,7 +34,7 @@ MonoBehaviour:
   - {x: 55, y: 0, z: -120}
   - {x: 89, y: 0, z: 11}
   spawnPointsLapida:
-  - {x: -50, y: -13, z: 65}
+  - {x: -50, y: -14.13, z: 65}
   bossPrefab: {fileID: 2811968405897873640, guid: b450d5c152800f74fa93f4a754f8f5f6, type: 3}
   portalBossPrefab: {fileID: 2148023456166452146, guid: 9c21d9309ee67ea4cb6833b8313b6223, type: 3}
   lapidaPrefab: {fileID: 1640529776990550443, guid: 31cc64558ddc5e44b8b3e9833d1d9c1f, type: 3}
@@ -44,6 +44,8 @@ MonoBehaviour:
   - {fileID: 6554328710291321494, guid: d35a37cd401117046937e655b7069cc6, type: 3}
   - {fileID: 6963621031325828773, guid: 878eca668dbce0e42a685d5f023f9d55, type: 3}
   cantidadDecoracionPrincipal: 15
+  zonaDefensaPrefab: {fileID: 0}
+  spawnPointsZonas: []
   prefabsDecoracionSecundaria:
   - {fileID: 8775978792791231413, guid: 7ffe4924f6901284ab1d3dcedea29c39, type: 3}
   - {fileID: 1687128777873670659, guid: 08ea27e48771e95409b53b44c1e73e05, type: 3}
