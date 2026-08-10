@@ -4043,7 +4043,7 @@ MonoBehaviour:
   - Forest
   datosNivelActual: {fileID: 11400000, guid: e6db02546bfee364bbbe99a923296d42, type: 2}
   objetivoActual: 0
-  enemigosParaJefe: 15
+  enemigosParaJefe: 1
   enemigosMuertosActuales: 0
   tiempoDefensa: 60
   tiempoDefensaActual: 0

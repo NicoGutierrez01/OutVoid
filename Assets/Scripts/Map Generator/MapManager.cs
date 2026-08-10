@@ -291,7 +291,7 @@ public class MapManager : MonoBehaviour
         if (objetivoActual == TipoObjetivo.EliminarEnemigos)
         {
             enemigosMuertosActuales = 0; 
-            enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10);
+            enemigosParaJefe = (1 * rondaActual) + ((nivelBucle - 1) * 10);
             
             if (zonaDefensaInstanciada != null) 
             {
