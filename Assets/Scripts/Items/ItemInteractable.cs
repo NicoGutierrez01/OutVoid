@@ -64,7 +64,19 @@ public class ItemInteractable : MonoBehaviour
         idDropOrigen = idDrop; 
         ActualizarVisual(); 
     }
+private void OnTriggerEnter(Collider other)
 
+{
+
+    if (other.CompareTag("Player"))
+
+    {
+
+        Recoger(other.gameObject);
+
+    }
+
+}
     public void Recoger(GameObject jugador)
     {
         Debug.Log($"¡Ítem {dataItem.nombreItem} recogido por el jugador!");
