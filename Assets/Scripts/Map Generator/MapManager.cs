@@ -421,23 +421,50 @@ public class MapManager : MonoBehaviour
     }
 
     public void AvanzarSiguienteNivel()
+{
+    AnalyticsBridge.EnviarLevelComplete(SessionData.level, maxRondas);
+
+    // =====================================================
+    // GUARDAR EL ESTADO DEL JUGADOR ANTES DE CAMBIAR
+    // DE ESCENA
+    // =====================================================
+
+    GameObject jugador = GameObject.FindGameObjectWithTag("Player");
+
+    if (jugador != null && AdministradorDeProgreso.Instancia != null)
     {
-        AnalyticsBridge.EnviarLevelComplete(SessionData.level, maxRondas);
+        AdministradorDeProgreso.Instancia.GuardarEstadoJugador(jugador);
 
-        nivelBucle++; 
-        SessionData.level = nivelBucle;
-
-        int indiceSiguienteMapa = nivelBucle - 1;
-
-        if (indiceSiguienteMapa >= ordenDeNiveles.Length) 
-        {
-            SceneManager.LoadScene("GameOver");
-        }
-        else
-        {
-            SceneManager.LoadScene(ordenDeNiveles[indiceSiguienteMapa]);
-        }
+        Debug.Log("[MAP MANAGER] Estado del jugador guardado antes de cambiar de escena.");
     }
+    else
+    {
+        Debug.LogWarning(
+            "[MAP MANAGER] No se pudo guardar el estado del jugador. " +
+            $"Jugador: {jugador != null} | " +
+            $"Administrador: {AdministradorDeProgreso.Instancia != null}"
+        );
+    }
+
+
+    // =====================================================
+    // CAMBIAR DE NIVEL
+    // =====================================================
+
+    nivelBucle++;
+    SessionData.level = nivelBucle;
+
+    int indiceSiguienteMapa = nivelBucle - 1;
+
+    if (indiceSiguienteMapa >= ordenDeNiveles.Length)
+    {
+        SceneManager.LoadScene("GameOver");
+    }
+    else
+    {
+        SceneManager.LoadScene(ordenDeNiveles[indiceSiguienteMapa]);
+    }
+}
 
     public void ColapsarMapa()
     {
