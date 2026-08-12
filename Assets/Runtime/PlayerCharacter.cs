@@ -559,4 +559,9 @@ else
             motor.BaseVelocity = Vector3.zero;
         
     }
+public void AgregarSaltoExtra(int cantidad = 1)
+{
+    maxJumps += cantidad;
+    Debug.Log("Nuevo maxJumps = " + maxJumps);
+}
 }

@@ -397,10 +397,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainMenu
   panelPrincipal: {fileID: 1719235752}
   panelOpciones: {fileID: 1394453996}
-  panelCarga: {fileID: 36972945}
   panelConsentimiento: {fileID: 2071556117}
   anim: {fileID: 0}
-  barraDeCarga: {fileID: 881760080}
   nombreEscenaJuego: Desert
   sliderSensibilidad: {fileID: 515582660}
   textoSensibilidad: {fileID: 326366570}
@@ -916,7 +914,7 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 0.34509805, g: 0.22745098, b: 0.64705884, a: 1}
+  m_Color: {r: 0.43107817, g: 0.33806515, b: 0.6698113, a: 1}
   m_Intensity: 10
   m_Range: 10
   m_SpotAngle: 30

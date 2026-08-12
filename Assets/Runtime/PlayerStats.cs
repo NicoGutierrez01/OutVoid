@@ -22,10 +22,12 @@ public class PlayerStats : MonoBehaviour
 
     private PlayerHUD _hud;
 
+
     private void Awake()
     {
         currentHealth = maxHealth;
     }
+
 
     public void Initialize()
     {
@@ -33,37 +35,62 @@ public class PlayerStats : MonoBehaviour
 
         if (AdministradorDeProgreso.Instancia != null)
         {
-            maxHealth = AdministradorDeProgreso.Instancia.vidaMaximaGuardada;
-            currentHealth = AdministradorDeProgreso.Instancia.vidaActualGuardada;
-            tieneEscudoEmergencia = AdministradorDeProgreso.Instancia.tieneEscudoEmergencia;
-            EnemyHealth.healthPerKillActive = AdministradorDeProgreso.Instancia.saludPorKill;
+            AdministradorDeProgreso progreso = AdministradorDeProgreso.Instancia;
+
+            // VIDA
+            maxHealth = progreso.vidaMaximaGuardada;
+            currentHealth = progreso.vidaActualGuardada;
+
+            // ESCUDO
+            currentShield = progreso.escudoGuardado;
+
+            // MEJORAS
+            tieneEscudoEmergencia = progreso.tieneEscudoEmergencia;
+
+            EnemyHealth.healthPerKillActive = progreso.saludPorKill;
+
+            Debug.Log(
+                $"[PLAYER STATS] Estado restaurado -> " +
+                $"HP: {currentHealth}/{maxHealth} | " +
+                $"Escudo: {currentShield}"
+            );
         }
         else
         {
             currentHealth = maxHealth;
+            currentShield = 0f;
         }
 
         regenTimer = timeBeforeRegen;
     }
 
+
     public void Heal(float amount)
     {
-        currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
+        currentHealth = Mathf.Clamp(
+            currentHealth + amount,
+            0,
+            maxHealth
+        );
     }
+
 
     public void TakeDamage(float amount)
     {
         if (isGhostMode) return;
 
         regenTimer = 0f;
+
         MusicManager.Instance.PlayTakingDamage();
 
         if (currentShield > 0)
         {
             currentShield -= amount;
+
             if (currentShield < 0)
             {
                 float sobrante = Mathf.Abs(currentShield);
+
                 currentShield = 0;
                 currentHealth -= sobrante;
             }
@@ -73,46 +100,95 @@ public class PlayerStats : MonoBehaviour
             currentHealth -= amount;
         }
 
-        if (tieneEscudoEmergencia && currentHealth > 0 && currentHealth < 30f)
+
+        // ESCUDO DE EMERGENCIA
+        if (
+            tieneEscudoEmergencia &&
+            currentHealth > 0 &&
+            currentHealth < 30f
+        )
         {
             currentShield += 60f;
+
             tieneEscudoEmergencia = false;
-            _hud?.MostrarItemRecogido("¡ESCUDO DE EMERGENCIA ACTIVADO!");
+
+            _hud?.MostrarItemRecogido(
+                "¡ESCUDO DE EMERGENCIA ACTIVADO!"
+            );
         }
 
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-        if (currentHealth <= 0) Morir();
+
+        currentHealth = Mathf.Clamp(
+            currentHealth,
+            0,
+            maxHealth
+        );
+
+
+        if (currentHealth <= 0)
+        {
+            Morir();
+        }
     }
+
 
     private void Morir()
     {
-        Debug.Log("El jugador ha muerto. Enviando evento GameOver y pasando a la pantalla...");
+        Debug.Log(
+            "El jugador ha muerto. Enviando evento GameOver y pasando a la pantalla..."
+        );
 
         GameOverEvent gameOverEvent = new GameOverEvent
         {
             level = SessionData.level,
-            time = Mathf.FloorToInt(GameTimer.tiempoTotal), 
+            time = Mathf.FloorToInt(GameTimer.tiempoTotal),
         };
 
         AnalyticsService.Instance.RecordEvent(gameOverEvent);
 
         UnityEngine.SceneManagement.SceneManager.LoadScene("GameOver");
     }
-    
+
+
     private void Update()
     {
-        if (currentHealth < limitRegen && currentHealth > 0 && regenTimer >= timeBeforeRegen)
+        // =====================================================
+        // REGENERACIÓN
+        // =====================================================
+
+        if (
+            currentHealth < limitRegen &&
+            currentHealth > 0 &&
+            regenTimer >= timeBeforeRegen
+        )
         {
-            currentHealth = Mathf.Clamp(currentHealth + regenRate * Time.deltaTime, 0, limitRegen);
+            currentHealth = Mathf.Clamp(
+                currentHealth + regenRate * Time.deltaTime,
+                0,
+                limitRegen
+            );
         }
-        else{
+        else
+        {
             regenTimer += Time.deltaTime;
         }
+
+
+        // =====================================================
+        // ACTUALIZAR PROGRESO
+        // =====================================================
+
         if (AdministradorDeProgreso.Instancia != null)
         {
-            AdministradorDeProgreso.Instancia.vidaActualGuardada = currentHealth;
-            AdministradorDeProgreso.Instancia.vidaMaximaGuardada = maxHealth;
+            AdministradorDeProgreso progreso =
+                AdministradorDeProgreso.Instancia;
+
+            progreso.vidaActualGuardada = currentHealth;
+            progreso.vidaMaximaGuardada = maxHealth;
+            progreso.escudoGuardado = currentShield;
+
+            progreso.tieneEscudoEmergencia =
+                tieneEscudoEmergencia;
         }
     }
-
 }

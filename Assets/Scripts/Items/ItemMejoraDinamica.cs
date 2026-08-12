@@ -5,16 +5,27 @@ public class ItemMejoraDinamica : MonoBehaviour
     private MejoraData data;
 
     [Header("Referencias Internas")]
-    public MeshFilter meshFilter;
-    public Light luzBaliza; 
+    public Transform puntoVisual;
+    public Light luzBaliza;
+
+    private GameObject visualInstanciado;
 
     public void ConfigurarItem(MejoraData datosAsignados)
     {
         data = datosAsignados;
 
-        if (meshFilter != null && data.malla != null)
+        if (visualInstanciado != null)
         {
-            meshFilter.mesh = data.malla;
+            Destroy(visualInstanciado);
+        }
+
+        if (puntoVisual != null && data.prefabVisual != null)
+        {
+            visualInstanciado = Instantiate(data.prefabVisual, puntoVisual);
+
+            visualInstanciado.transform.localPosition = Vector3.zero;
+            visualInstanciado.transform.localRotation = Quaternion.identity;
+            visualInstanciado.transform.localScale = Vector3.one;
         }
 
         if (luzBaliza != null)
@@ -36,15 +47,25 @@ public class ItemMejoraDinamica : MonoBehaviour
     private void AplicarMejora(GameObject jugador)
     {
         PlayerStats stats = jugador.GetComponentInChildren<PlayerStats>();
+        PlayerCharacter character = jugador.GetComponentInChildren<PlayerCharacter>();
+
         if (stats != null)
         {
             switch (data.statAMejorar)
             {
                 case TipoStat.VidaMaxima:
                     stats.maxHealth += data.valorSuma;
-                    stats.Heal(data.valorSuma); 
+                    stats.Heal(data.valorSuma);
                     break;
+
                 case TipoStat.Armadura:
+                    break;
+
+                case TipoStat.DobleSalto:
+                    if (character != null)
+                    {
+                        character.AgregarSaltoExtra((int)data.valorSuma);
+                    }
                     break;
             }
         }
@@ -53,6 +74,7 @@ public class ItemMejoraDinamica : MonoBehaviour
     private void MostrarMensaje()
     {
         PlayerHUD hud = FindAnyObjectByType<PlayerHUD>();
+
         if (hud != null)
         {
             hud.MostrarItemRecogido($"{data.nombreMejora} ({data.rareza})\n{data.descripcion}");

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Unity.AI.Navigation;
 using UnityEngine;
@@ -8,81 +9,67 @@ using Unity.Services.Analytics;
 using static StaticVariables;
 using static EventManager;
 
+public enum TipoObjetivo
+{
+    EliminarEnemigos,
+    DefenderZona
+}
+
 public class MapManager : MonoBehaviour
 {
     #region Variables y Referencias
-    [Header("Nueva Pantalla de Carga Interna (Evita congelamientos)")]
-    public GameObject panelCargaEscena;
-    public UnityEngine.UI.Slider barraCargaEscena;
-    [Header("Nuevo Sistema de Escenario")]
-    public GameObject mapaPrefab; 
+    [Header("Oredn de Escenas")]
+    public string[] ordenDeNiveles = new string[] { "Desert", "Forest"};
 
-    [Header("Player & Enemigos")]
-    public GameObject playerPrefab, portalEnemigoPrefab;
-    public LayerMask capaSuelo;
+    [Header("Datos del Nivel (el cartucho)")]
+    public DatosDeNivel datosNivelActual;
 
-    [Header("Boss Settings")]
-    public GameObject lapidaPrefab, portalBossPrefab, bossPrefab;
+    [Header("Sistema de Objetivos")]
+    public TipoObjetivo objetivoActual;
+
+    [Header("Logica Objetivo 1: Eliminar Enemigos")]
     public int enemigosParaJefe = 15;
     public int enemigosMuertosActuales = 0;
-    private GameObject lapidaInstanciada;
-    private Vector3 posicionLapida = new Vector3(95f, 0.2f, 100f);
-    public Vector3 alturaPortalBoss = new Vector3(95f, 40f, 100f);
-    public float retrasoSpawnBoss = 2f;
 
-    [Header("Sistema de Rondas y Bucle")]
+    [Header("Logica Objetivo 2: Defender Zona")]
+    public float tiempoDefensa = 60f;
+    public float tiempoDefensaActual = 0f;
+    public int zonasRestantesEnRonda = 1;
+
+    [Header("Sistema de Rondas y Bucles")]
     public static int nivelBucle = 1;
     public static bool bossDerrotado = false;
     public int rondaActual = 1;
-    public int maxRondas = 3;
+    public int maxRondas = 4;
+    public float retrasoSpawnBoss = 2f;
 
-    [Header("UI")]
+    [Header("UI y Pantallas de Carga")]
+    public GameObject panelCargaEscena;
+    public UnityEngine.UI.Slider barraCargaEscena;
     public TextMeshProUGUI textoProgresoMuertes;
-    public GameObject popupInstrucciones, popupLapidaInvocada;
+    public GameObject popupInstrucciones;
+    public GameObject popupLapidaInvocada;
 
-    [Header("Recompensas")]
+    [Header("Recompensas Globales")]
     public GameObject prefabContenedorMejora;
-    public MejoraData[] mejorasComunes, mejorasRaras, mejorasEpicas;
+    public MejoraData[] mejorasComunes;
+    public MejoraData[] mejorasRaras;
+    public MejoraData[] mejorasEpicas;
 
+    private GameObject zonaDefensaInstanciada;
+    private GameObject lapidaInstanciada;
+    private Vector3 alturaPortalBossDinamica; 
     private List<GameObject> portalesActivos = new List<GameObject>();
     private NavMeshSurface navSurface;
+    private int ultimoIndiceZona;
+    
     public static MapManager Instance;
-
-    private Vector3[] spawnPointsPlayer = new Vector3[]
-    {
-        new Vector3(-50f, -13f, 65f),
-        new Vector3(-210f, -13f, -60f),
-        new Vector3(65f, -13f, -55f)
-    };
-
-    private Vector3[] spawnPointsPortales = new Vector3[]
-    {
-        new Vector3(-110f, 0f, -30f),
-        new Vector3(-200f, 0f, -30f),
-        new Vector3(-200f, 0f, -100f),
-        new Vector3(-140f, 0f, 90f),
-        new Vector3(-45f, 0f, 50f),
-        new Vector3(-30f, 0f, -29f),
-        new Vector3(90f, 0f, -45f),
-        new Vector3(180f, 0f, -90f),
-        new Vector3(55f, 0f, -120f),
-        new Vector3(89f, 0f, 11f),
-    };
-
-    [Header("Sistema de Decoración del Desierto")]
-    public List<GameObject> prefabsArboles;
-    public List<GameObject> prefabsCactus;
-    public GameObject prefabPasto;
-    [Space(5)]
-    public int cantidadArboles = 15;
-    public int cantidadCactus = 25;
-    public int cantidadPasto = 40;
     #endregion
 
     #region Ciclo de Vida
-    void Awake() 
-    { 
-        Instance = this; 
+    void Awake()
+    {
+        Instance = this;
     }
 
     void Start()
@@ -90,90 +77,334 @@ public class MapManager : MonoBehaviour
         bossDerrotado = false;
         navSurface = GetComponent<NavMeshSurface>();
 
+        if (nivelBucle == 1)
+        {
+            objetivoActual = TipoObjetivo.EliminarEnemigos;
+        }
+        else if (nivelBucle == 2)
+        {
+            objetivoActual = TipoObjetivo.DefenderZona;
+            Debug.Log("El codigo funciona: el objetivo es defensa");
+        }
+
         if (panelCargaEscena != null) panelCargaEscena.SetActive(true);
-        if (barraCargaEscena != null) barraCargaEscena.value = 0.1f;
+        if (barraCargaEscena != null) barraCargaEscena.value = 0;
 
         StartCoroutine(SecuenciaDeGeneracionAsincrona());
 
         AnalyticsBridge.EnviarLevelStart(SessionData.level, rondaActual);
     }
+
+    void Update()
+    {
+        if (objetivoActual == TipoObjetivo.DefenderZona && rondaActual < maxRondas)
+        {
+            if (ZonaDefensa.jugadorEnZona)
+            {
+                tiempoDefensaActual -= Time.deltaTime; 
+
+                if (tiempoDefensaActual < 0) 
+                {
+                    tiempoDefensaActual = 0;
+                }
+
+                if (tiempoDefensaActual <= 0)
+                {
+                    ZonaDefensa.jugadorEnZona = false; 
+                    zonasRestantesEnRonda--; 
+                    
+                    if (zonasRestantesEnRonda > 0)
+                    {
+                        MoverZonaAOtroPunto();
+                        tiempoDefensaActual = tiempoDefensa; 
+                    }
+                    else
+                    {
+                        CompletarObjetivoRonda();
+                    }
+                }
+            }
+        }
+    }
     #endregion
 
-    #region Generación Asíncrona Controlada
+    #region Generacion Asíncrona Controlada
     System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
     {
-        yield return new WaitForSeconds(0.1f); 
+        yield return new WaitForSeconds(0.1f);
 
-        if (nivelBucle >= 4) 
+        if (rondaActual < maxRondas)
         {
-            rondaActual = 4;
             SessionData.level = nivelBucle;
             SessionData.round = rondaActual;
-            enemigosParaJefe = 0;
-            
-            GenerarMapa(); 
-            if (barraCargaEscena != null) barraCargaEscena.value = 0.4f;
-            yield return null;
 
-            ActualizarNavMesh();
-            if (barraCargaEscena != null) barraCargaEscena.value = 0.8f;
-            yield return null;
-            
-            int randomIndexPlayer = Random.Range(0, spawnPointsPlayer.Length);
-            Instantiate(playerPrefab, spawnPointsPlayer[randomIndexPlayer], Quaternion.identity);
-            
-            SpawnearPortalBoss();
-        }
-        else 
-        {
-            rondaActual = 1;
-            SessionData.level = nivelBucle;
-            SessionData.round = rondaActual;
-            ConfigurarRonda();
+            ConfigurarRondaPorObjetivo();
 
-            GenerarMapa(); 
+            GenerarMapa();
             if (barraCargaEscena != null) barraCargaEscena.value = 0.3f;
             yield return null;
 
             ActualizarNavMesh();
-            if (barraCargaEscena != null) barraCargaEscena.value = 0.6f;
+            if (barraCargaEscena != null) barraCargaEscena.value = 0.5f;
             yield return null;
 
-            SpawnearElementosDeJuego();
+            SpawnearJugador();
+            SpawnearPortales();
+
             if (barraCargaEscena != null) barraCargaEscena.value = 0.7f;
             yield return null;
 
             PoblarEscenarioConDecoracion();
             if (barraCargaEscena != null) barraCargaEscena.value = 0.95f;
-            yield return new WaitForSeconds(0.2f); 
+            yield return new WaitForSeconds(0.2f);
+        }
+
+        else
+        {
+            SessionData.level = nivelBucle;
+            SessionData.round = rondaActual;
+            enemigosParaJefe = 0;
+
+            GenerarMapa();
+            if (barraCargaEscena != null) barraCargaEscena.value = 0.3f;
+            yield return null;
+
+            ActualizarNavMesh();
+            if (barraCargaEscena != null) barraCargaEscena.value = 0.5f;
+            yield return null;
+
+            SpawnearJugador();
+            SpawnearPortales();
         }
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(false);
-        
         if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));
     }
     #endregion
 
-    #region Logica del Loop de Juego
+    #region Generacion y Helpers
+    void GenerarMapa()
+    {
+        if (datosNivelActual != null && datosNivelActual.mapaPrefab != null)
+        {
+            GameObject nuevoMapa = Instantiate(datosNivelActual.mapaPrefab, Vector3.zero, Quaternion.identity);
+            nuevoMapa.transform.parent = this.transform;
+        }
+    }
+
+    void ActualizarNavMesh()
+    {
+        if (navSurface != null) navSurface.BuildNavMesh();
+    }
+
+    void SpawnearJugador()
+    {
+        if (datosNivelActual == null || datosNivelActual.spawnPointsPlayer.Length == 0) return;
+
+        int randomIndex = Random.Range(0, datosNivelActual.spawnPointsPlayer.Length);
+        Instantiate(datosNivelActual.playerPrefab, datosNivelActual.spawnPointsPlayer[randomIndex], Quaternion.identity);
+
+        GameObject camCarga = GameObject.Find("Camera_Carga");
+        if (camCarga != null) camCarga.SetActive(false);
+    }
+
+    void SpawnearPortales()
+    {
+        if (datosNivelActual == null || datosNivelActual.spawnPointsPortales.Length == 0) return;
+
+        int cantidadAIntercalar = 4;
+        List<int> indicesDisponibles = new List<int>();
+        for (int i = 0; i < datosNivelActual.spawnPointsPortales.Length; i++) 
+        {
+            indicesDisponibles.Add(i);
+        }
+
+        for (int i = 0; i < cantidadAIntercalar; i++)
+        {
+            if (indicesDisponibles.Count == 0) break;
+
+            int randomIndexList = Random.Range(0, indicesDisponibles.Count);
+            int portalIndex = indicesDisponibles[randomIndexList];
+            indicesDisponibles.RemoveAt(randomIndexList);
+
+            Vector3 posPortal = datosNivelActual.spawnPointsPortales[portalIndex];
+            GameObject nuevoPortal = Instantiate(datosNivelActual.portalEnemigoPrefab, posPortal, Quaternion.identity);
+            portalesActivos.Add(nuevoPortal);
+        }
+    }
+
+    void PoblarEscenarioConDecoracion()
+    {
+        if (datosNivelActual == null) return;
+
+        SpawnearObjetoDecorativo(datosNivelActual.prefabsDecoracionPrincipal, datosNivelActual.cantidadDecoracionPrincipal);
+        SpawnearObjetoDecorativo(datosNivelActual.prefabsDecoracionSecundaria, datosNivelActual.cantidadDecoracionSecundaria);
+
+        if (datosNivelActual.prefabDecoracionSuelo != null)
+        {
+            List<GameObject> listaPasto = new List<GameObject> { datosNivelActual.prefabDecoracionSuelo };
+            SpawnearObjetoDecorativo(listaPasto, datosNivelActual.cantidadDecoracionSuelo);
+        }
+    }
+
+    void SpawnearObjetoDecorativo(List<GameObject> poolPrefabs, int cantidad)
+    {
+        if (poolPrefabs == null || poolPrefabs.Count == 0) return;
+
+        GameObject objetoSuelo = GameObject.Find("Ground_Baked.001");
+        if (objetoSuelo == null) return;
+
+        MeshCollider sueloCollider = objetoSuelo.GetComponent<MeshCollider>();
+        if (sueloCollider == null) return;
+
+        Bounds limitesSuelo = sueloCollider.bounds;
+        int creados = 0;
+        int intentos = 0;
+        int intentosMaximos = cantidad * 15; 
+
+        while (creados < cantidad && intentos < intentosMaximos)
+        {
+            intentos++;
+            float randomX = Random.Range(limitesSuelo.min.x, limitesSuelo.max.x);
+            float randomZ = Random.Range(limitesSuelo.min.z, limitesSuelo.max.z);
+            Vector3 origenRaycast = new Vector3(randomX, limitesSuelo.max.y + 30f, randomZ);
+
+            RaycastHit hit;
+            if (Physics.Raycast(origenRaycast, Vector3.down, out hit, 150f))
+            {
+                if (hit.collider.name == "Ground_Baked.001")
+                {
+                    GameObject prefabElegido = poolPrefabs[Random.Range(0, poolPrefabs.Count)];
+                    Vector3 rotacionOriginal = prefabElegido.transform.rotation.eulerAngles;
+                    Quaternion rotacionFinal = Quaternion.Euler(rotacionOriginal.x, Random.Range(0f, 360f), rotacionOriginal.z);
+
+                    GameObject deco = Instantiate(prefabElegido, hit.point, rotacionFinal);
+                    deco.transform.parent = this.transform; 
+                    creados++;
+                }
+            }
+        }
+    }
+
+    void ConfigurarRondaPorObjetivo()
+    {
+        if (objetivoActual == TipoObjetivo.EliminarEnemigos)
+        {
+            enemigosMuertosActuales = 0; 
+            enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10);
+            
+            if (zonaDefensaInstanciada != null) 
+            {
+                Destroy(zonaDefensaInstanciada);
+            }
+        }
+        else if (objetivoActual == TipoObjetivo.DefenderZona)
+        {
+            zonasRestantesEnRonda = rondaActual; 
+            tiempoDefensaActual = tiempoDefensa; 
+            
+            MoverZonaAOtroPunto();
+        }
+        
+        ActualizarTextoProgreso();
+    }
+
+    void MoverZonaAOtroPunto()
+    {
+        if (zonaDefensaInstanciada != null)
+        {
+            Destroy(zonaDefensaInstanciada);
+            zonaDefensaInstanciada = null; 
+        }
+
+        if (datosNivelActual != null && datosNivelActual.zonaDefensaPrefab != null)
+        {
+            Vector3 posicionZona = Vector3.zero;
+            
+            if (datosNivelActual.spawnPointsZonas != null && datosNivelActual.spawnPointsZonas.Length > 0)
+            {
+                int nuevoIndice;
+
+                if (datosNivelActual.spawnPointsZonas.Length == 1)
+                {
+                    nuevoIndice = 0;
+                }
+                else
+                {
+                    do
+                    {
+                        nuevoIndice = Random.Range(0, datosNivelActual.spawnPointsZonas.Length);
+                    } while (nuevoIndice == ultimoIndiceZona);
+                }
+
+                ultimoIndiceZona = nuevoIndice; 
+                posicionZona = datosNivelActual.spawnPointsZonas[nuevoIndice];
+            }
+            
+            zonaDefensaInstanciada = Instantiate(datosNivelActual.zonaDefensaPrefab, posicionZona, Quaternion.identity);
+            zonaDefensaInstanciada.transform.parent = this.transform; 
+        }
+    }
+
+    public void SpawnearPortalBoss()
+    {
+        if (datosNivelActual == null || datosNivelActual.portalBossPrefab == null) return;
+
+        Vector3 posPortalBoss = Vector3.zero;
+        if (datosNivelActual.spawnPointsPortalBoss.Length > 0)
+        {
+            posPortalBoss = datosNivelActual.spawnPointsPortalBoss[Random.Range(0, datosNivelActual.spawnPointsPortalBoss.Length)];
+        }
+
+        if (popupLapidaInvocada != null) popupLapidaInvocada.SetActive(false);
+
+        GameObject portal = Instantiate(datosNivelActual.portalBossPrefab, posPortalBoss, Quaternion.identity);
+        portal.transform.localScale = Vector3.one * 5f; 
+        
+        StartCoroutine(SecuenciaSpawnBoss(portal, posPortalBoss));
+    }
+
+    System.Collections.IEnumerator SecuenciaSpawnBoss(GameObject portal, Vector3 posicionPortal)
+    {
+        yield return new WaitForSeconds(retrasoSpawnBoss);
+        if (datosNivelActual.bossPrefab != null)
+        {
+            Vector3 posBoss = posicionPortal + Vector3.down * 2f;
+            Instantiate(datosNivelActual.bossPrefab, posBoss, Quaternion.identity);
+        }
+        yield return new WaitForSeconds(1f);
+        Destroy(portal); 
+    }
+    #endregion
+
+    #region Lógica del Loop de Juego y Recompensas
     public void RegistrarMuerte()
     {
-        if (rondaActual >= 4) return; 
+        if (rondaActual >= maxRondas) return; 
 
-        enemigosMuertosActuales++;
-        ActualizarTextoProgreso();
-
-        if (enemigosMuertosActuales >= enemigosParaJefe)
+        if (objetivoActual == TipoObjetivo.EliminarEnemigos)
         {
-            AnalyticsBridge.EnviarLevelComplete(SessionData.level, rondaActual);
+            enemigosMuertosActuales++;
+            ActualizarTextoProgreso();
+
+            if (enemigosMuertosActuales >= enemigosParaJefe)
+            {
+                CompletarObjetivoRonda();
+            }
+        }
+    }
+
+    public void CompletarObjetivoRonda()
+    {
+        AnalyticsBridge.EnviarLevelComplete(SessionData.level, rondaActual);
             
-            if (rondaActual < 3)
-            {
-                AvanzarRonda();
-            }
-            else
-            {
-                SpawnearLapida();
-            }
+        if (rondaActual < (maxRondas - 1)) 
+        {
+            AvanzarRonda();
+        }
+        else 
+        {
+            SpawnearLapida();
         }
     }
 
@@ -182,110 +413,97 @@ public class MapManager : MonoBehaviour
         SpawnearMejoraMenor();
         rondaActual++;
         SessionData.round = rondaActual;
-        ConfigurarRonda();
+        
+        ConfigurarRondaPorObjetivo();
+        
         AnalyticsBridge.EnviarLevelStart(SessionData.level, rondaActual);
         if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));
     }
 
-    private void InicializarRondaNormal()
-    {
-        rondaActual = 1;
-        SessionData.level = nivelBucle;
-        SessionData.round = rondaActual;
-        
-        ConfigurarRonda();
-        GenerarMapa(); 
-        ActualizarNavMesh();
-        SpawnearElementosDeJuego();
-        PoblarEscenarioConDecoracion();
-        
-        if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));
-    }
-
-    private void InicializarNivelBoss()
-    {
-        rondaActual = 4;
-        SessionData.level = nivelBucle;
-        SessionData.round = rondaActual;
-        enemigosParaJefe = 0;
-        
-        GenerarMapa(); 
-        ActualizarNavMesh();
-        
-        int randomIndexPlayer = Random.Range(0, spawnPointsPlayer.Length);
-        Instantiate(playerPrefab, spawnPointsPlayer[randomIndexPlayer], Quaternion.identity);
-        
-        SpawnearPortalBoss();
-    }
-
     public void AvanzarSiguienteNivel()
+{
+    AnalyticsBridge.EnviarLevelComplete(SessionData.level, maxRondas);
+
+    // =====================================================
+    // GUARDAR EL ESTADO DEL JUGADOR ANTES DE CAMBIAR
+    // DE ESCENA
+    // =====================================================
+
+    GameObject jugador = GameObject.FindGameObjectWithTag("Player");
+
+    if (jugador != null && AdministradorDeProgreso.Instancia != null)
     {
-        AnalyticsBridge.EnviarLevelComplete(SessionData.level, 4);
+        AdministradorDeProgreso.Instancia.GuardarEstadoJugador(jugador);
 
-        nivelBucle++; 
-        SessionData.level = nivelBucle;
-
-        if (nivelBucle > 4) 
-        {
-            SceneManager.LoadScene("GameOver");
-        }
-        else
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
+        Debug.Log("[MAP MANAGER] Estado del jugador guardado antes de cambiar de escena.");
     }
+    else
+    {
+        Debug.LogWarning(
+            "[MAP MANAGER] No se pudo guardar el estado del jugador. " +
+            $"Jugador: {jugador != null} | " +
+            $"Administrador: {AdministradorDeProgreso.Instancia != null}"
+        );
+    }
+
+
+    // =====================================================
+    // CAMBIAR DE NIVEL
+    // =====================================================
+
+    nivelBucle++;
+    SessionData.level = nivelBucle;
+
+    int indiceSiguienteMapa = nivelBucle - 1;
+
+    if (indiceSiguienteMapa >= ordenDeNiveles.Length)
+    {
+        SceneManager.LoadScene("GameOver");
+    }
+    else
+    {
+        SceneManager.LoadScene(ordenDeNiveles[indiceSiguienteMapa]);
+    }
+}
 
     public void ColapsarMapa()
     {
-        foreach (Transform child in transform) {
+        foreach (Transform child in transform) 
+        {
             Destroy(child.gameObject);
         }
-
         AvanzarSiguienteNivel();
     }
-    #endregion
-
-    #region Generacion y Helpers
-    void ConfigurarRonda() 
-    { 
-        enemigosMuertosActuales = 0; 
-        enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10); 
-        ActualizarTextoProgreso();
-    }                                               
 
     void SpawnearLapida()                                                           
     {
-        if (lapidaInstanciada != null) return; 
+        if (lapidaInstanciada != null || datosNivelActual == null) return; 
+
+        if (zonaDefensaInstanciada != null)
+        {
+            Destroy(zonaDefensaInstanciada);
+            zonaDefensaInstanciada = null;
+        }
 
         if (nivelBucle < 4) 
         {
             SpawnearMejoraMenor();
         }
 
-        rondaActual = 4;
+        rondaActual = maxRondas;
         SessionData.round = rondaActual;
-        
-        AnalyticsBridge.EnviarLevelStart(SessionData.level, 4);
+        AnalyticsBridge.EnviarLevelStart(SessionData.level, maxRondas);
 
-        int randomIndex = Random.Range(0, spawnPointsPlayer.Length);
-        Vector3 coordenadaElegida = spawnPointsPlayer[randomIndex];
-        Vector3 puntoDesdeElCielo = new Vector3(coordenadaElegida.x, 50f, coordenadaElegida.z);
-        Vector3 posicionLapidaSegura = coordenadaElegida; 
-
-        RaycastHit hit;
-        if (Physics.Raycast(puntoDesdeElCielo, Vector3.down, out hit, 100f))
+        Vector3 posicionLapida = Vector3.zero;
+        if (datosNivelActual.spawnPointsLapida.Length > 0)
         {
-            posicionLapidaSegura = hit.point + Vector3.up * 0.1f; 
-            alturaPortalBoss = hit.point + Vector3.up * 40f;
-        }
-        else
-        {
-            alturaPortalBoss = posicionLapidaSegura + Vector3.up * 40f;
+            posicionLapida = datosNivelActual.spawnPointsLapida[Random.Range(0, datosNivelActual.spawnPointsLapida.Length)];
         }
 
-        lapidaInstanciada = Instantiate(lapidaPrefab, posicionLapidaSegura, Quaternion.identity);
+        lapidaInstanciada = Instantiate(datosNivelActual.lapidaPrefab, posicionLapida, Quaternion.identity);
         DesactivarPortalesComunes();
         
+        ActualizarTextoProgreso(); 
         if (popupLapidaInvocada != null) StartCoroutine(ManejarPopupLapida(4f));
     }
 
@@ -302,7 +520,8 @@ public class MapManager : MonoBehaviour
             
             Vector3 spawnPos = posInicial; 
             RaycastHit hit;
-            if (Physics.Raycast(posInicial, Vector3.down, out hit, 15f, capaSuelo))
+
+            if (Physics.Raycast(posInicial, Vector3.down, out hit, 15f, datosNivelActual.capaSuelo))
             {
                 spawnPos = hit.point + Vector3.up * 0.5f; 
             }
@@ -337,46 +556,6 @@ public class MapManager : MonoBehaviour
         return (lista != null && lista.Length > 0) ? lista[Random.Range(0, lista.Length)] : null;
     }
 
-    void ActualizarNavMesh()
-    {
-        if (navSurface != null) navSurface.BuildNavMesh();
-    }
-
-    void SpawnearElementosDeJuego()
-    {
-        int randomIndexPlayer = Random.Range(0, spawnPointsPlayer.Length);
-        Vector3 posPlayer = spawnPointsPlayer[randomIndexPlayer];
-        Instantiate(playerPrefab, posPlayer, Quaternion.identity);
-
-        GameObject camCarga = GameObject.Find("Camera_Carga");
-        if (camCarga != null)
-        {
-            camCarga.SetActive(false);
-        }
-        
-        SpawnearPortales();
-    }
-
-    void SpawnearPortales()
-    {
-        int cantidadAIntercalar = 4;
-        List<int> indicesDisponibles = new List<int>();
-        for (int i = 0; i < spawnPointsPortales.Length; i++) indicesDisponibles.Add(i);
-
-        for (int i = 0; i < cantidadAIntercalar; i++)
-        {
-            if (indicesDisponibles.Count == 0) break;
-
-            int randomIndexList = Random.Range(0, indicesDisponibles.Count);
-            int portalIndexElegido = indicesDisponibles[randomIndexList];
-            indicesDisponibles.RemoveAt(randomIndexList);
-
-            Vector3 posPortal = spawnPointsPortales[portalIndexElegido];
-            GameObject nuevoPortal = Instantiate(portalEnemigoPrefab, posPortal, Quaternion.identity);
-            portalesActivos.Add(nuevoPortal);
-        }
-    }
-
     public void DesactivarPortalesComunes()
     {
         foreach (GameObject portal in portalesActivos)
@@ -385,83 +564,9 @@ public class MapManager : MonoBehaviour
         }
         portalesActivos.Clear(); 
     }
-
-    void GenerarMapa()
-    {
-        if (mapaPrefab != null)
-        {
-            GameObject nuevoMapa = Instantiate(mapaPrefab, Vector3.zero, Quaternion.identity);
-            nuevoMapa.transform.parent = this.transform;
-        }
-    }
-
-    void PoblarEscenarioConDecoracion()
-    {
-        SpawnearObjetoDecorativo(prefabsArboles, cantidadArboles, "Árbol");
-        SpawnearObjetoDecorativo(prefabsCactus, cantidadCactus, "Cactus");
-
-        if (prefabPasto != null)
-        {
-            List<GameObject> listaPasto = new List<GameObject> { prefabPasto };
-            SpawnearObjetoDecorativo(listaPasto, cantidadPasto, "Pasto");
-        }
-    }
-
-    void SpawnearObjetoDecorativo(List<GameObject> poolPrefabs, int cantidad, string tipoNombre)
-    {
-        if (poolPrefabs == null || poolPrefabs.Count == 0) return;
-
-        GameObject objetoSuelo = GameObject.Find("Ground_Baked.001");
-        if (objetoSuelo == null)
-        {
-            Debug.LogError("No se encontró 'Ground_Baked.001' para calcular los límites de decoración.");
-            return;
-        }
-
-        MeshCollider sueloCollider = objetoSuelo.GetComponent<MeshCollider>();
-        if (sueloCollider == null)
-        {
-            Debug.LogError("'Ground_Baked.001' no tiene un MeshCollider para calcular las dimensiones.");
-            return;
-        }
-
-        Bounds limitesSuelo = sueloCollider.bounds;
-
-        int creados = 0;
-        int intentos = 0;
-        int intentosMaximos = cantidad * 15; 
-
-        while (creados < cantidad && intentos < intentosMaximos)
-        {
-            intentos++;
-
-            float randomX = Random.Range(limitesSuelo.min.x, limitesSuelo.max.x);
-            float randomZ = Random.Range(limitesSuelo.min.z, limitesSuelo.max.z);
-
-            Vector3 origenRaycast = new Vector3(randomX, limitesSuelo.max.y + 30f, randomZ);
-
-            RaycastHit hit;
-            if (Physics.Raycast(origenRaycast, Vector3.down, out hit, 150f))
-            {
-                if (hit.collider.name == "Ground_Baked.001")
-                {
-                    GameObject prefabElegido = poolPrefabs[Random.Range(0, poolPrefabs.Count)];
-                    
-                    Vector3 rotacionOriginal = prefabElegido.transform.rotation.eulerAngles;
-                    Quaternion rotacionFinal = Quaternion.Euler(rotacionOriginal.x, Random.Range(0f, 360f), rotacionOriginal.z);
-
-                    GameObject deco = Instantiate(prefabElegido, hit.point, rotacionFinal);
-                    deco.transform.parent = this.transform; 
-                    
-                    creados++;
-                }
-            }
-        }
-        Debug.Log($"[Decoración] Se instanciaron {creados} / {cantidad} objetos de tipo {tipoNombre} distribuidos por el mapa.");
-    }
     #endregion
 
-    #region Corrutinas y UI
+    #region Corrutinas de UI y Textos
     System.Collections.IEnumerator AnimacionPopUp()
     {
         Vector3 escalaOriginal = Vector3.one;
@@ -483,7 +588,7 @@ public class MapManager : MonoBehaviour
         var textoComponente = popupInstrucciones.GetComponentInChildren<TextMeshProUGUI>();
         if (textoComponente != null)
         {
-            textoComponente.text = $"LEVEL {nivelBucle} - RONDA {rondaActual}";
+            textoComponente.text = $"NIVEL {nivelBucle} - RONDA {rondaActual}";
         }
 
         yield return new WaitForSeconds(tiempo);
@@ -498,43 +603,23 @@ public class MapManager : MonoBehaviour
         popupLapidaInvocada.SetActive(false);
     }
 
-    System.Collections.IEnumerator SecuenciaSpawnBoss(GameObject portal)
-    {
-        yield return new WaitForSeconds(retrasoSpawnBoss);
-        if (bossPrefab != null)
-        {
-            Vector3 posBoss = alturaPortalBoss + Vector3.down * 2f;
-            Instantiate(bossPrefab, posBoss, Quaternion.identity);
-        }
-        yield return new WaitForSeconds(1f);
-        Destroy(portal); 
-    }
-
     void ActualizarTextoProgreso()
     {
         if (textoProgresoMuertes != null)
         {
-            if (rondaActual == 4)
+            if (rondaActual >= maxRondas) 
             {
-                textoProgresoMuertes.text = "¡Derrota al Jefe!";
+                textoProgresoMuertes.text = "¡Derrota\nal Jefe!";
             }
-            else
+            else if (objetivoActual == TipoObjetivo.EliminarEnemigos)
             {
                 int muertesVisuales = Mathf.Min(enemigosMuertosActuales, enemigosParaJefe);
-                textoProgresoMuertes.text = $"Matados: {muertesVisuales} / {enemigosParaJefe}";
+                textoProgresoMuertes.text = $"Mata enemigos\n{muertesVisuales} / {enemigosParaJefe}";
             }
-        }
-    }
-
-    public void SpawnearPortalBoss()
-    {
-        if (portalBossPrefab != null)
-        {
-            if (popupLapidaInvocada != null) popupLapidaInvocada.SetActive(false);
-
-            GameObject portal = Instantiate(portalBossPrefab, alturaPortalBoss, Quaternion.identity);
-            portal.transform.localScale = Vector3.one * 5f; 
-            StartCoroutine(SecuenciaSpawnBoss(portal));
+            else if (objetivoActual == TipoObjetivo.DefenderZona)
+            {
+                textoProgresoMuertes.text = $"Defiende la zona\n{Mathf.CeilToInt(tiempoDefensaActual)}s";
+            }
         }
     }
     #endregion

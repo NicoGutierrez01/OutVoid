@@ -1,53 +1,97 @@
 using UnityEngine;
-using Unity.Services.Analytics;
-using static StaticVariables;
-using static EventManager;
+using UnityEngine.SceneManagement; 
 
 public class ItemInteractable : MonoBehaviour
 {
-    public ItemMejoraData data;
-    [HideInInspector] public string idGrupoDrop; 
+    [Header("Referencias")]
+    [SerializeField] private Transform puntoVisual; 
 
-    public void Configurar(ItemMejoraData nuevaData, string idGrupo)
+    [Header("Datos del Ítem")]
+    [SerializeField] private ItemMejoraData dataItem; 
+
+    public ItemMejoraData data => dataItem;
+
+    private GameObject visualActual;
+    private string idDropOrigen; 
+
+    private void Start()
     {
-        data = nuevaData;
-        idGrupoDrop = idGrupo;
-        
-        Renderer render = GetComponent<Renderer>();
-        if (render != null) render.material.color = data.colorProvisorio;
+        ActualizarVisual();
     }
 
-    public void Recoger(GameObject jugador)
+    public void ActualizarVisual()
     {
-        PlayerInventario inventario = jugador.GetComponent<PlayerInventario>();
-        if (inventario != null)
+        if (puntoVisual == null)
         {
-            inventario.AplicarMejora(data);
+            Debug.LogWarning($"Falta asignar el punto visual en {gameObject.name}");
+            return;
         }
 
-        SessionData.itemName = data.name; 
-        
-        Debug.Log($"Evento 'ItemPick' - El jugador eligió el ítem: {SessionData.itemName}");
-
-        ItemPickEvent itemPickEvent = new ItemPickEvent
+        if (dataItem == null)
         {
-            itemName = SessionData.itemName
-        };
+            return; 
+        }
 
-        AnalyticsService.Instance.RecordEvent(itemPickEvent);
-
-        ItemInteractable[] todosLosItems = Object.FindObjectsByType<ItemInteractable>(FindObjectsSortMode.None);
-        foreach (ItemInteractable item in todosLosItems)
+        if (visualActual != null)
         {
-            if (item.idGrupoDrop == this.idGrupoDrop)
+            Destroy(visualActual);
+        }
+        else
+        {
+            foreach (Transform hijo in puntoVisual)
             {
-                Destroy(item.gameObject);
+                Destroy(hijo.gameObject);
             }
         }
+
+        if (dataItem.mallaEspecial != null)
+        {
+            visualActual = Instantiate(dataItem.mallaEspecial, puntoVisual);
+            
+            visualActual.transform.localPosition = Vector3.zero;
+            visualActual.transform.localRotation = Quaternion.identity;
+            visualActual.transform.localScale = Vector3.one;
+        }
+        else
+        {
+            Debug.LogWarning($"El ítem {dataItem.nombreItem} no tiene una mallaEspecial asignada en su Data.");
+        }
+    }
+
+    public void Configurar(ItemMejoraData nuevaData, string idDrop)
+    {
+        dataItem = nuevaData;
+        idDropOrigen = idDrop; 
+        ActualizarVisual(); 
+    }
+private void OnTriggerEnter(Collider other)
+
+{
+
+    if (other.CompareTag("Player"))
+
+    {
+
+        Recoger(other.gameObject);
+
+    }
+
+}
+    public void Recoger(GameObject jugador)
+    {
+        Debug.Log($"¡Ítem {dataItem.nombreItem} recogido por el jugador!");
+
+        StaticVariables.SessionData.round = 1; 
 
         if (MapManager.Instance != null)
         {
             MapManager.Instance.ColapsarMapa();
         }
+        else
+        {
+            Debug.LogError("No se encontró una instancia activa de MapManager en la escena.");
+        }
+
+        Destroy(gameObject);
     }
 }

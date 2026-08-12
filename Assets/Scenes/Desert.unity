@@ -4038,26 +4038,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ba6b767489101f4b8c87b8f30fbb22f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
+  ordenDeNiveles:
+  - Desert
+  - Forest
+  datosNivelActual: {fileID: 11400000, guid: e6db02546bfee364bbbe99a923296d42, type: 2}
+  objetivoActual: 0
+  enemigosParaJefe: 15
+  enemigosMuertosActuales: 0
+  tiempoDefensa: 60
+  tiempoDefensaActual: 0
+  zonasRestantesEnRonda: 1
+  rondaActual: 1
+  maxRondas: 4
+  retrasoSpawnBoss: 2
   panelCargaEscena: {fileID: 1094834790}
   barraCargaEscena: {fileID: 1005934888}
-  mapaPrefab: {fileID: 7914907432012892536, guid: 30228d338501f9b4797a031dc9f16c39, type: 3}
-  playerPrefab: {fileID: 663390133554984710, guid: 1c42ed567325a4898965abdee55fa808, type: 3}
-  portalEnemigoPrefab: {fileID: 2148023456166452146, guid: ecc1c68241d7b764d96464dbb4fbfa87, type: 3}
-  capaSuelo:
-    serializedVersion: 2
-    m_Bits: 8
-  lapidaPrefab: {fileID: 1640529776990550443, guid: 31cc64558ddc5e44b8b3e9833d1d9c1f, type: 3}
-  portalBossPrefab: {fileID: 2148023456166452146, guid: 9c21d9309ee67ea4cb6833b8313b6223, type: 3}
-  bossPrefab: {fileID: 2811968405897873640, guid: b450d5c152800f74fa93f4a754f8f5f6, type: 3}
-  enemigosParaJefe: 25
-  enemigosMuertosActuales: 0
-  alturaPortalBoss: {x: 95, y: 45, z: 100}
-  retrasoSpawnBoss: 2
-  rondaActual: 1
-  maxRondas: 3
-  textoProgresoMuertes: {fileID: 0}
-  popupInstrucciones: {fileID: 0}
-  popupLapidaInvocada: {fileID: 0}
+  textoProgresoMuertes: {fileID: 1461506914}
+  popupInstrucciones: {fileID: 1312207454}
+  popupLapidaInvocada: {fileID: 2123949316}
   prefabContenedorMejora: {fileID: 3367296277196983850, guid: 275865f72f0706f4c90102cc567b09f2, type: 3}
   mejorasComunes:
   - {fileID: 11400000, guid: 15de0f1a984c49646865c816ba7b2ca8, type: 2}
@@ -4065,16 +4063,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ce7041853a391564e9cd32920708b1ce, type: 2}
   mejorasEpicas:
   - {fileID: 11400000, guid: 69cb924d41c16b04d92679faeec3610c, type: 2}
-  prefabsArboles:
-  - {fileID: 6554328710291321494, guid: d35a37cd401117046937e655b7069cc6, type: 3}
-  - {fileID: 6963621031325828773, guid: 878eca668dbce0e42a685d5f023f9d55, type: 3}
-  prefabsCactus:
-  - {fileID: 8775978792791231413, guid: 7ffe4924f6901284ab1d3dcedea29c39, type: 3}
-  - {fileID: 1687128777873670659, guid: 08ea27e48771e95409b53b44c1e73e05, type: 3}
-  prefabPasto: {fileID: 6439883145149483738, guid: 7eff52fd4ae45a64ba32bbd92a7b3ca2, type: 3}
-  cantidadArboles: 50
-  cantidadCactus: 75
-  cantidadPasto: 150
 --- !u!4 &1479725374
 Transform:
   m_ObjectHideFlags: 0

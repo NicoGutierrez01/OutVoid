@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Desert.unity
     guid: b309cbbcbcea8144abe8690600bceb51
   - enabled: 1
+    path: Assets/Scenes/Forest.unity
+    guid: 29a717f7a4209ba4793b418433f94b31
+  - enabled: 1
     path: Assets/Scenes/GameOver.unity
     guid: 861ea84dfb205a24ab1782beab29abac
   m_configObjects:

@@ -63,7 +63,6 @@ public class MainMenu : MonoBehaviour
         GameTimer.tiempoTotal = 0f; 
         MapManager.nivelBucle = 1;
 
-        // Carga directa e inmediata de la escena del juego
         SceneManager.LoadScene(nombreEscenaJuego);
     }
 

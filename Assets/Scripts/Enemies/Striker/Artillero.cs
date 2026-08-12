@@ -9,12 +9,15 @@ public class Artillero : MonoBehaviour
 
     [Header("Configuración de Movimiento")]
     public float attackRange = 15f;  
-    public float retreatRange = 5f;  
-    
+    public float retreatRange = 7f;  // Aumenté un poquito para que empiece a retroceder antes
+    public float velocidadAvance = 3.5f;
+    public float velocidadRetroceso = 2.5f; // Un poco más lento al ir hacia atrás
+
     [Header("Configuración de Disparo")]
     public GameObject projectilePrefab; 
     public Transform firePoint;        
-    public float timeBetweenShots = 2f; 
+    public float timeBetweenShots = 2.2f; 
+    public float delayDisparoAnimacion = 0.18f; 
     private float nextShotTime;
 
     [Header("Seguridad NavMesh")]
@@ -33,6 +36,7 @@ public class Artillero : MonoBehaviour
 
     private bool haAterrizado = false;
     private bool isAlerted = false; 
+    private bool estaDisparando = false;
     private Animator anim;
 
     private int estadoActualAnim = -1; 
@@ -57,17 +61,21 @@ public class Artillero : MonoBehaviour
         {
             if (!isAlerted)
             {
-                if (CheckVisionYProximidad())
+                if (CheckVisionYProximidad() || ZonaDefensa.jugadorEnZona)
                 {
                     isAlerted = true;
                     SetAnimState(false, true); 
                 }
                 else
                 {
+                    agent.updateRotation = true;
+                    agent.speed = velocidadAvance;
                     ManejarPatrullaPasiva();
                     return; 
                 }
             }
+
+            agent.updateRotation = false;
 
             if (agent.velocity.sqrMagnitude < 0.3f && !agent.isStopped)
             {
@@ -78,13 +86,27 @@ public class Artillero : MonoBehaviour
 
             float distance = Vector3.Distance(transform.position, playerTransform.position);
 
+            if (estaDisparando)
+            {
+                agent.isStopped = true;
+                MirarAlJugador(15f);
+                return;
+            }
+
+            if (distance <= attackRange && Time.time >= nextShotTime)
+            {
+                if (ShotManager.Instance == null || ShotManager.Instance.SolicitarPermisoParaDisparar())
+                {
+                    StartCoroutine(RutinaDisparoYRecarga());
+                }
+            }
+
             if (distance > attackRange)
             {
-                if (agent.isOnNavMesh)
-                {
-                    agent.isStopped = false;
-                    agent.SetDestination(playerTransform.position);
-                }
+                agent.isStopped = false;
+                agent.speed = velocidadAvance;
+                agent.SetDestination(playerTransform.position);
+                MirarAlJugador(10f);
                 
                 if (estadoActualAnim != 0)
                 {
@@ -92,50 +114,55 @@ public class Artillero : MonoBehaviour
                     estadoActualAnim = 0;
                 }
             }
+            else if (distance < retreatRange)
+            {
+                Vector3 direccionAlejarse = (transform.position - playerTransform.position).normalized;
+                direccionAlejarse.y = 0;
+
+                Vector3 destinoRetroceso = transform.position + direccionAlejarse * 3f; 
+
+                agent.isStopped = false;
+                agent.speed = velocidadRetroceso;
+                agent.SetDestination(destinoRetroceso);
+                
+                MirarAlJugador(12f);
+
+                if (estadoActualAnim != 2) 
+                {
+                    SetAnimState(true, true); 
+                    estadoActualAnim = 2;
+                }
+            }
             else
             {
                 agent.isStopped = true;
-                MirarAlJugador();
+                MirarAlJugador(12f);
                 
                 if (estadoActualAnim != 1)
                 {
                     SetAnimState(false, true); 
                     estadoActualAnim = 1;
                 }
-
-                if (Time.time >= nextShotTime)
-                {
-                    if (ShotManager.Instance != null)
-                    {
-                        if (ShotManager.Instance.SolicitarPermisoParaDisparar())
-                        {
-                            EjecutarDisparoYRecarga();
-                        }
-                    }
-                    else
-                    {
-                        EjecutarDisparoYRecarga();
-                    }
-                }
             }
         }
     }
 
-    void EjecutarDisparoYRecarga()
+    IEnumerator RutinaDisparoYRecarga()
     {
-        if (anim != null) anim.SetTrigger("Shoot");
-        
-        Disparar();
-
+        estaDisparando = true;
         nextShotTime = Time.time + timeBetweenShots;
 
-        StartCoroutine(RutinaAnimacionRecarga());
-    }
+        if (anim != null) anim.SetTrigger("Shoot");
 
-    IEnumerator RutinaAnimacionRecarga()
-    {
+        yield return new WaitForSeconds(delayDisparoAnimacion);
+
+        Disparar();
+
         yield return new WaitForSeconds(0.2f);
+
         if (anim != null) anim.SetTrigger("Recharge");
+
+        estaDisparando = false;
     }
 
     void ManejarPatrullaPasiva()
@@ -203,17 +230,21 @@ public class Artillero : MonoBehaviour
         }
     }
 
-    void MirarAlJugador()
+    void MirarAlJugador(float velocidadRotacion = 8f)
     {
+        if (playerTransform == null) return;
         Vector3 direccion = (playerTransform.position - transform.position).normalized;
         direccion.y = 0;
-        Quaternion rotacionMirar = Quaternion.LookRotation(direccion);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotacionMirar, Time.deltaTime * 5f);
+        if (direccion != Vector3.zero)
+        {
+            Quaternion rotacionMirar = Quaternion.LookRotation(direccion);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotacionMirar, Time.deltaTime * velocidadRotacion);
+        }
     }
 
     void Disparar() 
     {
-        if (playerTransform != null)
+        if (playerTransform != null && firePoint != null)
         {
             Vector3 puntoDeMira = playerTransform.position + Vector3.up * 0.5f;
             firePoint.LookAt(puntoDeMira);
