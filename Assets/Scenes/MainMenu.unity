@@ -914,7 +914,7 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 0.34509805, g: 0.22745098, b: 0.64705884, a: 1}
+  m_Color: {r: 0.43107817, g: 0.33806515, b: 0.6698113, a: 1}
   m_Intensity: 10
   m_Range: 10
   m_SpotAngle: 30
