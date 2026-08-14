@@ -2219,7 +2219,7 @@ MonoBehaviour:
   priority: 0
   blendDistance: 0
   weight: 1
-  sharedProfile: {fileID: 11400000, guid: f9d41c6dad42b4347b11159e63c3a4e9, type: 2}
+  sharedProfile: {fileID: 11400000, guid: 10fc4df2da32a41aaa32d77bc913491c, type: 2}
 --- !u!4 &847427226
 Transform:
   m_ObjectHideFlags: 0
@@ -5545,6 +5545,9 @@ MonoBehaviour:
   probabilidadDropExtra: 0
   vidaMaximaGuardada: 100
   vidaActualGuardada: 100
+  escudoGuardado: 0
+  balasActualesGuardadas: 6
+  balasReservaGuardadas: 24
   enemigosMuertos: 0
   puntosTotales: 0
   mejorasRecogidas: 0
