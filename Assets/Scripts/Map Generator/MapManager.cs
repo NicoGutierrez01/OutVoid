@@ -46,7 +46,6 @@ public class MapManager : MonoBehaviour
     [Header("UI y Pantallas de Carga")]
     public GameObject panelCargaEscena;
     public UnityEngine.UI.Slider barraCargaEscena;
-    public TextMeshProUGUI textoProgresoMuertes;
     public GameObject popupInstrucciones;
     public GameObject popupLapidaInvocada;
 
@@ -70,6 +69,11 @@ public class MapManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        if (!SceneManager.GetSceneByName("UIScene").isLoaded)
+        {
+            SceneManager.LoadScene("UIScene", LoadSceneMode.Additive);
+        }
     }
 
     void Start()
@@ -306,7 +310,6 @@ public class MapManager : MonoBehaviour
             MoverZonaAOtroPunto();
         }
         
-        ActualizarTextoProgreso();
     }
 
     void MoverZonaAOtroPunto()
@@ -385,7 +388,7 @@ public class MapManager : MonoBehaviour
         if (objetivoActual == TipoObjetivo.EliminarEnemigos)
         {
             enemigosMuertosActuales++;
-            ActualizarTextoProgreso();
+
 
             if (enemigosMuertosActuales >= enemigosParaJefe)
             {
@@ -421,7 +424,7 @@ public class MapManager : MonoBehaviour
     }
 
     public void AvanzarSiguienteNivel()
-{
+    {
     AnalyticsBridge.EnviarLevelComplete(SessionData.level, maxRondas);
 
     // =====================================================
@@ -464,7 +467,7 @@ public class MapManager : MonoBehaviour
     {
         SceneManager.LoadScene(ordenDeNiveles[indiceSiguienteMapa]);
     }
-}
+    }
 
     public void ColapsarMapa()
     {
@@ -502,8 +505,7 @@ public class MapManager : MonoBehaviour
 
         lapidaInstanciada = Instantiate(datosNivelActual.lapidaPrefab, posicionLapida, Quaternion.identity);
         DesactivarPortalesComunes();
-        
-        ActualizarTextoProgreso(); 
+         
         if (popupLapidaInvocada != null) StartCoroutine(ManejarPopupLapida(4f));
     }
 
@@ -567,19 +569,6 @@ public class MapManager : MonoBehaviour
     #endregion
 
     #region Corrutinas de UI y Textos
-    System.Collections.IEnumerator AnimacionPopUp()
-    {
-        Vector3 escalaOriginal = Vector3.one;
-        textoProgresoMuertes.transform.localScale = Vector3.one * 1.4f; 
-        float t = 0;
-        while (t < 1)
-        {
-            t += Time.deltaTime * 5f; 
-            textoProgresoMuertes.transform.localScale = Vector3.Lerp(Vector3.one * 1.4f, escalaOriginal, t);
-            yield return null;
-        }
-    }
-
     System.Collections.IEnumerator ManejarPopupInstrucciones(float tiempo)
     {
         if (popupInstrucciones == null) yield break;
@@ -601,26 +590,6 @@ public class MapManager : MonoBehaviour
         popupLapidaInvocada.SetActive(true);
         yield return new WaitForSeconds(tiempo);
         popupLapidaInvocada.SetActive(false);
-    }
-
-    void ActualizarTextoProgreso()
-    {
-        if (textoProgresoMuertes != null)
-        {
-            if (rondaActual >= maxRondas) 
-            {
-                textoProgresoMuertes.text = "¡Derrota\nal Jefe!";
-            }
-            else if (objetivoActual == TipoObjetivo.EliminarEnemigos)
-            {
-                int muertesVisuales = Mathf.Min(enemigosMuertosActuales, enemigosParaJefe);
-                textoProgresoMuertes.text = $"Mata enemigos\n{muertesVisuales} / {enemigosParaJefe}";
-            }
-            else if (objetivoActual == TipoObjetivo.DefenderZona)
-            {
-                textoProgresoMuertes.text = $"Defiende la zona\n{Mathf.CeilToInt(tiempoDefensaActual)}s";
-            }
-        }
     }
     #endregion
 }

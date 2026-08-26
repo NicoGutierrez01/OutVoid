@@ -106,10 +106,10 @@ public class ItemMejora : MonoBehaviour
             textoPopup = "MÁS PROBABILIDAD DE DROP"; break;
     }
 
-    if (hud != null && textoPopup != "")
-    {
-        hud.MostrarItemRecogido(textoPopup);
-    }
+    // if (hud != null && textoPopup != "")
+    // {
+    //     hud.MostrarItemRecogido(textoPopup);
+    // }
 
     Debug.Log("¡Obtuviste: " + mejoraAsignada + "!");
     }

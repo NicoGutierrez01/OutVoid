@@ -23,15 +23,19 @@ public class ItemRecurso : MonoBehaviour
     {
         var stats = player.GetComponent<PlayerStats>();
         var weapon = player.GetComponent<WeaponSystem>();
+        
+        CrosshairFeedbackManager crosshair = FindAnyObjectByType<CrosshairFeedbackManager>();
 
         switch (tipo)
         {
             case TipoRecurso.Vida:
                 if (stats != null) stats.Heal(cantidadVida);
+                if (crosshair != null) crosshair.ShowReward(CrosshairFeedbackManager.RewardType.Health);
                 break;
                 
             case TipoRecurso.Escudo:
                 if (stats != null) stats.currentShield += cantidadEscudo;
+                if (crosshair != null) crosshair.ShowReward(CrosshairFeedbackManager.RewardType.Shield);
                 break;
                 
             case TipoRecurso.Balas:

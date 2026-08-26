@@ -75,9 +75,9 @@ public class ItemMejoraDinamica : MonoBehaviour
     {
         PlayerHUD hud = FindAnyObjectByType<PlayerHUD>();
 
-        if (hud != null)
-        {
-            hud.MostrarItemRecogido($"{data.nombreMejora} ({data.rareza})\n{data.descripcion}");
-        }
+        // if (hud != null)
+        // {
+        //     hud.MostrarItemRecogido($"{data.nombreMejora} ({data.rareza})\n{data.descripcion}");
+        // }
     }
 }

@@ -18,6 +18,8 @@ public class WeaponSystem : MonoBehaviour
     public float tiempoRecarga = 1.5f;
     public bool recargando = false;
 
+    private int limitePocasBalas = 12; 
+
     [Header("Animaciones")]
     public Animator gunAnim; 
     public Animator gunAnimIzquierda; 
@@ -38,6 +40,8 @@ public class WeaponSystem : MonoBehaviour
     [Header("Mejoras")]
     public bool tieneFuego = false;
 
+    private CrosshairFeedbackManager crosshairFeedback;
+
     void Start()
     {
         balasActuales = balasMaximas;
@@ -48,6 +52,14 @@ public class WeaponSystem : MonoBehaviour
             damage *= AdministradorDeProgreso.Instancia.multiplicadorDaño;
             tiempoRecarga *= AdministradorDeProgreso.Instancia.multiplicadorRecarga;
             tieneFuego = AdministradorDeProgreso.Instancia.balasDeFuego;
+        }
+    }
+
+    private void BuscarCrosshairFeedback()
+    {
+        if (crosshairFeedback == null)
+        {
+            crosshairFeedback = FindAnyObjectByType<CrosshairFeedbackManager>();
         }
     }
 
@@ -109,7 +121,7 @@ public class WeaponSystem : MonoBehaviour
     void Disparar()
     {
         if (!isUltActive) balasActuales--;
-            MusicManager.Instance.PlayShoot();
+        MusicManager.Instance.PlayShoot();
 
         if (isUltActive && gunAnimIzquierda != null)
         {
@@ -143,6 +155,9 @@ public class WeaponSystem : MonoBehaviour
 
             if (hit.transform.CompareTag("Enemigo") || hit.transform.CompareTag("MinionBoss")) 
             {
+                BuscarCrosshairFeedback();
+                if (crosshairFeedback != null) crosshairFeedback.OnTargetHit();
+
                 if (prefabImpactoRobot != null)
                 {
                     GameObject chispas = Instantiate(prefabImpactoRobot, hit.point, Quaternion.LookRotation(hit.normal));
@@ -203,7 +218,7 @@ public class WeaponSystem : MonoBehaviour
     IEnumerator RutinaRecarga()
     {
         recargando = true;
-    MusicManager.Instance.PlayReload();        
+        MusicManager.Instance.PlayReload();        
         EjecutarAnimacion(gunAnim, "Recharge");
         if (isUltActive && gunAnimIzquierda != null) EjecutarAnimacion(gunAnimIzquierda, "Recharge");
 
@@ -215,11 +230,31 @@ public class WeaponSystem : MonoBehaviour
         balasActuales += balasARecargar;
         balasReserva -= balasARecargar;
 
+        BuscarCrosshairFeedback();
+        if (crosshairFeedback != null && balasARecargar > 0)
+        {
+            if (balasReserva == 0) 
+            {
+                crosshairFeedback.ShowWarning(CrosshairFeedbackManager.WarningType.LastMagazine);
+            }
+            else if (balasReserva <= limitePocasBalas) 
+            {
+                crosshairFeedback.ShowWarning(CrosshairFeedbackManager.WarningType.LowAmmo);
+            }
+            else 
+            {
+                crosshairFeedback.ShowWarning(CrosshairFeedbackManager.WarningType.MinusMagazine);
+            }
+        }
+
         recargando = false;
     }
 
     public void AddAmmo(int amount)
     {
         balasReserva += amount;
+
+        BuscarCrosshairFeedback();
+        if (crosshairFeedback != null) crosshairFeedback.ShowReward(CrosshairFeedbackManager.RewardType.Bullets);
     }
 }

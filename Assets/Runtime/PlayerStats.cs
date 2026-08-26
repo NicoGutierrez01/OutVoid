@@ -20,8 +20,6 @@ public class PlayerStats : MonoBehaviour
     [Header("Mejoras Pasivas")]
     public bool tieneEscudoEmergencia = false;
 
-    private PlayerHUD _hud;
-
 
     private void Awake()
     {
@@ -31,20 +29,16 @@ public class PlayerStats : MonoBehaviour
 
     public void Initialize()
     {
-        _hud = Object.FindAnyObjectByType<PlayerHUD>();
 
         if (AdministradorDeProgreso.Instancia != null)
         {
             AdministradorDeProgreso progreso = AdministradorDeProgreso.Instancia;
 
-            // VIDA
             maxHealth = progreso.vidaMaximaGuardada;
             currentHealth = progreso.vidaActualGuardada;
 
-            // ESCUDO
             currentShield = progreso.escudoGuardado;
 
-            // MEJORAS
             tieneEscudoEmergencia = progreso.tieneEscudoEmergencia;
 
             EnemyHealth.healthPerKillActive = progreso.saludPorKill;
@@ -100,8 +94,6 @@ public class PlayerStats : MonoBehaviour
             currentHealth -= amount;
         }
 
-
-        // ESCUDO DE EMERGENCIA
         if (
             tieneEscudoEmergencia &&
             currentHealth > 0 &&
@@ -109,12 +101,10 @@ public class PlayerStats : MonoBehaviour
         )
         {
             currentShield += 60f;
-
             tieneEscudoEmergencia = false;
 
-            _hud?.MostrarItemRecogido(
-                "¡ESCUDO DE EMERGENCIA ACTIVADO!"
-            );
+            CrosshairFeedbackManager crosshair = FindAnyObjectByType<CrosshairFeedbackManager>();
+            if (crosshair != null) crosshair.ShowReward(CrosshairFeedbackManager.RewardType.Shield);
         }
 
 
@@ -152,10 +142,6 @@ public class PlayerStats : MonoBehaviour
 
     private void Update()
     {
-        // =====================================================
-        // REGENERACIÓN
-        // =====================================================
-
         if (
             currentHealth < limitRegen &&
             currentHealth > 0 &&
@@ -172,11 +158,6 @@ public class PlayerStats : MonoBehaviour
         {
             regenTimer += Time.deltaTime;
         }
-
-
-        // =====================================================
-        // ACTUALIZAR PROGRESO
-        // =====================================================
 
         if (AdministradorDeProgreso.Instancia != null)
         {

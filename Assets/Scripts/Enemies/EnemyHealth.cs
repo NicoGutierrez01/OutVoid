@@ -64,7 +64,7 @@ public class EnemyHealth : MonoBehaviour
 
         StartCoroutine(FlashWhiteRoutine());
 
-        if (playerHUDScript != null) playerHUDScript.MostrarHitmarker();
+        // if (playerHUDScript != null) playerHUDScript.MostrarHitmarker();
 
         if (currentHealth > 0)
         {

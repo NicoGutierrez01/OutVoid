@@ -111,7 +111,7 @@ public class PlayerMovement : MonoBehaviour
         {
             currentShield += 60f; 
             tieneEscudoEmergencia = false; 
-            Object.FindAnyObjectByType<PlayerHUD>().MostrarItemRecogido("¡ESCUDO DE EMERGENCIA ACTIVADO!");
+            // Object.FindAnyObjectByType<PlayerHUD>().MostrarItemRecogido("¡ESCUDO DE EMERGENCIA ACTIVADO!");
         }
 
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
