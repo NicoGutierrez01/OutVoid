@@ -11,6 +11,7 @@ TagManager:
   - Obstaculo
   - MinionBoss
   - ItemBoss
+  - Head
   layers:
   - Default
   - TransparentFX

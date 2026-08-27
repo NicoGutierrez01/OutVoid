@@ -43,6 +43,8 @@ public class PauseMenu : MonoBehaviour
             if (estaPausado) ReanudarJuego();
             else PausarJuego();
         }
+
+        if (Time.timeScale == 0f) return;
     }
 
     public void PausarJuego()

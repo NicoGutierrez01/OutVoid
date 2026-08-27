@@ -6,6 +6,7 @@ public class WeaponSystem : MonoBehaviour
 {
     [Header("Configuración de Disparo")]
     public float damage = 20f;
+    public float multiplicadorHeadshot = 2f; 
     private bool r2EstabaPresionado = false;
     public float range = 100f; 
     public Transform cam; 
@@ -151,12 +152,20 @@ public class WeaponSystem : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, range))
         {
-            if (hit.transform.CompareTag("Player")) return;
+            if (hit.collider.CompareTag("Player")) return;
 
-            if (hit.transform.CompareTag("Enemigo") || hit.transform.CompareTag("MinionBoss")) 
+            // Primero calculamos si es headshot antes de evaluar el impacto visual
+            bool esHeadshot = hit.collider.CompareTag("Head");
+            float danoFinal = esHeadshot ? damage * multiplicadorHeadshot : damage;
+
+            if (hit.collider.CompareTag("Enemigo") || hit.collider.CompareTag("MinionBoss") || esHeadshot) 
             {
                 BuscarCrosshairFeedback();
-                if (crosshairFeedback != null) crosshairFeedback.OnTargetHit();
+                if (crosshairFeedback != null) 
+                {
+                    // Le enviamos el estado del headshot para que pinte la mira de rojo o amarillo
+                    crosshairFeedback.OnTargetHit(esHeadshot);
+                }
 
                 if (prefabImpactoRobot != null)
                 {
@@ -173,20 +182,20 @@ public class WeaponSystem : MonoBehaviour
                 }
             }
 
-            EnemyHealth enemy = hit.transform.GetComponent<EnemyHealth>();
-            if (enemy != null) enemy.TakeDamage(damage);
+            EnemyHealth enemy = hit.collider.GetComponentInParent<EnemyHealth>();
+            if (enemy != null) enemy.TakeDamage(danoFinal, esHeadshot);
 
-            Boss boss = hit.transform.GetComponent<Boss>();
+            Boss boss = hit.collider.GetComponentInParent<Boss>();
             if (boss != null)
             {
-                boss.TakeDamage(damage);
+                boss.TakeDamage(danoFinal); 
                 if (tieneFuego && Random.value <= 0.25f) boss.Quemar();
             }
 
-            MiniCube minion = hit.transform.GetComponent<MiniCube>();
+            MiniCube minion = hit.collider.GetComponentInParent<MiniCube>();
             if (minion != null)
             {
-                minion.TakeDamage(damage);
+                minion.TakeDamage(danoFinal); 
                 if (tieneFuego && Random.value <= 0.25f) minion.Quemar();
             }
         }

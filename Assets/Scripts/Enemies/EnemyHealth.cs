@@ -57,14 +57,12 @@ public class EnemyHealth : MonoBehaviour
         ApagarBrillo();
     }
 
-    public void TakeDamage(float amount)
+    public void TakeDamage(float amount, bool esHeadshot = false)
     {
         if (isDead) return;
         currentHealth -= amount;
 
         StartCoroutine(FlashWhiteRoutine());
-
-        // if (playerHUDScript != null) playerHUDScript.MostrarHitmarker();
 
         if (currentHealth > 0)
         {
@@ -75,6 +73,9 @@ public class EnemyHealth : MonoBehaviour
         
         if (currentHealth <= 0)
         {
+            CrosshairFeedbackManager crosshair = Object.FindFirstObjectByType<CrosshairFeedbackManager>();
+            if (crosshair != null) crosshair.OnEnemyKill(esHeadshot);
+
             isDead = true;
             if(healthBar != null) healthBar.gameObject.SetActive(false);
             Die();

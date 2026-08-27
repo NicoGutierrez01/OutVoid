@@ -1,14 +1,16 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class CrosshairFeedbackManager : MonoBehaviour
 {
     [Header("Centro - Mira y Calavera")]
     public Image crosshairImage;
-    public Image skullImage; 
-    
-    [Space]
+    public Image skullImage;
+
+    public Sprite spriteCalaveraNormal;
+    public Sprite spriteCalaveraHeadshot;
+
     public Color colorDefault = Color.white;
     public Color colorHit = Color.red;
     public Color colorHeadshot = Color.yellow;
@@ -27,109 +29,100 @@ public class CrosshairFeedbackManager : MonoBehaviour
     public GameObject iconPlusMagazine;
     public float rewardDuration = 1.5f;
 
+    public enum WarningType { MinusMagazine, LowAmmo, LastMagazine }
+    public enum RewardType { Health, Shield, Bullets, Magazine }
+
     private Coroutine centralCoroutine;
-    private bool isShowingHeadshot = false;
+    private Coroutine warningCoroutine;
+    private Coroutine rewardCoroutine;
 
-    private void Start()
+    void Start()
     {
-        // Estado inicial
-        crosshairImage.color = colorDefault;
+        if (crosshairImage != null) crosshairImage.color = colorDefault;
         if (skullImage != null) skullImage.gameObject.SetActive(false);
-        
-        HideAllPopups();
+
+        ApagarAlertas();
+        ApagarRecompensas();
     }
 
-    public void OnTargetHit()
-    {
-        if (isShowingHeadshot) return; 
-        TriggerCentralFeedback(colorHit, false, false);
-    }
-
-    public void OnEnemyKill(bool isHeadshot)
-    {
-        if (isHeadshot)
-        {
-            TriggerCentralFeedback(colorHeadshot, true, true);
-        }
-        else
-        {
-            if (!isShowingHeadshot) 
-            {
-                TriggerCentralFeedback(colorHit, true, false);
-            }
-        }
-    }
-
-    private void TriggerCentralFeedback(Color color, bool showSkull, bool headshotLock)
+    public void OnTargetHit(bool isHeadshot = false)
     {
         if (centralCoroutine != null) StopCoroutine(centralCoroutine);
-        centralCoroutine = StartCoroutine(CentralFeedbackRoutine(color, showSkull, headshotLock));
+        centralCoroutine = StartCoroutine(RutinaFeedbackCentral(isHeadshot, false));
     }
 
-    private IEnumerator CentralFeedbackRoutine(Color color, bool showSkull, bool headshotLock)
+    public void OnEnemyKill(bool isHeadshot = false)
     {
-        isShowingHeadshot = headshotLock;
-        
-        crosshairImage.color = color;
-        if (skullImage != null)
+        if (centralCoroutine != null) StopCoroutine(centralCoroutine);
+        centralCoroutine = StartCoroutine(RutinaFeedbackCentral(isHeadshot, true));
+    }
+
+    private IEnumerator RutinaFeedbackCentral(bool isHeadshot, bool isKill)
+    {
+        Color colorActivo = isHeadshot ? colorHeadshot : colorHit;
+
+        if (crosshairImage != null) crosshairImage.color = colorActivo;
+
+        if (isKill && skullImage != null)
         {
-            skullImage.gameObject.SetActive(showSkull);
-            skullImage.color = color;
+            skullImage.sprite = isHeadshot ? spriteCalaveraHeadshot : spriteCalaveraNormal;
+            skullImage.color = colorActivo;
+            skullImage.gameObject.SetActive(true);
         }
 
         yield return new WaitForSeconds(centralFeedbackDuration);
 
-        crosshairImage.color = colorDefault;
+        if (crosshairImage != null) crosshairImage.color = colorDefault;
         if (skullImage != null) skullImage.gameObject.SetActive(false);
-        isShowingHeadshot = false;
     }
-
-    public enum WarningType { MinusMagazine, LowAmmo, LastMagazine }
-    public enum RewardType { Health, Shield, Bullets, Magazine }
 
     public void ShowWarning(WarningType type)
     {
-        GameObject iconToShow = type switch
-        {
-            WarningType.MinusMagazine => iconMinusMagazine,
-            WarningType.LowAmmo => iconLowAmmo,
-            WarningType.LastMagazine => iconLastMagazine,
-            _ => null
-        };
+        if (warningCoroutine != null) StopCoroutine(warningCoroutine);
+        warningCoroutine = StartCoroutine(RutinaWarning(type));
+    }
 
-        if (iconToShow != null) StartCoroutine(ShowPopupRoutine(iconToShow, warningDuration));
+    private IEnumerator RutinaWarning(WarningType type)
+    {
+        ApagarAlertas();
+        if (type == WarningType.MinusMagazine && iconMinusMagazine != null) iconMinusMagazine.SetActive(true);
+        else if (type == WarningType.LowAmmo && iconLowAmmo != null) iconLowAmmo.SetActive(true);
+        else if (type == WarningType.LastMagazine && iconLastMagazine != null) iconLastMagazine.SetActive(true);
+        
+        yield return new WaitForSeconds(warningDuration);
+        ApagarAlertas();
+    }
+
+    private void ApagarAlertas()
+    {
+        if (iconMinusMagazine != null) iconMinusMagazine.SetActive(false);
+        if (iconLowAmmo != null) iconLowAmmo.SetActive(false);
+        if (iconLastMagazine != null) iconLastMagazine.SetActive(false);
     }
 
     public void ShowReward(RewardType type)
     {
-        GameObject iconToShow = type switch
-        {
-            RewardType.Health => iconPlusHealth,
-            RewardType.Shield => iconPlusShield,
-            RewardType.Bullets => iconPlusBullets,
-            RewardType.Magazine => iconPlusMagazine,
-            _ => null
-        };
-
-        if (iconToShow != null) StartCoroutine(ShowPopupRoutine(iconToShow, rewardDuration));
+        if (rewardCoroutine != null) StopCoroutine(rewardCoroutine);
+        rewardCoroutine = StartCoroutine(RutinaReward(type));
     }
 
-    private IEnumerator ShowPopupRoutine(GameObject popupIcon, float duration)
+    private IEnumerator RutinaReward(RewardType type)
     {
-        popupIcon.SetActive(true);
-        yield return new WaitForSeconds(duration);
-        popupIcon.SetActive(false);
-    }
-
-    private void HideAllPopups()
-    {
-        iconMinusMagazine.SetActive(false);
-        iconLowAmmo.SetActive(false);
-        iconLastMagazine.SetActive(false);
+        ApagarRecompensas();
+        if (type == RewardType.Health && iconPlusHealth != null) iconPlusHealth.SetActive(true);
+        else if (type == RewardType.Shield && iconPlusShield != null) iconPlusShield.SetActive(true);
+        else if (type == RewardType.Bullets && iconPlusBullets != null) iconPlusBullets.SetActive(true);
+        else if (type == RewardType.Magazine && iconPlusMagazine != null) iconPlusMagazine.SetActive(true);
         
-        iconPlusHealth.SetActive(false);
-        iconPlusShield.SetActive(false);
-        iconPlusBullets.SetActive(false);
-        iconPlusMagazine.SetActive(false);
+        yield return new WaitForSeconds(rewardDuration);
+        ApagarRecompensas();
+    }
+
+    private void ApagarRecompensas()
+    {
+        if (iconPlusHealth != null) iconPlusHealth.SetActive(false);
+        if (iconPlusShield != null) iconPlusShield.SetActive(false);
+        if (iconPlusBullets != null) iconPlusBullets.SetActive(false);
+        if (iconPlusMagazine != null) iconPlusMagazine.SetActive(false);
     }
 }
