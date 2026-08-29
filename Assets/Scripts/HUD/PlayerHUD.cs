@@ -42,25 +42,31 @@ public class PlayerHUD : MonoBehaviour
             if (player == null || weapon == null) return; 
         }
 
-        if (imgForeground != null)
-        {
-            float porcentajeVida = Mathf.Clamp01(player.currentHealth / player.maxHealth);
-            imgForeground.fillAmount = porcentajeVida;
+        // Límite visual dinámico: Si Vida+Escudo supera el máximo, estiramos la escala
+        float limiteVisualBarra = Mathf.Max(player.maxHealth, player.currentHealth + player.currentShield);
 
-            imgForeground.color = gradienteVida.Evaluate(porcentajeVida);
-        }
-
+        // Actualizamos primero el escudo (se dibuja detrás)
         if (imgShield != null)
         {
             if (player.currentShield > 0)
             {
                 imgShield.gameObject.SetActive(true);
-                imgShield.fillAmount = Mathf.Clamp01(player.currentShield / player.maxHealth);
+                imgShield.fillAmount = (player.currentHealth + player.currentShield) / limiteVisualBarra;
             }
             else
             {
                 imgShield.gameObject.SetActive(false);
             }
+        }
+
+        // Actualizamos la barra de vida (se dibuja delante)
+        if (imgForeground != null)
+        {
+            imgForeground.fillAmount = player.currentHealth / limiteVisualBarra;
+
+            // El color sigue dependiendo solo de la vida real respecto al máximo original
+            float porcentajeColor = Mathf.Clamp01(player.currentHealth / player.maxHealth);
+            imgForeground.color = gradienteVida.Evaluate(porcentajeColor);
         }
 
         if (healthText != null)
