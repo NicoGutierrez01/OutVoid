@@ -50,10 +50,7 @@ public class MapManager : MonoBehaviour
     public GameObject popupLapidaInvocada;
 
     [Header("Recompensas Globales")]
-    public GameObject prefabContenedorMejora;
-    public MejoraData[] mejorasComunes;
-    public MejoraData[] mejorasRaras;
-    public MejoraData[] mejorasEpicas;
+    public GameObject prefabCofre; // Solo queda el cofre
 
     private GameObject zonaDefensaInstanciada;
     private GameObject lapidaInstanciada;
@@ -88,7 +85,6 @@ public class MapManager : MonoBehaviour
         else if (nivelBucle == 2)
         {
             objetivoActual = TipoObjetivo.DefenderZona;
-            Debug.Log("El codigo funciona: el objetivo es defensa");
         }
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(true);
@@ -427,32 +423,17 @@ public class MapManager : MonoBehaviour
     {
     AnalyticsBridge.EnviarLevelComplete(SessionData.level, maxRondas);
 
-    // =====================================================
-    // GUARDAR EL ESTADO DEL JUGADOR ANTES DE CAMBIAR
-    // DE ESCENA
-    // =====================================================
-
     GameObject jugador = GameObject.FindGameObjectWithTag("Player");
 
     if (jugador != null && AdministradorDeProgreso.Instancia != null)
     {
         AdministradorDeProgreso.Instancia.GuardarEstadoJugador(jugador);
-
         Debug.Log("[MAP MANAGER] Estado del jugador guardado antes de cambiar de escena.");
     }
     else
     {
-        Debug.LogWarning(
-            "[MAP MANAGER] No se pudo guardar el estado del jugador. " +
-            $"Jugador: {jugador != null} | " +
-            $"Administrador: {AdministradorDeProgreso.Instancia != null}"
-        );
+        Debug.LogWarning("[MAP MANAGER] No se pudo guardar el estado del jugador.");
     }
-
-
-    // =====================================================
-    // CAMBIAR DE NIVEL
-    // =====================================================
 
     nivelBucle++;
     SessionData.level = nivelBucle;
@@ -511,51 +492,23 @@ public class MapManager : MonoBehaviour
 
     void SpawnearMejoraMenor()
     {
-        if (prefabContenedorMejora == null) return;
+        if (prefabCofre == null) return;
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player == null) return;
 
-        for (int i = 0; i < 2; i++)
+        Vector3 posInicial = player.transform.position + player.transform.forward * 3f + Vector3.up * 5f;
+        
+        Vector3 spawnPos = posInicial; 
+        RaycastHit hit;
+
+        if (Physics.Raycast(posInicial, Vector3.down, out hit, 15f, datosNivelActual.capaSuelo))
         {
-            float offsetX = (i == 0) ? -2f : 2f;
-            Vector3 posInicial = player.transform.position + player.transform.forward * 3f + player.transform.right * offsetX + Vector3.up * 5f;
-            
-            Vector3 spawnPos = posInicial; 
-            RaycastHit hit;
-
-            if (Physics.Raycast(posInicial, Vector3.down, out hit, 15f, datosNivelActual.capaSuelo))
-            {
-                spawnPos = hit.point + Vector3.up * 0.5f; 
-            }
-
-            int rng = Random.Range(1, 101);
-            MejoraData data = null;
-
-            if (rondaActual == 1) data = (rng <= 85) ? ObtenerMejoraRandom(mejorasComunes) : ObtenerMejoraRandom(mejorasRaras);
-            else if (rondaActual == 2) 
-            {
-                if (rng <= 50) data = ObtenerMejoraRandom(mejorasComunes);
-                else if (rng <= 90) data = ObtenerMejoraRandom(mejorasRaras);
-                else data = ObtenerMejoraRandom(mejorasEpicas);
-            }
-            else 
-            {
-                if (rng <= 20) data = ObtenerMejoraRandom(mejorasComunes);
-                else if (rng <= 70) data = ObtenerMejoraRandom(mejorasRaras);
-                else data = ObtenerMejoraRandom(mejorasEpicas);
-            }
-
-            if (data != null)
-            {
-                GameObject item = Instantiate(prefabContenedorMejora, spawnPos, Quaternion.identity);
-                item.GetComponent<ItemMejoraDinamica>().ConfigurarItem(data);
-            }
+            spawnPos = hit.point + Vector3.up * 0.8f; 
         }
-    }
 
-    MejoraData ObtenerMejoraRandom(MejoraData[] lista)
-    {
-        return (lista != null && lista.Length > 0) ? lista[Random.Range(0, lista.Length)] : null;
+        GameObject cofre = Instantiate(prefabCofre, spawnPos, Quaternion.identity);
+
+        cofre.transform.LookAt(new Vector3(player.transform.position.x, cofre.transform.position.y, player.transform.position.z));
     }
 
     public void DesactivarPortalesComunes()
