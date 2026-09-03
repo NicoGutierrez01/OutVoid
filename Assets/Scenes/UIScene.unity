@@ -4968,6 +4968,10 @@ MonoBehaviour:
   - {fileID: 221447054}
   - {fileID: 1549784719}
   - {fileID: 1020222968}
+  marcosCartas:
+  - {fileID: 221447052}
+  - {fileID: 1549784717}
+  - {fileID: 1020222966}
   iconosCartas:
   - {fileID: 1246462382}
   - {fileID: 1693103836}

@@ -15,16 +15,10 @@ public class PowerUpUIManager : MonoBehaviour
 
     [Header("Elementos de las 3 Cartas (Botones)")]
     public Button[] botonesCartas;
-    public Image[] marcosCartas; // Las imágenes con el sprite "power_ups_marco"
+    public Image[] marcosCartas; // Acá van Boton_Opcion1, Boton_Opcion2, Boton_Opcion3
     public Image[] iconosCartas;
     public TextMeshProUGUI[] titulosCartas;
     public TextMeshProUGUI[] descripcionesCartas;
-
-    [Header("Colores por Rareza")]
-    public Color colorComun = new Color(0.3f, 0.9f, 0.3f, 1f);       // Verde
-    public Color colorRara = new Color(0.2f, 0.6f, 1f, 1f);          // Azul
-    public Color colorEpica = new Color(0.7f, 0.2f, 1f, 1f);         // Púrpura / Magenta
-    public Color colorLegendaria = new Color(1f, 0.75f, 0.1f, 1f);   // Dorado / Naranja
 
     private GameObject cofreActivo;
 
@@ -67,10 +61,13 @@ public class PowerUpUIManager : MonoBehaviour
             descripcionesCartas[i].text = mejoraActual.descripcion;
             iconosCartas[i].sprite = mejoraActual.iconoUI;
 
-            // Cambiar el color del marco según su rareza
             if (marcosCartas != null && i < marcosCartas.Length && marcosCartas[i] != null)
             {
-                marcosCartas[i].color = ObtenerColorPorRareza(mejoraActual.rareza);
+                if (mejoraActual.marcoUI != null)
+                {
+                    marcosCartas[i].sprite = mejoraActual.marcoUI;
+                }
+                marcosCartas[i].color = Color.white;
             }
 
             botonesCartas[i].onClick.RemoveAllListeners();
@@ -78,18 +75,6 @@ public class PowerUpUIManager : MonoBehaviour
         }
 
         panelPowerUps.SetActive(true);
-    }
-
-    private Color ObtenerColorPorRareza(RarezaPowerUp rareza)
-    {
-        switch (rareza)
-        {
-            case RarezaPowerUp.Comun: return colorComun;
-            case RarezaPowerUp.Rara: return colorRara;
-            case RarezaPowerUp.Epica: return colorEpica;
-            case RarezaPowerUp.Legendaria: return colorLegendaria;
-            default: return Color.white;
-        }
     }
 
     private void SeleccionarMejora(PowerUpsChest mejoraElegida)
