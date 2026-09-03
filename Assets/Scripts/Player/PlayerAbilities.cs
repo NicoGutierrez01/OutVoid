@@ -164,6 +164,12 @@ public class PlayerAbilities : MonoBehaviour
         MusicManager.Instance.PlayDash();
         if (playerCamera != null) playerCamera.SetDashFOV(10f);
 
+        PlayerHUD hud = Object.FindFirstObjectByType<PlayerHUD>();
+        if (hud != null)
+        {
+            hud.TriggerGhostOverlay(dashDuration);
+        }
+
         moveScript.isGhostMode = true;
         if (weaponScript != null) weaponScript.enabled = false;
 

@@ -15,6 +15,12 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("UI y Drops de Recursos")]
     public Slider healthBar;
+    [Tooltip("¿Mantener tamaño relativo a la distancia para que se distinga de lejos?")]
+    public bool escalarConDistancia = true;
+    public float multiplicadorEscalaLejos = 1.25f;
+    [Tooltip("Tiempo en segundos antes de ocultar la barra si no recibe daño")]
+    public float tiempoOcultarBarra = 5f; 
+
     [Range(0, 100)] public float probabilidadDrop = 35f; 
 
     public GameObject prefabDropVida;
@@ -22,7 +28,6 @@ public class EnemyHealth : MonoBehaviour
     public GameObject prefabDropBalas;
 
     [Header("Efecto de Explosión al Morir")]
-    [Tooltip("Arrastrá acá el prefab de partículas de explosión/chispas que quieras que suelte")]
     public GameObject prefabParticulasMuerte; 
 
     private PlayerStats playerScript; 
@@ -31,10 +36,15 @@ public class EnemyHealth : MonoBehaviour
     public static bool healthPerKillActive = false; 
 
     private bool isDead = false;
+    private Camera camaraPrincipal;
+    private Vector3 escalaInicialCanvas;
+    private Transform canvasTransform;
+    private Coroutine corrutinaOcultarBarra;
 
     void Start()
     {
         renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
+        camaraPrincipal = Camera.main;
         
         maxHealth = maxHealth + ((MapManager.nivelBucle - 1) * 25f);
         currentHealth = maxHealth;
@@ -47,7 +57,35 @@ public class EnemyHealth : MonoBehaviour
             playerHUDScript = Object.FindFirstObjectByType<PlayerHUD>();
         }
 
-        if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
+        if (healthBar != null) 
+        { 
+            healthBar.direction = Slider.Direction.LeftToRight;
+            healthBar.maxValue = maxHealth; 
+            healthBar.value = currentHealth;
+
+            canvasTransform = healthBar.transform.parent != null ? healthBar.transform.parent : healthBar.transform;
+
+            Vector3 localScale = canvasTransform.localScale;
+            localScale.x = Mathf.Abs(localScale.x);
+            canvasTransform.localScale = localScale;
+            escalaInicialCanvas = localScale;
+
+            healthBar.gameObject.SetActive(false);
+        }
+    }
+
+    void LateUpdate()
+    {
+        if (isDead || healthBar == null || !healthBar.gameObject.activeSelf || camaraPrincipal == null) return;
+
+        canvasTransform.forward = camaraPrincipal.transform.forward;
+
+        if (escalarConDistancia)
+        {
+            float distancia = Vector3.Distance(camaraPrincipal.transform.position, canvasTransform.position);
+            float factor = Mathf.Max(1f, (distancia / 10f) * multiplicadorEscalaLejos);
+            canvasTransform.localScale = escalaInicialCanvas * factor;
+        }
     }
 
     IEnumerator FlashWhiteRoutine()
@@ -60,7 +98,17 @@ public class EnemyHealth : MonoBehaviour
     public void TakeDamage(float amount, bool esHeadshot = false)
     {
         if (isDead) return;
+
         currentHealth -= amount;
+
+        if (healthBar != null)
+        {
+            healthBar.gameObject.SetActive(true);
+            healthBar.value = currentHealth;
+
+            if (corrutinaOcultarBarra != null) StopCoroutine(corrutinaOcultarBarra);
+            corrutinaOcultarBarra = StartCoroutine(RutinaOcultarBarraPorInactividad());
+        }
 
         StartCoroutine(FlashWhiteRoutine());
 
@@ -69,16 +117,23 @@ public class EnemyHealth : MonoBehaviour
             StartCoroutine(StunRoutine());
         }
         
-        if (healthBar != null) healthBar.value = currentHealth;
-        
         if (currentHealth <= 0)
         {
             CrosshairFeedbackManager crosshair = Object.FindFirstObjectByType<CrosshairFeedbackManager>();
             if (crosshair != null) crosshair.OnEnemyKill(esHeadshot);
 
             isDead = true;
-            if(healthBar != null) healthBar.gameObject.SetActive(false);
+            if (healthBar != null) healthBar.gameObject.SetActive(false);
             Die();
+        }
+    }
+
+    IEnumerator RutinaOcultarBarraPorInactividad()
+    {
+        yield return new WaitForSeconds(tiempoOcultarBarra);
+        if (healthBar != null && !isDead)
+        {
+            healthBar.gameObject.SetActive(false);
         }
     }
 
@@ -115,6 +170,8 @@ public class EnemyHealth : MonoBehaviour
 
     void Die()
     {
+        if (corrutinaOcultarBarra != null) StopCoroutine(corrutinaOcultarBarra);
+
         if (agent != null) 
         {
             if (agent.isActiveAndEnabled && agent.isOnNavMesh) agent.isStopped = true;
