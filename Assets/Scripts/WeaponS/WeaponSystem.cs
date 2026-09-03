@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 using System.Collections;
 
 public class WeaponSystem : MonoBehaviour
@@ -41,19 +42,19 @@ public class WeaponSystem : MonoBehaviour
     [Header("Mejoras")]
     public bool tieneFuego = false;
     [Header("Debug - Tipos de Disparo")]
-public bool disparoTriple = false;
-public bool balasPenetrantes = false;
+    public bool disparoTriple = false;
+    public bool balasPenetrantes = false;
 
-[Tooltip("Ángulo entre el disparo central y cada disparo lateral.")]
-public float anguloDisparoTriple = 8f;
+    [Tooltip("Ángulo entre el disparo central y cada disparo lateral.")]
+    public float anguloDisparoTriple = 8f;
 
     private CrosshairFeedbackManager crosshairFeedback;
 
     [Header("Tracer Visual")]
-public bool mostrarTracer = true;
-public float duracionTracer = 0.08f;
-public float grosorTracer = 0.0025f;
-public Material materialTracer;
+    public bool mostrarTracer = true;
+    public float duracionTracer = 0.08f;
+    public float grosorTracer = 0.0025f;
+    public Material materialTracer;
 
     void Start()
     {
@@ -78,6 +79,12 @@ public Material materialTracer;
 
     void Update()
     {
+        // 1. Bloqueo total si el juego está en pausa
+        if (Time.timeScale <= 0f) return;
+
+        // 2. Bloqueo si el clic se hace sobre elementos de UI (botones de menú, ajustes, etc.)
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
         bool r2RecienPresionado = false;
 
         if (Gamepad.current != null)
@@ -119,7 +126,7 @@ public Material materialTracer;
         }
 
         if (
-            (Keyboard.current.rKey.wasPressedThisFrame ||
+            (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame ||
             Gamepad.current != null && Gamepad.current.buttonWest.wasPressedThisFrame)
             &&
             balasActuales < balasMaximas &&
@@ -132,123 +139,114 @@ public Material materialTracer;
     }
 
     void Disparar()
-{
-    if (!isUltActive)
-        balasActuales--;
-
-    MusicManager.Instance.PlayShoot();
-
-    // ==============================
-    // ANIMACIÓN Y MUZZLE FLASH
-    // ==============================
-
-    if (isUltActive && gunAnimIzquierda != null)
     {
-        if (dispararDerecha)
+        if (!isUltActive)
+            balasActuales--;
+
+        MusicManager.Instance.PlayShoot();
+
+        // ==============================
+        // ANIMACIÓN Y MUZZLE FLASH
+        // ==============================
+
+        if (isUltActive && gunAnimIzquierda != null)
+        {
+            if (dispararDerecha)
+            {
+                EjecutarAnimacion(gunAnim, "Shoot");
+
+                if (muzzleFlash != null)
+                    muzzleFlash.Play();
+            }
+            else
+            {
+                EjecutarAnimacion(gunAnimIzquierda, "Shoot");
+
+                if (muzzleFlashIzquierda != null)
+                    muzzleFlashIzquierda.Play();
+            }
+
+            dispararDerecha = !dispararDerecha;
+        }
+        else
         {
             EjecutarAnimacion(gunAnim, "Shoot");
 
             if (muzzleFlash != null)
                 muzzleFlash.Play();
         }
-        else
+
+        // ==============================
+        // COMPROBAR CÁMARA
+        // ==============================
+
+        if (cam == null)
+            return;
+
+        // ==============================
+        // ORIGEN DEL TRACER
+        // ==============================
+
+        Transform origenTracer = null;
+
+        if (isUltActive && gunAnimIzquierda != null)
         {
-            EjecutarAnimacion(gunAnimIzquierda, "Shoot");
-
-            if (muzzleFlashIzquierda != null)
-                muzzleFlashIzquierda.Play();
+            if (dispararDerecha && muzzleFlash != null)
+            {
+                origenTracer = muzzleFlash.transform;
+            }
+            else if (!dispararDerecha && muzzleFlashIzquierda != null)
+            {
+                origenTracer = muzzleFlashIzquierda.transform;
+            }
         }
-
-        dispararDerecha = !dispararDerecha;
-    }
-    else
-    {
-        EjecutarAnimacion(gunAnim, "Shoot");
-
-        if (muzzleFlash != null)
-            muzzleFlash.Play();
-    }
-
-    // ==============================
-    // COMPROBAR CÁMARA
-    // ==============================
-
-    if (cam == null)
-        return;
-
-    // ==============================
-    // ORIGEN DEL TRACER
-    // ==============================
-
-    Transform origenTracer = null;
-
-    if (isUltActive && gunAnimIzquierda != null)
-    {
-        if (dispararDerecha && muzzleFlash != null)
+        else if (muzzleFlash != null)
         {
             origenTracer = muzzleFlash.transform;
         }
-        else if (!dispararDerecha && muzzleFlashIzquierda != null)
+
+        // ==============================
+        // DIRECCIONES DE DISPARO
+        // ==============================
+
+        Vector3[] direcciones;
+
+        if (disparoTriple)
         {
-            origenTracer = muzzleFlashIzquierda.transform;
+            direcciones = new Vector3[3];
+
+            direcciones[0] = cam.forward;
+            direcciones[1] = Quaternion.AngleAxis(-anguloDisparoTriple, cam.up) * cam.forward;
+            direcciones[2] = Quaternion.AngleAxis(anguloDisparoTriple, cam.up) * cam.forward;
+        }
+        else
+        {
+            direcciones = new Vector3[1];
+            direcciones[0] = cam.forward;
+        }
+
+        // ==============================
+        // EJECUTAR CADA DISPARO
+        // ==============================
+
+        foreach (Vector3 direccion in direcciones)
+        {
+            ProcesarDisparo(
+                cam.position,
+                direccion,
+                origenTracer
+            );
+        }
+
+        // ==============================
+        // RECARGA AUTOMÁTICA
+        // ==============================
+
+        if (balasActuales <= 0 && !isUltActive && balasReserva > 0)
+        {
+            StartCoroutine(RutinaRecarga());
         }
     }
-    else if (muzzleFlash != null)
-    {
-        origenTracer = muzzleFlash.transform;
-    }
-
-    // ==============================
-    // DIRECCIONES DE DISPARO
-    // ==============================
-
-    Vector3[] direcciones;
-
-    if (disparoTriple)
-    {
-        direcciones = new Vector3[3];
-
-        // Disparo central
-        direcciones[0] = cam.forward;
-
-        // Disparo lateral izquierdo
-        direcciones[1] =
-            Quaternion.AngleAxis(-anguloDisparoTriple, cam.up)
-            * cam.forward;
-
-        // Disparo lateral derecho
-        direcciones[2] =
-            Quaternion.AngleAxis(anguloDisparoTriple, cam.up)
-            * cam.forward;
-    }
-    else
-    {
-        direcciones = new Vector3[1];
-        direcciones[0] = cam.forward;
-    }
-
-    // ==============================
-    // EJECUTAR CADA DISPARO
-    // ==============================
-
-    foreach (Vector3 direccion in direcciones)
-    {
-        ProcesarDisparo(
-            cam.position,
-            direccion,
-            origenTracer
-        );
-    }
-
-    // ==============================
-    // RECARGA AUTOMÁTICA
-    // ==============================
-
-    if (balasActuales <= 0 && !isUltActive && balasReserva > 0)
-    {
-        StartCoroutine(RutinaRecarga());
-    }
-}
 
     void ReproducirNoBullet()
     {
@@ -302,322 +300,236 @@ public Material materialTracer;
 
         recargando = false;
     }
-private void CrearTracer(Vector3 origen, Vector3 destino)
-{
-    if (!mostrarTracer)
-        return;
 
-    GameObject tracer = new GameObject("BulletTracer");
-
-    LineRenderer line = tracer.AddComponent<LineRenderer>();
-
-    line.positionCount = 2;
-    line.useWorldSpace = true;
-
-    line.startWidth = grosorTracer;
-    line.endWidth = grosorTracer * 0.35f;
-
-    // Definir el color según la mejora de fuego
-    Color colorTracer = tieneFuego ? Color.red : Color.white;
-
-    if (materialTracer != null)
+    private void CrearTracer(Vector3 origen, Vector3 destino)
     {
-        line.material = materialTracer;
-        // Si usas un material personalizado y quieres forzar el color por código:
-        line.startColor = colorTracer;
-        line.endColor = colorTracer;
-    }
-    else
-    {
-        Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (!mostrarTracer)
+            return;
 
-        if (shader == null)
-            shader = Shader.Find("Sprites/Default");
+        GameObject tracer = new GameObject("BulletTracer");
 
-        if (shader != null)
+        LineRenderer line = tracer.AddComponent<LineRenderer>();
+
+        line.positionCount = 2;
+        line.useWorldSpace = true;
+
+        line.startWidth = grosorTracer;
+        line.endWidth = grosorTracer * 0.35f;
+
+        Color colorTracer = tieneFuego ? Color.red : Color.white;
+
+        if (materialTracer != null)
         {
-            Material material = new Material(shader);
-            material.color = colorTracer;
-            line.material = material;
+            line.material = materialTracer;
+            line.startColor = colorTracer;
+            line.endColor = colorTracer;
         }
+        else
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+
+            if (shader == null)
+                shader = Shader.Find("Sprites/Default");
+
+            if (shader != null)
+            {
+                Material material = new Material(shader);
+                material.color = colorTracer;
+                line.material = material;
+            }
+        }
+
+        StartCoroutine(MoverTracer(line, origen, destino, duracionTracer, tracer));
     }
 
-    StartCoroutine(MoverTracer(line, origen, destino, duracionTracer, tracer));
-}
-
-private IEnumerator MoverTracer(
-    LineRenderer line,
-    Vector3 origen,
-    Vector3 destino,
-    float duracion,
-    GameObject tracerObject)
-{
-    float tiempo = 0f;
-
-    line.SetPosition(0, origen);
-    line.SetPosition(1, origen);
-
-    while (tiempo < duracion)
+    private IEnumerator MoverTracer(
+        LineRenderer line,
+        Vector3 origen,
+        Vector3 destino,
+        float duracion,
+        GameObject tracerObject)
     {
-        tiempo += Time.deltaTime;
-
-        float t = Mathf.Clamp01(tiempo / duracion);
-
-        Vector3 posicionActual = Vector3.Lerp(origen, destino, t);
+        float tiempo = 0f;
 
         line.SetPosition(0, origen);
-        line.SetPosition(1, posicionActual);
+        line.SetPosition(1, origen);
 
-        yield return null;
-    }
-
-    line.SetPosition(0, origen);
-    line.SetPosition(1, destino);
-
-    Destroy(tracerObject, 0.02f);
-}
-void ProcesarDisparo(
-    Vector3 origen,
-    Vector3 direccion,
-    Transform origenTracer)
-{
-    // ==========================================
-    // DISPARO NORMAL
-    // ==========================================
-
-    if (!balasPenetrantes)
-    {
-        Ray ray = new Ray(origen, direccion);
-
-        RaycastHit hit;
-
-        Vector3 puntoImpacto =
-            origen + direccion * range;
-
-        if (Physics.Raycast(ray, out hit, range))
+        while (tiempo < duracion)
         {
-            puntoImpacto = hit.point;
+            tiempo += Time.deltaTime;
 
-            if (hit.collider.CompareTag("Player"))
-                return;
+            float t = Mathf.Clamp01(tiempo / duracion);
 
-            ProcesarImpacto(hit);
+            Vector3 posicionActual = Vector3.Lerp(origen, destino, t);
+
+            line.SetPosition(0, origen);
+            line.SetPosition(1, posicionActual);
+
+            yield return null;
         }
 
-        // Tracer
+        line.SetPosition(0, origen);
+        line.SetPosition(1, destino);
+
+        Destroy(tracerObject, 0.02f);
+    }
+
+    void ProcesarDisparo(
+        Vector3 origen,
+        Vector3 direccion,
+        Transform origenTracer)
+    {
+        if (!balasPenetrantes)
+        {
+            Ray ray = new Ray(origen, direccion);
+            RaycastHit hit;
+            Vector3 puntoImpacto = origen + direccion * range;
+
+            if (Physics.Raycast(ray, out hit, range))
+            {
+                puntoImpacto = hit.point;
+
+                if (hit.collider.CompareTag("Player"))
+                    return;
+
+                ProcesarImpacto(hit);
+            }
+
+            if (origenTracer != null)
+            {
+                CrearTracer(
+                    origenTracer.position,
+                    puntoImpacto
+                );
+            }
+
+            return;
+        }
+
+        Ray rayPenetrante = new Ray(origen, direccion);
+        RaycastHit[] impactos = Physics.RaycastAll(rayPenetrante, range);
+
+        System.Array.Sort(
+            impactos,
+            (a, b) => a.distance.CompareTo(b.distance)
+        );
+
+        Vector3 puntoImpactoPenetrante = origen + direccion * range;
+        System.Collections.Generic.HashSet<GameObject> objetivosGolpeados = new System.Collections.Generic.HashSet<GameObject>();
+
+        foreach (RaycastHit hit in impactos)
+        {
+            if (hit.collider.CompareTag("Player"))
+                continue;
+
+            puntoImpactoPenetrante = hit.point;
+
+            EnemyHealth enemy = hit.collider.GetComponentInParent<EnemyHealth>();
+            Boss boss = hit.collider.GetComponentInParent<Boss>();
+            MiniCube minion = hit.collider.GetComponentInParent<MiniCube>();
+
+            GameObject objetivo = null;
+
+            if (enemy != null)
+                objetivo = enemy.gameObject;
+            else if (boss != null)
+                objetivo = boss.gameObject;
+            else if (minion != null)
+                objetivo = minion.gameObject;
+
+            if (objetivo != null)
+            {
+                if (objetivosGolpeados.Contains(objetivo))
+                    continue;
+
+                objetivosGolpeados.Add(objetivo);
+                ProcesarImpacto(hit);
+                continue;
+            }
+
+            ProcesarImpacto(hit);
+            break;
+        }
+
         if (origenTracer != null)
         {
             CrearTracer(
                 origenTracer.position,
-                puntoImpacto
+                puntoImpactoPenetrante
             );
         }
-
-        return;
     }
 
-    // ==========================================
-    // DISPARO PENETRANTE
-    // ==========================================
-
-    Ray rayPenetrante = new Ray(origen, direccion);
-
-    RaycastHit[] impactos =
-        Physics.RaycastAll(rayPenetrante, range);
-
-    // RaycastAll no garantiza el orden.
-    // Ordenamos los impactos por distancia.
-    System.Array.Sort(
-        impactos,
-        (a, b) => a.distance.CompareTo(b.distance)
-    );
-
-    Vector3 puntoImpactoPenetrante =
-        origen + direccion * range;
-
-    // Evita golpear dos veces al mismo enemigo
-    // si tiene varios colliders.
-    System.Collections.Generic.HashSet<GameObject> objetivosGolpeados =
-        new System.Collections.Generic.HashSet<GameObject>();
-
-    foreach (RaycastHit hit in impactos)
+    void ProcesarImpacto(RaycastHit hit)
     {
-        if (hit.collider.CompareTag("Player"))
-            continue;
+        bool esHeadshot = hit.collider.CompareTag("Head");
+        float danoFinal = esHeadshot ? damage * multiplicadorHeadshot : damage;
 
-        puntoImpactoPenetrante = hit.point;
+        if (hit.collider.CompareTag("Enemigo") ||
+            hit.collider.CompareTag("MinionBoss") ||
+            esHeadshot)
+        {
+            BuscarCrosshairFeedback();
 
-        // ------------------------------------------
-        // ENEMIGO
-        // ------------------------------------------
+            if (crosshairFeedback != null)
+            {
+                crosshairFeedback.OnTargetHit(esHeadshot);
+            }
 
-        EnemyHealth enemy =
-            hit.collider.GetComponentInParent<EnemyHealth>();
+            if (prefabImpactoRobot != null)
+            {
+                GameObject chispas = Instantiate(
+                    prefabImpactoRobot,
+                    hit.point,
+                    Quaternion.LookRotation(hit.normal)
+                );
 
-        Boss boss =
-            hit.collider.GetComponentInParent<Boss>();
+                Destroy(chispas, 1.5f);
+            }
+        }
+        else
+        {
+            if (prefabImpactoEntorno != null)
+            {
+                GameObject polvo = Instantiate(
+                    prefabImpactoEntorno,
+                    hit.point,
+                    Quaternion.LookRotation(hit.normal)
+                );
 
-        MiniCube minion =
-            hit.collider.GetComponentInParent<MiniCube>();
+                Destroy(polvo, 1.5f);
+            }
+        }
 
-        GameObject objetivo = null;
-
+        EnemyHealth enemy = hit.collider.GetComponentInParent<EnemyHealth>();
         if (enemy != null)
-            objetivo = enemy.gameObject;
-        else if (boss != null)
-            objetivo = boss.gameObject;
-        else if (minion != null)
-            objetivo = minion.gameObject;
-
-        // ------------------------------------------
-        // SI ES UN ENEMIGO
-        // ------------------------------------------
-
-        if (objetivo != null)
         {
-            // Si ya golpeamos este enemigo con este disparo,
-            // ignoramos sus demás colliders.
-            if (objetivosGolpeados.Contains(objetivo))
-                continue;
-
-            objetivosGolpeados.Add(objetivo);
-
-            ProcesarImpacto(hit);
-
-            // IMPORTANTE:
-            // No hacemos break.
-            // El Raycast continúa atravesando al enemigo.
-            continue;
+            enemy.TakeDamage(danoFinal, esHeadshot);
         }
 
-        // ------------------------------------------
-        // SI ES ENTORNO
-        // ------------------------------------------
-
-        // Llegamos a una superficie que no es enemigo.
-        // La bala deja de atravesar.
-        ProcesarImpacto(hit);
-
-        break;
-    }
-
-    // ==========================================
-    // TRACER PENETRANTE
-    // ==========================================
-
-    if (origenTracer != null)
-    {
-        CrearTracer(
-            origenTracer.position,
-            puntoImpactoPenetrante
-        );
-    }
-}
-void ProcesarImpacto(RaycastHit hit)
-{
-    // ==========================================
-    // HEADSHOT
-    // ==========================================
-
-    bool esHeadshot =
-        hit.collider.CompareTag("Head");
-
-    float danoFinal =
-        esHeadshot
-            ? damage * multiplicadorHeadshot
-            : damage;
-
-    // ==========================================
-    // EFECTOS VISUALES
-    // ==========================================
-
-    if (hit.collider.CompareTag("Enemigo") ||
-        hit.collider.CompareTag("MinionBoss") ||
-        esHeadshot)
-    {
-        BuscarCrosshairFeedback();
-
-        if (crosshairFeedback != null)
+        Boss boss = hit.collider.GetComponentInParent<Boss>();
+        if (boss != null)
         {
-            crosshairFeedback.OnTargetHit(esHeadshot);
+            boss.TakeDamage(danoFinal);
+
+            if (tieneFuego && Random.value <= 0.25f)
+            {
+                boss.Quemar();
+            }
         }
 
-        if (prefabImpactoRobot != null)
+        MiniCube minion = hit.collider.GetComponentInParent<MiniCube>();
+        if (minion != null)
         {
-            GameObject chispas = Instantiate(
-                prefabImpactoRobot,
-                hit.point,
-                Quaternion.LookRotation(hit.normal)
-            );
+            minion.TakeDamage(danoFinal);
 
-            Destroy(chispas, 1.5f);
-        }
-    }
-    else
-    {
-        if (prefabImpactoEntorno != null)
-        {
-            GameObject polvo = Instantiate(
-                prefabImpactoEntorno,
-                hit.point,
-                Quaternion.LookRotation(hit.normal)
-            );
-
-            Destroy(polvo, 1.5f);
+            if (tieneFuego && Random.value <= 0.25f)
+            {
+                minion.Quemar();
+            }
         }
     }
 
-    // ==========================================
-    // ENEMIGO NORMAL
-    // ==========================================
-
-    EnemyHealth enemy =
-        hit.collider.GetComponentInParent<EnemyHealth>();
-
-    if (enemy != null)
-    {
-        enemy.TakeDamage(
-            danoFinal,
-            esHeadshot
-        );
-    }
-
-    // ==========================================
-    // BOSS
-    // ==========================================
-
-    Boss boss =
-        hit.collider.GetComponentInParent<Boss>();
-
-    if (boss != null)
-    {
-        boss.TakeDamage(danoFinal);
-
-        if (tieneFuego &&
-            Random.value <= 0.25f)
-        {
-            boss.Quemar();
-        }
-    }
-
-    // ==========================================
-    // MINION DEL BOSS
-    // ==========================================
-
-    MiniCube minion =
-        hit.collider.GetComponentInParent<MiniCube>();
-
-    if (minion != null)
-    {
-        minion.TakeDamage(danoFinal);
-
-        if (tieneFuego &&
-            Random.value <= 0.25f)
-        {
-            minion.Quemar();
-        }
-    }
-}
     public void AddAmmo(int amount)
     {
         balasReserva += amount;

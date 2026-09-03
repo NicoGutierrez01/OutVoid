@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections;
 
 public class PlayerHUD : MonoBehaviour
 {
@@ -25,9 +26,29 @@ public class PlayerHUD : MonoBehaviour
     public float alfaMaximo = 0.8f;
     public float umbralVida = 45f;
 
+    [Header("Efecto Dash Espectral")]
+    public Image imgGhostDash;
+    [Range(0f, 1f)] public float alfaMaximoGhost = 0.9f;
+    [Tooltip("Tiempo que tarda en aparecer gradualmente")]
+    public float tiempoFadeInGhost = 0.25f; 
+    [Tooltip("Tiempo que tarda en desvanecerse")]
+    public float tiempoFadeOutGhost = 0.4f;
+    private Coroutine ghostCoroutine;
+
     [Header("Objetivos (Panel Morado)")]
     public TextMeshProUGUI textoRonda;      
     public TextMeshProUGUI textoDescripcion; 
+
+    void Start()
+    {
+        if (imgGhostDash != null)
+        {
+            Color c = imgGhostDash.color;
+            c.a = 0f;
+            imgGhostDash.color = c;
+            imgGhostDash.gameObject.SetActive(false);
+        }
+    }
 
     void Update()
     {
@@ -42,10 +63,8 @@ public class PlayerHUD : MonoBehaviour
             if (player == null || weapon == null) return; 
         }
 
-        // Límite visual dinámico: Si Vida+Escudo supera el máximo, estiramos la escala
         float limiteVisualBarra = Mathf.Max(player.maxHealth, player.currentHealth + player.currentShield);
 
-        // Actualizamos primero el escudo (se dibuja detrás)
         if (imgShield != null)
         {
             if (player.currentShield > 0)
@@ -59,12 +78,10 @@ public class PlayerHUD : MonoBehaviour
             }
         }
 
-        // Actualizamos la barra de vida (se dibuja delante)
         if (imgForeground != null)
         {
             imgForeground.fillAmount = player.currentHealth / limiteVisualBarra;
 
-            // El color sigue dependiendo solo de la vida real respecto al máximo original
             float porcentajeColor = Mathf.Clamp01(player.currentHealth / player.maxHealth);
             imgForeground.color = gradienteVida.Evaluate(porcentajeColor);
         }
@@ -90,6 +107,51 @@ public class PlayerHUD : MonoBehaviour
         ActualizarObjetivos();
         
         ActualizarVignetteDano();
+    }
+
+    public void TriggerGhostOverlay(float duracionHabilidad)
+    {
+        if (imgGhostDash == null) return;
+
+        if (ghostCoroutine != null) StopCoroutine(ghostCoroutine);
+        ghostCoroutine = StartCoroutine(RutinaGhostOverlay(duracionHabilidad));
+    }
+
+    private IEnumerator RutinaGhostOverlay(float duracionHabilidad)
+    {
+        imgGhostDash.gameObject.SetActive(true);
+
+        Color c = imgGhostDash.color;
+        c.a = 0f;
+        imgGhostDash.color = c;
+
+        float tIn = 0f;
+        while (tIn < tiempoFadeInGhost)
+        {
+            tIn += Time.deltaTime;
+            c.a = Mathf.Lerp(0f, alfaMaximoGhost, tIn / tiempoFadeInGhost);
+            imgGhostDash.color = c;
+            yield return null;
+        }
+
+        c.a = alfaMaximoGhost;
+        imgGhostDash.color = c;
+
+        float tiempoSostenido = Mathf.Max(0f, duracionHabilidad - tiempoFadeInGhost - tiempoFadeOutGhost);
+        yield return new WaitForSeconds(tiempoSostenido);
+
+        float tOut = 0f;
+        while (tOut < tiempoFadeOutGhost)
+        {
+            tOut += Time.deltaTime;
+            c.a = Mathf.Lerp(alfaMaximoGhost, 0f, tOut / tiempoFadeOutGhost);
+            imgGhostDash.color = c;
+            yield return null;
+        }
+
+        c.a = 0f;
+        imgGhostDash.color = c;
+        imgGhostDash.gameObject.SetActive(false);
     }
 
     private void ActualizarObjetivos()
