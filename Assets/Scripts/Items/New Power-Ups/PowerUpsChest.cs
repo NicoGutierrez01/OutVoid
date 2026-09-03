@@ -1,7 +1,7 @@
 using UnityEngine;
 
 public enum RarezaPowerUp { Comun, Rara, Epica, Legendaria }
-public enum StatModificado { VidaMaxima, EscudoMaximo, DanoArma, VelocidadRecarga, BalasDeFuego }
+public enum StatModificado { VidaMaxima, EscudoMaximo, DanoArma, VelocidadRecarga, BalasDeFuego,BalasPenetrantes,DisparoTriple }
 
 [CreateAssetMenu(fileName = "NuevoPowerUp", menuName = "Out-Void/Power Up de Cofre")]
 public class PowerUpsChest : ScriptableObject

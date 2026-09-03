@@ -15,11 +15,17 @@ public class PowerUpUIManager : MonoBehaviour
 
     [Header("Elementos de las 3 Cartas (Botones)")]
     public Button[] botonesCartas;
+    public Image[] marcosCartas; // Las imágenes con el sprite "power_ups_marco"
     public Image[] iconosCartas;
     public TextMeshProUGUI[] titulosCartas;
     public TextMeshProUGUI[] descripcionesCartas;
 
-    // NUEVO: Guardamos la referencia del cofre para borrarlo después
+    [Header("Colores por Rareza")]
+    public Color colorComun = new Color(0.3f, 0.9f, 0.3f, 1f);       // Verde
+    public Color colorRara = new Color(0.2f, 0.6f, 1f, 1f);          // Azul
+    public Color colorEpica = new Color(0.7f, 0.2f, 1f, 1f);         // Púrpura / Magenta
+    public Color colorLegendaria = new Color(1f, 0.75f, 0.1f, 1f);   // Dorado / Naranja
+
     private GameObject cofreActivo;
 
     private void Awake()
@@ -33,7 +39,6 @@ public class PowerUpUIManager : MonoBehaviour
         if (panelPowerUps != null) panelPowerUps.SetActive(false);
     }
 
-    // NUEVO: Ahora recibe el GameObject del cofre que lo llamó
     public void MostrarOpciones(GameObject cofreQueSeAbrio)
     {
         if (poolDeMejoras.Count < 3)
@@ -62,6 +67,12 @@ public class PowerUpUIManager : MonoBehaviour
             descripcionesCartas[i].text = mejoraActual.descripcion;
             iconosCartas[i].sprite = mejoraActual.iconoUI;
 
+            // Cambiar el color del marco según su rareza
+            if (marcosCartas != null && i < marcosCartas.Length && marcosCartas[i] != null)
+            {
+                marcosCartas[i].color = ObtenerColorPorRareza(mejoraActual.rareza);
+            }
+
             botonesCartas[i].onClick.RemoveAllListeners();
             botonesCartas[i].onClick.AddListener(() => SeleccionarMejora(mejoraActual));
         }
@@ -69,17 +80,27 @@ public class PowerUpUIManager : MonoBehaviour
         panelPowerUps.SetActive(true);
     }
 
+    private Color ObtenerColorPorRareza(RarezaPowerUp rareza)
+    {
+        switch (rareza)
+        {
+            case RarezaPowerUp.Comun: return colorComun;
+            case RarezaPowerUp.Rara: return colorRara;
+            case RarezaPowerUp.Epica: return colorEpica;
+            case RarezaPowerUp.Legendaria: return colorLegendaria;
+            default: return Color.white;
+        }
+    }
+
     private void SeleccionarMejora(PowerUpsChest mejoraElegida)
     {
         AplicarEfecto(mejoraElegida);
 
-        // Ocultar panel y reanudar el juego (SIN colapsar el mapa)
         panelPowerUps.SetActive(false);
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // NUEVO: Destruimos el cofre para que no lo pueda volver a abrir
         if (cofreActivo != null)
         {
             Destroy(cofreActivo);
@@ -102,17 +123,32 @@ public class PowerUpUIManager : MonoBehaviour
                     stats.currentHealth += mejora.valorSuma; 
                 }
                 break;
+
             case StatModificado.EscudoMaximo:
                 if (stats != null) stats.currentShield += mejora.valorSuma;
                 break;
+
             case StatModificado.DanoArma:
                 if (weapon != null) weapon.damage += mejora.valorSuma;
                 break;
+
             case StatModificado.VelocidadRecarga:
                 if (weapon != null) weapon.tiempoRecarga -= mejora.valorSuma; 
                 break;
+
             case StatModificado.BalasDeFuego:
                 if (weapon != null) weapon.tieneFuego = true;
+                if (AdministradorDeProgreso.Instancia != null) AdministradorDeProgreso.Instancia.balasDeFuego = true;
+                break;
+
+            case StatModificado.BalasPenetrantes:
+                if (weapon != null) weapon.balasPenetrantes = true;
+                if (AdministradorDeProgreso.Instancia != null) AdministradorDeProgreso.Instancia.balasPenetrantes = true;
+                break;
+
+            case StatModificado.DisparoTriple:
+                if (weapon != null) weapon.disparoTriple = true;
+                if (AdministradorDeProgreso.Instancia != null) AdministradorDeProgreso.Instancia.disparoTriple = true;
                 break;
         }
     }

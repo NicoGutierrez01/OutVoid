@@ -656,6 +656,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponSystem
   damage: 50
+  multiplicadorHeadshot: 2
   range: 500
   cam: {fileID: 974036132606901512}
   balasMaximas: 6
@@ -672,6 +673,13 @@ MonoBehaviour:
   prefabImpactoRobot: {fileID: 1000011945391522, guid: 78b71003e8b357d4bbf89c8b5e5e4f0e, type: 3}
   prefabImpactoEntorno: {fileID: 1385637644607250558, guid: 7cf6b1bcac16eed49ad3b87737ae0b2e, type: 3}
   tieneFuego: 0
+  disparoTriple: 0
+  balasPenetrantes: 0
+  anguloDisparoTriple: 5
+  mostrarTracer: 1
+  duracionTracer: 0.08
+  grosorTracer: 0.0025
+  materialTracer: {fileID: 0}
 --- !u!114 &4792990378224857872
 MonoBehaviour:
   m_ObjectHideFlags: 0

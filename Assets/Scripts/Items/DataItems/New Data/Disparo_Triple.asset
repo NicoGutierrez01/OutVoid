@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e9778c5143335664eb4392dc5c5fa894, type: 3}
-  m_Name: Vida
+  m_Name: Disparo_Triple
   m_EditorClassIdentifier: Assembly-CSharp::PowerUpsChest
-  nombrePowerUp: vida
-  descripcion: mas vida
-  iconoUI: {fileID: 0}
-  rareza: 0
-  statAMejorar: 0
+  nombrePowerUp: Disparo Triple
+  descripcion: Disparo Triple
+  iconoUI: {fileID: 21300000, guid: 9803efae157e8f640bcea3d8be02c056, type: 3}
+  rareza: 2
+  statAMejorar: 6
   valorSuma: 0

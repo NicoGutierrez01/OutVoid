@@ -16,15 +16,15 @@ public class AdministradorDeProgreso : MonoBehaviour
 
     public float multiplicadorDaño = 1f;
     public bool balasDeFuego = false;
+    public bool balasPenetrantes = false;
+    public bool disparoTriple = false;
 
     public float multiplicadorRecarga = 1f;
     public float probabilidadDropExtra = 0f;
 
-
     [Header("Estadísticas de Vida")]
     public float vidaMaximaGuardada = 100f;
     public float vidaActualGuardada = 100f;
-
 
     [Header("Estado del Jugador")]
     public float escudoGuardado = 0f;
@@ -35,12 +35,10 @@ public class AdministradorDeProgreso : MonoBehaviour
     // Balas disponibles en reserva
     public int balasReservaGuardadas = 24;
 
-
     [Header("Datos para el Game Over")]
     public int enemigosMuertos = 0;
     public int puntosTotales = 0;
     public int mejorasRecogidas = 0;
-
 
     private void Awake()
     {
@@ -54,7 +52,6 @@ public class AdministradorDeProgreso : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
 
     // =========================================================
     // GUARDAR ESTADO DEL JUGADOR
@@ -71,47 +68,32 @@ public class AdministradorDeProgreso : MonoBehaviour
         PlayerStats stats = jugador.GetComponentInChildren<PlayerStats>();
         WeaponSystem weapon = jugador.GetComponentInChildren<WeaponSystem>();
 
-
-        // =====================================================
         // VIDA Y ESCUDO
-        // =====================================================
-
         if (stats != null)
         {
             vidaMaximaGuardada = stats.maxHealth;
             vidaActualGuardada = stats.currentHealth;
             escudoGuardado = stats.currentShield;
         }
-        else
-        {
-            Debug.LogWarning("[PROGRESO] No se encontró PlayerStats.");
-        }
 
-
-        // =====================================================
-        // MUNICIÓN
-        // =====================================================
-
+        // MUNICIÓN Y MEJORAS DE ARMA
         if (weapon != null)
         {
             balasActualesGuardadas = weapon.balasActuales;
             balasReservaGuardadas = weapon.balasReserva;
+            balasDeFuego = weapon.tieneFuego;
+            balasPenetrantes = weapon.balasPenetrantes;
+            disparoTriple = weapon.disparoTriple;
         }
-        else
-        {
-            Debug.LogWarning("[PROGRESO] No se encontró WeaponSystem.");
-        }
-
 
         Debug.Log(
             $"[PROGRESO] Estado guardado -> " +
             $"HP: {vidaActualGuardada}/{vidaMaximaGuardada} | " +
             $"Escudo: {escudoGuardado} | " +
             $"Balas: {balasActualesGuardadas}/{balasReservaGuardadas} | " +
-            $"Saltos extra: {saltosAdicionales}"
+            $"Penetrante: {balasPenetrantes} | Triple: {disparoTriple}"
         );
     }
-
 
     // =========================================================
     // REINICIAR TODA LA PARTIDA
@@ -119,19 +101,14 @@ public class AdministradorDeProgreso : MonoBehaviour
 
     public void ReiniciarProgreso()
     {
-        // Vida
         vidaMaximaGuardada = 100f;
         vidaActualGuardada = 100f;
 
-        // Estado
         escudoGuardado = 0f;
 
-        // Munición inicial
         balasActualesGuardadas = 6;
         balasReservaGuardadas = 24;
 
-
-        // Mejoras
         tieneEscudoEmergencia = false;
         saludPorKill = false;
 
@@ -143,16 +120,15 @@ public class AdministradorDeProgreso : MonoBehaviour
 
         multiplicadorDaño = 1f;
         balasDeFuego = false;
+        balasPenetrantes = false;
+        disparoTriple = false;
 
         multiplicadorRecarga = 1f;
         probabilidadDropExtra = 0f;
 
-
-        // Estadísticas
         enemigosMuertos = 0;
         puntosTotales = 0;
         mejorasRecogidas = 0;
-
 
         Debug.Log("[PROGRESO] Progreso reiniciado.");
     }

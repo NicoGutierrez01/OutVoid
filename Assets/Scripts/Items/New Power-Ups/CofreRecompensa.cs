@@ -7,30 +7,66 @@ public class CofreRecompensa : MonoBehaviour
     public Animator animCofre;
     [Tooltip("Tiempo en segundos que tarda la animación en abrirse")]
     public float tiempoAnimacion = 1.2f; 
+    public float radioInteraccion = 3.5f;
+
+    [Header("UI Flotante")]
+    public GameObject canvasFlotante; 
+    private Transform camaraJugador; 
+
     private bool jugadorCerca = false;
     private bool yaAbierto = false;
 
+    void Start()
+    {
+        if (canvasFlotante != null) canvasFlotante.SetActive(false);
+        if (Camera.main != null) camaraJugador = Camera.main.transform;
+    }
+
     void Update()
     {
-        if (jugadorCerca && !yaAbierto && Keyboard.current.fKey.wasPressedThisFrame)
+        if (yaAbierto) return;
+
+        // Detección esférica idéntica a la Lápida
+        Collider[] colliders = Physics.OverlapSphere(transform.position, radioInteraccion);
+        bool detectado = false;
+
+        foreach (var hit in colliders)
+        {
+            if (hit.CompareTag("Player"))
+            {
+                detectado = true;
+                break;
+            }
+        }
+
+        jugadorCerca = detectado;
+
+        // Manejo del Canvas interactivo (Mostrar / Ocultar / Billboard)
+        if (canvasFlotante != null)
+        {
+            if (canvasFlotante.activeSelf != jugadorCerca)
+            {
+                canvasFlotante.SetActive(jugadorCerca);
+            }
+
+            if (canvasFlotante.activeSelf && camaraJugador != null)
+            {
+                canvasFlotante.transform.LookAt(canvasFlotante.transform.position + camaraJugador.forward);
+            }
+        }
+
+        if (jugadorCerca && Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
         {
             StartCoroutine(RutinaAbrirCofre());
         }
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player")) jugadorCerca = true;
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player")) jugadorCerca = false;
-    }
-
     private IEnumerator RutinaAbrirCofre()
     {
         yaAbierto = true;
+
+        // Apagar el texto de presionar F inmediatamente
+        if (canvasFlotante != null) canvasFlotante.SetActive(false);
         
         if (animCofre != null) animCofre.SetTrigger("Abrir");
 
@@ -44,5 +80,11 @@ public class CofreRecompensa : MonoBehaviour
         {
            PowerUpUIManager.Instancia.MostrarOpciones(this.gameObject);
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, radioInteraccion);
     }
 }

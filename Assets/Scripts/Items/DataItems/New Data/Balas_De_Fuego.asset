@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e9778c5143335664eb4392dc5c5fa894, type: 3}
-  m_Name: Dano
+  m_Name: Balas_De_Fuego
   m_EditorClassIdentifier: Assembly-CSharp::PowerUpsChest
-  nombrePowerUp: dano
-  descripcion: mas dano
-  iconoUI: {fileID: 0}
-  rareza: 0
-  statAMejorar: 0
-  valorSuma: 0
+  nombrePowerUp: Balas De Fuego
+  descripcion: Balas de fuego
+  iconoUI: {fileID: 21300000, guid: f77aa5b706357024baea93850bc162a7, type: 3}
+  rareza: 1
+  statAMejorar: 4
+  valorSuma: 25

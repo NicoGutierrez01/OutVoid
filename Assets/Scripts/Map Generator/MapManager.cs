@@ -28,7 +28,14 @@ public class MapManager : MonoBehaviour
     public TipoObjetivo objetivoActual;
 
     [Header("Logica Objetivo 1: Eliminar Enemigos")]
-    public int enemigosParaJefe = 15;
+    [Tooltip("Cantidad base de kills para la Ronda 1")]
+    public int killsBasePorRonda = 5; 
+    [Tooltip("Cuántas kills suma cada ronda que avanza (Ej: si base es 5 y esto es 3: R1=5, R2=8, R3=11)")]
+    public int incrementoKillsPorRonda = 3;
+    [Tooltip("Cuántas kills extra suma por cada bucle/loop de mapa")]
+    public int incrementoKillsPorBucle = 5;
+
+    [HideInInspector] public int enemigosParaJefe;
     public int enemigosMuertosActuales = 0;
 
     [Header("Logica Objetivo 2: Defender Zona")]
@@ -291,7 +298,8 @@ public class MapManager : MonoBehaviour
         if (objetivoActual == TipoObjetivo.EliminarEnemigos)
         {
             enemigosMuertosActuales = 0; 
-            enemigosParaJefe = (15 * rondaActual) + ((nivelBucle - 1) * 10);
+
+            enemigosParaJefe = killsBasePorRonda + ((rondaActual - 1) * incrementoKillsPorRonda) + ((nivelBucle - 1) * incrementoKillsPorBucle);
             
             if (zonaDefensaInstanciada != null) 
             {
@@ -305,7 +313,6 @@ public class MapManager : MonoBehaviour
             
             MoverZonaAOtroPunto();
         }
-        
     }
 
     void MoverZonaAOtroPunto()

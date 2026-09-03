@@ -66,6 +66,10 @@ public class WeaponSystem : MonoBehaviour
             damage *= AdministradorDeProgreso.Instancia.multiplicadorDaño;
             tiempoRecarga *= AdministradorDeProgreso.Instancia.multiplicadorRecarga;
             tieneFuego = AdministradorDeProgreso.Instancia.balasDeFuego;
+            
+            // Cargar estado guardado de penetración y disparo triple
+            balasPenetrantes = AdministradorDeProgreso.Instancia.balasPenetrantes;
+            disparoTriple = AdministradorDeProgreso.Instancia.disparoTriple;
         }
     }
 

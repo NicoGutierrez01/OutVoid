@@ -56,5 +56,5 @@ MonoBehaviour:
   - {x: 33.78, y: 26.14, z: -140.86}
   prefabsDecoracionSecundaria: []
   cantidadDecoracionSecundaria: 0
-  prefabDecoracionSuelo: {fileID: 0}
-  cantidadDecoracionSuelo: 0
+  prefabDecoracionSuelo: {fileID: 3633136758112759580, guid: 943205a4b0ae0a14e98bc8ba8774348e, type: 3}
+  cantidadDecoracionSuelo: 20
