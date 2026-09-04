@@ -26,7 +26,6 @@ public class CofreRecompensa : MonoBehaviour
     {
         if (yaAbierto) return;
 
-        // Detección esférica idéntica a la Lápida
         Collider[] colliders = Physics.OverlapSphere(transform.position, radioInteraccion);
         bool detectado = false;
 
@@ -41,7 +40,6 @@ public class CofreRecompensa : MonoBehaviour
 
         jugadorCerca = detectado;
 
-        // Manejo del Canvas interactivo (Mostrar / Ocultar / Billboard)
         if (canvasFlotante != null)
         {
             if (canvasFlotante.activeSelf != jugadorCerca)
@@ -65,7 +63,6 @@ public class CofreRecompensa : MonoBehaviour
     {
         yaAbierto = true;
 
-        // Apagar el texto de presionar F inmediatamente
         if (canvasFlotante != null) canvasFlotante.SetActive(false);
         
         if (animCofre != null) animCofre.SetTrigger("Abrir");

@@ -968,7 +968,7 @@ MonoBehaviour:
   - Forest
   datosNivelActual: {fileID: 11400000, guid: e6db02546bfee364bbbe99a923296d42, type: 2}
   objetivoActual: 0
-  killsBasePorRonda: 5
+  killsBasePorRonda: 10
   incrementoKillsPorRonda: 5
   incrementoKillsPorBucle: 5
   enemigosParaJefe: 10
@@ -1220,6 +1220,8 @@ MonoBehaviour:
   multiplicadorDinamitaCooldown: 1
   "multiplicadorDa\xF1o": 1
   balasDeFuego: 0
+  balasPenetrantes: 0
+  disparoTriple: 0
   multiplicadorRecarga: 1
   probabilidadDropExtra: 0
   vidaMaximaGuardada: 100
