@@ -34,10 +34,11 @@ public class PortalSpawner : MonoBehaviour
         foreach (Collider c in componentesFisicos) c.enabled = estado;
     }
 
-IEnumerator CicloDeOleadas()
-{
-    yield return new WaitUntil(() => GameObject.FindGameObjectWithTag("Player") != null);
-    yield return new WaitForSeconds(1f);
+    IEnumerator CicloDeOleadas()
+    {
+        yield return new WaitUntil(() => GameObject.FindGameObjectWithTag("Player") != null);
+        yield return new WaitForSeconds(1f);
+
         while (true)
         {
             if (posiblesEnemigos != null && posiblesEnemigos.Length > 0)
@@ -50,7 +51,7 @@ IEnumerator CicloDeOleadas()
 
             if (MapManager.Instance != null)
             {
-                transform.position = MapManager.Instance.ObtenerPosicionAleatoriaPortal();
+                transform.position = MapManager.Instance.ObtenerPosicionAleatoriaPortal(transform.position);
             }
 
             CambiarEstadoPortal(true);
@@ -77,6 +78,14 @@ IEnumerator CicloDeOleadas()
             CambiarEstadoPortal(false);
 
             yield return new WaitForSeconds(tiempoEntreOleadas);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (MapManager.Instance != null)
+        {
+            MapManager.Instance.LiberarPosicionPortal(transform.position);
         }
     }
 }

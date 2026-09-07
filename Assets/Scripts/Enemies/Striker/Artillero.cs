@@ -21,10 +21,18 @@ public class Artillero : MonoBehaviour
 
     [Header("Configuración de Disparo")]
     public GameObject projectilePrefab; 
-    public Transform firePoint;        
+    public Transform firePoint;   
+    public ParticleSystem muzzleFlash;     
     public float timeBetweenShots = 2.2f; 
     public float delayDisparoAnimacion = 0.18f; 
     private float nextShotTime;
+
+    [Header("Tracer Visual")]
+    public bool mostrarTracer = true;
+    public float duracionTracer = 0.08f;
+    public float grosorTracer = 0.04f;
+    public Color colorTracer = new Color(1f, 0.4f, 0f);
+    public Material materialTracer;
 
     [Header("Seguridad NavMesh")]
     public LayerMask capaObstaculos; 
@@ -276,8 +284,76 @@ public class Artillero : MonoBehaviour
         {
             Vector3 puntoDeMira = playerTransform.position + Vector3.up * 0.5f;
             firePoint.LookAt(puntoDeMira);
-            Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+
+            if (muzzleFlash != null)
+            {
+                muzzleFlash.Play();
+            }
+
+            if (projectilePrefab != null)
+            {
+                GameObject bala = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+                EnemyBullet balaScript = bala.GetComponent<EnemyBullet>();
+                if (balaScript != null)
+                {
+                    balaScript.origenDisparo = transform.position; 
+                }
+            }
+
+            if (mostrarTracer)
+            {
+                CrearTracerArtillero(firePoint.position, puntoDeMira);
+            }
         }
+    }
+
+    void CrearTracerArtillero(Vector3 origen, Vector3 destino)
+    {
+        GameObject tracer = new GameObject("ArtilleroBulletTracer");
+        LineRenderer line = tracer.AddComponent<LineRenderer>();
+
+        line.positionCount = 2;
+        line.useWorldSpace = true;
+        line.startWidth = grosorTracer;
+        line.endWidth = grosorTracer * 0.35f;
+
+        if (materialTracer != null)
+        {
+            line.material = materialTracer;
+        }
+        else
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null) shader = Shader.Find("Sprites/Default");
+            line.material = new Material(shader);
+        }
+
+        line.startColor = colorTracer;
+        line.endColor = colorTracer;
+
+        StartCoroutine(MoverTracerArtillero(line, origen, destino, duracionTracer, tracer));
+    }
+
+    IEnumerator MoverTracerArtillero(LineRenderer line, Vector3 origen, Vector3 destino, float duracion, GameObject tracerObject)
+    {
+        float tiempo = 0f;
+        line.SetPosition(0, origen);
+        line.SetPosition(1, origen);
+
+        while (tiempo < duracion)
+        {
+            tiempo += Time.deltaTime;
+            float t = Mathf.Clamp01(tiempo / duracion);
+            Vector3 posActual = Vector3.Lerp(origen, destino, t);
+
+            line.SetPosition(0, origen);
+            line.SetPosition(1, posActual);
+            yield return null;
+        }
+
+        line.SetPosition(0, origen);
+        line.SetPosition(1, destino);
+        Destroy(tracerObject, 0.02f);
     }
 
     private void OnCollisionEnter(Collision collision)
