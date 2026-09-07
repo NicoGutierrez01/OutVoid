@@ -33,7 +33,8 @@ public class PlayerAbilities : MonoBehaviour
     [Header("Configuración Habilidades")]
     public GameObject dynamitePrefab;
     public Transform muzzle;
-    public float throwForce = 15f;
+    public float throwForceFrontal = 35f; 
+    public float throwForceArriba = 8f;    
     public float ultDuration = 10f;
     public bool isUltActive = false;
 
@@ -94,20 +95,20 @@ public class PlayerAbilities : MonoBehaviour
 
     void ThrowDynamite()
     {
-            MusicManager.Instance.PlayThrowingDynamite();
-        GameObject dyn = Instantiate(dynamitePrefab, muzzle.position, Quaternion.identity);
-        Rigidbody rb = dyn.GetComponent<Rigidbody>();
+        if (dynamitePrefab == null) return;
 
-        if (rb != null)
+        if (MusicManager.Instance != null) MusicManager.Instance.PlayThrowingDynamite();
+
+        Vector3 posicionSpawn = muzzle != null ? muzzle.position : (cam.position + cam.forward * 0.8f);
+
+        GameObject dyn = Instantiate(dynamitePrefab, posicionSpawn, Quaternion.identity);
+        Dynamite dynamiteScript = dyn.GetComponent<Dynamite>();
+
+        Collider[] playerColliders = transform.root.GetComponentsInChildren<Collider>();
+
+        if (dynamiteScript != null)
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            Vector3 dir = (cam.forward + Vector3.up * 0.2f).normalized;
-            Vector3 inheritedVelocity = playerCharacter != null ? playerCharacter.GetComponent<Rigidbody>()?.linearVelocity ?? Vector3.zero : Vector3.zero;
-
-            rb.linearVelocity = inheritedVelocity;
-            rb.AddForce(cam.forward * throwForce, ForceMode.Impulse);
-            rb.maxAngularVelocity = 2f;
+            dynamiteScript.InicializarLanzamiento(cam.forward, throwForceFrontal, throwForceArriba, playerColliders);
         }
     }
 
@@ -150,7 +151,6 @@ public class PlayerAbilities : MonoBehaviour
         weaponScript.damage = originalDamage;
         weaponScript.isUltActive = false;
 
-        // Desactivamos la mano izquierda al terminar la ráfaga
         if (revolverIzquierdo != null) revolverIzquierdo.SetActive(false);
         if (auraDerecha != null) auraDerecha.SetActive(false);
         if (auraIzquierda != null) auraIzquierda.SetActive(false);

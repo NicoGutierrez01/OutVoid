@@ -9,9 +9,15 @@ public class Artillero : MonoBehaviour
 
     [Header("Configuración de Movimiento")]
     public float attackRange = 15f;  
-    public float retreatRange = 7f;  // Aumenté un poquito para que empiece a retroceder antes
+    public float retreatRange = 7f;  
     public float velocidadAvance = 3.5f;
-    public float velocidadRetroceso = 2.5f; // Un poco más lento al ir hacia atrás
+    public float velocidadRetroceso = 2.5f; 
+
+    [Header("Comportamiento de Disparo en Movimiento")]
+    public float velocidadStrafe = 3f;
+    private float tiempoSiguienteStrafe = 0f;
+    private Vector3 destinoStrafe;
+    private int direccionStrafe = 1;
 
     [Header("Configuración de Disparo")]
     public GameObject projectilePrefab; 
@@ -86,14 +92,9 @@ public class Artillero : MonoBehaviour
 
             float distance = Vector3.Distance(transform.position, playerTransform.position);
 
-            if (estaDisparando)
-            {
-                agent.isStopped = true;
-                MirarAlJugador(15f);
-                return;
-            }
+            MirarAlJugador(12f);
 
-            if (distance <= attackRange && Time.time >= nextShotTime)
+            if (distance <= attackRange && Time.time >= nextShotTime && !estaDisparando)
             {
                 if (ShotManager.Instance == null || ShotManager.Instance.SolicitarPermisoParaDisparar())
                 {
@@ -106,7 +107,6 @@ public class Artillero : MonoBehaviour
                 agent.isStopped = false;
                 agent.speed = velocidadAvance;
                 agent.SetDestination(playerTransform.position);
-                MirarAlJugador(10f);
                 
                 if (estadoActualAnim != 0)
                 {
@@ -114,18 +114,16 @@ public class Artillero : MonoBehaviour
                     estadoActualAnim = 0;
                 }
             }
+
             else if (distance < retreatRange)
             {
                 Vector3 direccionAlejarse = (transform.position - playerTransform.position).normalized;
                 direccionAlejarse.y = 0;
-
-                Vector3 destinoRetroceso = transform.position + direccionAlejarse * 3f; 
+                Vector3 destinoRetroceso = transform.position + direccionAlejarse * 4f; 
 
                 agent.isStopped = false;
                 agent.speed = velocidadRetroceso;
                 agent.SetDestination(destinoRetroceso);
-                
-                MirarAlJugador(12f);
 
                 if (estadoActualAnim != 2) 
                 {
@@ -133,14 +131,17 @@ public class Artillero : MonoBehaviour
                     estadoActualAnim = 2;
                 }
             }
+
             else
             {
-                agent.isStopped = true;
-                MirarAlJugador(12f);
-                
+                agent.isStopped = false;
+                agent.speed = velocidadStrafe;
+
+                ManejarMovimientoOrbital();
+
                 if (estadoActualAnim != 1)
                 {
-                    SetAnimState(false, true); 
+                    SetAnimState(true, true); 
                     estadoActualAnim = 1;
                 }
             }
@@ -187,6 +188,33 @@ public class Artillero : MonoBehaviour
         
         if (moviendose) estadoActualAnim = 0;
         else estadoActualAnim = -1;
+    }
+
+    void ManejarMovimientoOrbital()
+    {
+        if (Time.time >= tiempoSiguienteStrafe || agent.remainingDistance <= 0.8f)
+        {
+
+            if (Random.value < 0.3f) direccionStrafe *= -1;
+
+            Vector3 dirAlJugador = (playerTransform.position - transform.position).normalized;
+            Vector3 perpendicular = Vector3.Cross(Vector3.up, dirAlJugador) * direccionStrafe;
+
+            Vector3 puntoTentativo = transform.position + perpendicular * Random.Range(3f, 6f);
+            
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(puntoTentativo, out hit, 4f, NavMesh.AllAreas))
+            {
+                destinoStrafe = hit.position;
+                agent.SetDestination(destinoStrafe);
+            }
+            else
+            {
+                direccionStrafe *= -1; 
+            }
+
+            tiempoSiguienteStrafe = Time.time + Random.Range(1.5f, 3f);
+        }
     }
 
     bool CheckVisionYProximidad()
@@ -268,6 +296,12 @@ public class Artillero : MonoBehaviour
 
                     Rigidbody rb = GetComponent<Rigidbody>();
                     if (rb != null) rb.isKinematic = true;
+
+                    if (MapManager.nivelBucle == 1)
+                    {
+                        isAlerted = true;
+                        SetAnimState(false, true);
+                    }
                 }
             }
         }

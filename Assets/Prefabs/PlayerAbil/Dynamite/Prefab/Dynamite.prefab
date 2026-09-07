@@ -54,10 +54,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+  m_Radius: 1.0956615
+  m_Height: 3.3499632
+  m_Direction: 2
+  m_Center: {x: 0.000000074505806, y: 0.008102655, z: -0.03374502}
 --- !u!54 &926720793263339802
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -66,8 +66,8 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 883501954159504122}
   serializedVersion: 5
-  m_Mass: 1.2
-  m_LinearDamping: 0.5
+  m_Mass: 1.5
+  m_LinearDamping: 0.2
   m_AngularDamping: 2
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
@@ -98,9 +98,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Dynamite
   prefabExplosion: {fileID: 8677464401101943085, guid: 958a8b14a731b714185b934a431fd419, type: 3}
-  tiempoParaExplotar: 3
-  radioExplosion: 5
-  "da\xF1oExplosion": 50
+  tiempoParaExplotar: 2.5
+  radioExplosion: 10
+  "da\xF1oExplosion": 90
+  amortiguacionImpacto: 0.4
 --- !u!1001 &7194601330852418615
 PrefabInstance:
   m_ObjectHideFlags: 0

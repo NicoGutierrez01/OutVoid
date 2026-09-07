@@ -381,6 +381,16 @@ public class MapManager : MonoBehaviour
         yield return new WaitForSeconds(1f);
         Destroy(portal); 
     }
+
+    public Vector3 ObtenerPosicionAleatoriaPortal()
+    {
+        if (datosNivelActual != null && datosNivelActual.spawnPointsPortales != null && datosNivelActual.spawnPointsPortales.Length > 0)
+        {
+            int index = Random.Range(0, datosNivelActual.spawnPointsPortales.Length);
+            return datosNivelActual.spawnPointsPortales[index];
+        }
+        return transform.position;
+    }
     #endregion
 
     #region Lógica del Loop de Juego y Recompensas

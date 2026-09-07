@@ -290,6 +290,12 @@ public class Stalker : MonoBehaviour
                 agent.Warp(hit.position);
                 Rigidbody rb = GetComponent<Rigidbody>();
                 if (rb != null) rb.isKinematic = true;
+
+                if (MapManager.nivelBucle == 1)
+                {
+                    isAlerted = true;
+                    agent.isStopped = false;
+                }
             }
         }
     }
