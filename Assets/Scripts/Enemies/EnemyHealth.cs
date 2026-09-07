@@ -33,7 +33,7 @@ public class EnemyHealth : MonoBehaviour
     private PlayerStats playerScript; 
     private WeaponSystem weaponScript;
     private PlayerHUD playerHUDScript;
-    public static bool healthPerKillActive = false; 
+    public static bool healthPerKillActive = false;
 
     private bool isDead = false;
     private Camera camaraPrincipal;
@@ -196,7 +196,11 @@ public class EnemyHealth : MonoBehaviour
             AdministradorDeProgreso.Instancia.puntosTotales += Random.Range(120, 350); 
         }
         
-        if (healthPerKillActive && playerScript != null) { playerScript.maxHealth += 1f; playerScript.Heal(1f); }
+        // Pacto de Sangre: cura 12 HP al jugador al conseguir la baja
+        if (healthPerKillActive && playerScript != null) 
+        { 
+            playerScript.Heal(12f);
+        }
 
         if (Random.value * 100 <= probabilidadDrop)
         {

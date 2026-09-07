@@ -18,6 +18,7 @@ public class AdministradorDeProgreso : MonoBehaviour
     public bool balasDeFuego = false;
     public bool balasPenetrantes = false;
     public bool disparoTriple = false;
+    public bool balasExplosivas = false;
 
     public float multiplicadorRecarga = 1f;
     public float probabilidadDropExtra = 0f;
@@ -84,6 +85,7 @@ public class AdministradorDeProgreso : MonoBehaviour
             balasDeFuego = weapon.tieneFuego;
             balasPenetrantes = weapon.balasPenetrantes;
             disparoTriple = weapon.disparoTriple;
+            balasExplosivas = weapon.balasExplosivas;       
         }
 
         Debug.Log(
@@ -122,6 +124,7 @@ public class AdministradorDeProgreso : MonoBehaviour
         balasDeFuego = false;
         balasPenetrantes = false;
         disparoTriple = false;
+        balasExplosivas = false;
 
         multiplicadorRecarga = 1f;
         probabilidadDropExtra = 0f;

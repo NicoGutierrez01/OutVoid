@@ -3,64 +3,146 @@ using System.Collections.Generic;
 
 public class PlayerInventario : MonoBehaviour
 {
-    public Dictionary<TipoEfecto, int> nivelesMejoras = new Dictionary<TipoEfecto, int>();
+    // Diccionario para contar cuántas veces se eligió cada stat o tipo de mejora
+    public Dictionary<StatModificado, int> nivelesMejoras = new Dictionary<StatModificado, int>();
 
     private WeaponSystem weapon;
     private PlayerStats stats;
 
-    void Start()
+    void Awake()
     {
         weapon = GetComponentInChildren<WeaponSystem>();
         stats = GetComponentInChildren<PlayerStats>();
     }
 
-    public void AplicarMejora(ItemMejoraData item)
+    public void RegistrarYAplicarPowerUp(PowerUpsChest powerUp)
     {
-        if (nivelesMejoras.ContainsKey(item.efecto))
+        if (powerUp == null) return;
+
+        if (weapon == null) weapon = GetComponentInChildren<WeaponSystem>();
+        if (stats == null) stats = GetComponentInChildren<PlayerStats>();
+
+        // 1. Seguimiento de niveles
+        if (nivelesMejoras.ContainsKey(powerUp.statAMejorar))
         {
-            if (nivelesMejoras[item.efecto] < item.nivelMaximo)
-            {
-                nivelesMejoras[item.efecto]++;
-                Debug.Log($"¡{item.nombreItem} subió al nivel {nivelesMejoras[item.efecto]}!");
-            }
-            else
-            {
-                Debug.Log($"El ítem {item.nombreItem} ya está al nivel máximo. Reemplazando por curación extra.");
-                stats.Heal(25f); 
-                return; 
-            }
+            nivelesMejoras[powerUp.statAMejorar]++;
         }
         else
         {
-            nivelesMejoras.Add(item.efecto, 1);
-            Debug.Log($"¡Agarraste {item.nombreItem} por primera vez!");
+            nivelesMejoras.Add(powerUp.statAMejorar, 1);
         }
 
-        EjecutarEfecto(item.efecto);
+        // 2. Aplicar el efecto mecánico
+        EjecutarEfecto(powerUp);
+
+        // 3. Registrar en el Administrador de Progreso para el GameOver
+        if (AdministradorDeProgreso.Instancia != null)
+        {
+            AdministradorDeProgreso.Instancia.mejorasRecogidas++;
+        }
+
+        Debug.Log($"[INVENTARIO] PowerUp aplicado: {powerUp.nombrePowerUp} (Nivel acumulado: {nivelesMejoras[powerUp.statAMejorar]} | Total Run: {(AdministradorDeProgreso.Instancia != null ? AdministradorDeProgreso.Instancia.mejorasRecogidas : 0)})");
     }
 
-    private void EjecutarEfecto(TipoEfecto efecto)
+    private void EjecutarEfecto(PowerUpsChest mejora)
     {
         AdministradorDeProgreso admin = AdministradorDeProgreso.Instancia;
 
-        switch (efecto)
+        switch (mejora.statAMejorar)
         {
-            case TipoEfecto.Daño:
-                weapon.damage *= 1.15f;
-                if (admin != null) admin.multiplicadorDaño *= 1.15f;
+            case StatModificado.VidaMaxima:
+                if (stats != null)
+                {
+                    stats.maxHealth += mejora.valorSuma;
+                    stats.currentHealth += mejora.valorSuma;
+                }
                 break;
 
-            case TipoEfecto.BalasFuego:
-                weapon.tieneFuego = true;
+            case StatModificado.EscudoMaximo:
+                if (stats != null)
+                {
+                    stats.currentShield += mejora.valorSuma;
+                }
+                break;
+
+            case StatModificado.DanoArma:
+                if (weapon != null)
+                {
+                    weapon.damage += mejora.valorSuma;
+                }
+                if (admin != null)
+                {
+                    admin.multiplicadorDaño *= 1.15f;
+                }
+                break;
+
+            case StatModificado.VelocidadRecarga:
+                if (weapon != null)
+                {
+                    weapon.tiempoRecarga = Mathf.Max(0.2f, weapon.tiempoRecarga - mejora.valorSuma);
+                }
+                if (admin != null)
+                {
+                    admin.multiplicadorRecarga += 0.15f;
+                }
+                break;
+
+            case StatModificado.BalasDeFuego:
+                if (weapon != null) weapon.tieneFuego = true;
                 if (admin != null) admin.balasDeFuego = true;
                 break;
 
-            case TipoEfecto.EscudoMax:
-                stats.currentShield += 25f;
+            case StatModificado.BalasPenetrantes:
+                if (weapon != null) weapon.balasPenetrantes = true;
+                if (admin != null) admin.balasPenetrantes = true;
                 break;
-                
-        }
 
-        if (admin != null) admin.mejorasRecogidas++;
+            case StatModificado.DisparoTriple:
+                if (weapon != null) weapon.disparoTriple = true;
+                if (admin != null) admin.disparoTriple = true;
+                break;
+
+            case StatModificado.BalasExplosivas:
+                if (weapon != null) weapon.balasExplosivas = true;
+                if (admin != null) admin.balasExplosivas = true;
+                break;
+
+            // Rara: Velocidad de movimiento
+            case StatModificado.VelocidadMovimiento:
+                if (admin != null) admin.multiplicadorVelocidad += mejora.valorSuma;
+                PlayerCharacter pChar = GetComponentInChildren<PlayerCharacter>();
+                if (pChar != null)
+                {
+                    pChar.AumentarVelocidad(mejora.valorSuma);
+                }
+                break;
+
+            // Legendaria: Vampirismo por muerte
+            case StatModificado.SaludPorBaja:
+                EnemyHealth.healthPerKillActive = true;
+                if (admin != null) admin.saludPorKill = true;
+                break;
+
+            // Epica: Escudo de emergencia
+            case StatModificado.EscudoEmergencia:
+                if (stats != null) stats.tieneEscudoEmergencia = true;
+                if (admin != null) admin.tieneEscudoEmergencia = true;
+                break;
+
+            // Legendaria: Potenciador de Dinamita
+            case StatModificado.DinamitaDevastadora:
+                if (admin != null) admin.multiplicadorDinamitaCooldown *= 0.5f;
+                PlayerAbilities abilities = GetComponentInChildren<PlayerAbilities>();
+                if (abilities != null)
+                {
+                    abilities.PotenciarDinamita(mejora.valorSuma);
+                }
+                break;
+        }
+    }
+
+    public int ObtenerNivelMejora(StatModificado stat)
+    {
+        return nivelesMejoras.ContainsKey(stat) ? nivelesMejoras[stat] : 0;
     }
 }

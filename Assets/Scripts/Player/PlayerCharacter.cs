@@ -39,8 +39,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private KinematicCharacterMotor motor;
     [SerializeField] private Transform root;
     [SerializeField] private Transform cameraTarget;
-private float stepTimer;
-public float stepInterval = 0.4f;
+    private float stepTimer;
+    public float stepInterval = 0.4f;
+
+    [Header("Modificadores de Estadísticas")]
+    public float multiplicadorVelocidadExtra = 1f;
+
     [Space]
     [SerializeField] public float walkSpeed = 12f;
     [SerializeField] private float crouchSpeed = 7f;
@@ -96,25 +100,29 @@ public float stepInterval = 0.4f;
 
     private int jumpsUsed = 0;
 
-
     private Collider[] _uncrouchOverlapResults;
 
-void Awake()
-{
-    motor.CharacterController = this;
-}
-
-public void Initialize()
-{
-    _state.Stance = Stance.Stand;
-    _lastState = _state;
-    _uncrouchOverlapResults = new Collider[8];
-
-    if (AdministradorDeProgreso.Instancia != null)
+    void Awake()
     {
-        walkSpeed *= AdministradorDeProgreso.Instancia.multiplicadorVelocidad;
+        motor.CharacterController = this;
     }
-}
+
+    public void Initialize()
+    {
+        _state.Stance = Stance.Stand;
+        _lastState = _state;
+        _uncrouchOverlapResults = new Collider[8];
+
+        if (AdministradorDeProgreso.Instancia != null)
+        {
+            multiplicadorVelocidadExtra = AdministradorDeProgreso.Instancia.multiplicadorVelocidad;
+        }
+    }
+
+    public void AumentarVelocidad(float porcentaje)
+    {
+        multiplicadorVelocidadExtra += porcentaje;
+    }
 
     public void UpdateInput(CharacterInput input)
     {
@@ -132,14 +140,12 @@ public void Initialize()
         _requestedSustainedJump = input.JumpSustain;
         var wasRequestingCrouch = _requestedCrouch;
 
-_requestedCrouch = input.Crouch == CrouchInput.Hold;
+        _requestedCrouch = input.Crouch == CrouchInput.Hold;
 
-if (_requestedCrouch && !wasRequestingCrouch)
-    _requestedCrouchInAir = !_state.Grounded;
-else if (!_requestedCrouch && wasRequestingCrouch)
-    _requestedCrouchInAir = false;
-    
-            
+        if (_requestedCrouch && !wasRequestingCrouch)
+            _requestedCrouchInAir = !_state.Grounded;
+        else if (!_requestedCrouch && wasRequestingCrouch)
+            _requestedCrouchInAir = false;
     }
 
     public void UpdateBody(float deltaTime)
@@ -179,11 +185,11 @@ else if (!_requestedCrouch && wasRequestingCrouch)
 
         if (motor.GroundingStatus.IsStableOnGround)
         {
-                    _timeSinceUngrounded = 0f;
-                    _ungroundedDueToJump = false;
-                    jumpsUsed = 0;
+            _timeSinceUngrounded = 0f;
+            _ungroundedDueToJump = false;
+            jumpsUsed = 0;
 
-               var groundedMovement =
+            var groundedMovement =
                 motor.GetDirectionTangentToSurface
                 (
                     direction: _requestedMovement,
@@ -199,7 +205,7 @@ else if (!_requestedCrouch && wasRequestingCrouch)
             {
                 _state.Stance = Stance.Slide;
 
-                if(wasInAir)
+                if (wasInAir)
                 {
                     currentVelocity = Vector3.ProjectOnPlane
                     (
@@ -208,15 +214,14 @@ else if (!_requestedCrouch && wasRequestingCrouch)
                     );
                 }
 
-                
                 var effectiveSlideStartSpeed = slideStartSpeed;
                 if (!_lastState.Grounded && !_requestedCrouchInAir)
                 {
                     effectiveSlideStartSpeed = 0f;
                     _requestedCrouchInAir = false;
                 }
-               var slideSpeed =
-    Mathf.Min(currentVelocity.magnitude, slideStartSpeed);
+
+                var slideSpeed = Mathf.Min(currentVelocity.magnitude, slideStartSpeed);
 
                 currentVelocity =
                     motor.GetDirectionTangentToSurface
@@ -224,22 +229,16 @@ else if (!_requestedCrouch && wasRequestingCrouch)
                         direction: currentVelocity,
                         surfaceNormal: motor.GroundingStatus.GroundNormal
                     ) * slideSpeed;
-
-               
             }
 
             // WALK / CROUCH
             if (_state.Stance is Stance.Stand or Stance.Crouch)
             {
                 var speed =
-                    _state.Stance is Stance.Stand
-                        ? walkSpeed
-                        : crouchSpeed;
+                    (_state.Stance is Stance.Stand ? walkSpeed : crouchSpeed) * multiplicadorVelocidadExtra;
 
                 var response =
-                    _state.Stance is Stance.Stand
-                        ? walkResponse
-                        : crouchResponse;
+                    _state.Stance is Stance.Stand ? walkResponse : crouchResponse;
 
                 var targetVelocity = groundedMovement * speed;
 
@@ -252,27 +251,28 @@ else if (!_requestedCrouch && wasRequestingCrouch)
                 _state.Acceleration = moveVelocity - currentVelocity;
                 
                 currentVelocity = moveVelocity;
-                // FOOTSTEPS (WALK SFX)
-if (_state.Grounded && groundedMovement.sqrMagnitude > 0.1f)
-{
-    stepTimer -= deltaTime;
 
-    if (stepTimer <= 0f)
-    {
-        MusicManager.Instance.PlayWalk();
-        stepTimer = stepInterval;
-    }
-}
-else
-{
-    stepTimer = 0f;
-}
+                // FOOTSTEPS (WALK SFX)
+                if (_state.Grounded && groundedMovement.sqrMagnitude > 0.1f)
+                {
+                    stepTimer -= deltaTime;
+
+                    if (stepTimer <= 0f)
+                    {
+                        MusicManager.Instance.PlayWalk();
+                        stepTimer = stepInterval;
+                    }
+                }
+                else
+                {
+                    stepTimer = 0f;
+                }
             }
 
             // SLIDE
             else if (_state.Stance is Stance.Slide)
             {
-                currentVelocity -=currentVelocity * (slideFriction * deltaTime);
+                currentVelocity -= currentVelocity * (slideFriction * deltaTime);
 
                 {
                     var force = Vector3.ProjectOnPlane
@@ -295,7 +295,6 @@ else
                     _state.Acceleration = (steerVelocity - currentVelocity) / deltaTime;
                     currentVelocity = steerVelocity;
                 }
-
 
                 if (currentVelocity.magnitude < slideEndSpeed)
                 {
@@ -329,22 +328,18 @@ else
                     airAcceleration *
                     deltaTime;
 
-
                 if (currentPlanarVelocity.magnitude < airSpeed)
                 {
-                    var targetPlanarVelocity =
-                    currentPlanarVelocity + movementForce;
+                    var targetPlanarVelocity = currentPlanarVelocity + movementForce;
 
-                targetPlanarVelocity =
-                    Vector3.ClampMagnitude
-                    (
-                        targetPlanarVelocity,
-                        airSpeed
-                    ); 
+                    targetPlanarVelocity =
+                        Vector3.ClampMagnitude
+                        (
+                            targetPlanarVelocity,
+                            airSpeed
+                        ); 
                     movementForce = targetPlanarVelocity - currentPlanarVelocity;
-
                 }   
-
                 else if (Vector3.Dot(currentPlanarVelocity, movementForce) > 0f)
                 {
                     var constrainedMovementForce = Vector3.ProjectOnPlane
@@ -355,9 +350,9 @@ else
                     movementForce = constrainedMovementForce;
                 } 
 
-            if (motor.GroundingStatus.FoundAnyGround)
+                if (motor.GroundingStatus.FoundAnyGround)
                 {
-                    if (Vector3.Dot(movementForce, currentVelocity + movementForce) >0f)
+                    if (Vector3.Dot(movementForce, currentVelocity + movementForce) > 0f)
                     {
                         var obstructionNormal = Vector3.Cross(
                             motor.CharacterUp,
@@ -398,28 +393,28 @@ else
             var canCoyoteJump = _timeSinceUngrounded < coyoteTime && !_ungroundedDueToJump;
 
             if ((grounded || canCoyoteJump) || jumpsUsed < maxJumps)
-{
-    jumpsUsed++;
-    MusicManager.Instance.PlayJump();
+            {
+                jumpsUsed++;
+                MusicManager.Instance.PlayJump();
 
-    _requestedJump = false;
-    _requestedCrouch = false;
-    _requestedCrouchInAir = false;
+                _requestedJump = false;
+                _requestedCrouch = false;
+                _requestedCrouchInAir = false;
 
-    motor.ForceUnground(0f);
-    _ungroundedDueToJump = true;
+                motor.ForceUnground(0f);
+                _ungroundedDueToJump = true;
 
-    var currentVerticalSpeed =
-        Vector3.Dot(currentVelocity, motor.CharacterUp);
+                var currentVerticalSpeed =
+                    Vector3.Dot(currentVelocity, motor.CharacterUp);
 
-    var targetVerticalSpeed =
-        Mathf.Max(currentVerticalSpeed, jumpSpeed);
+                var targetVerticalSpeed =
+                    Mathf.Max(currentVerticalSpeed, jumpSpeed);
 
-    currentVelocity +=
-        motor.CharacterUp *
-        (targetVerticalSpeed - currentVerticalSpeed);
-}
-        else
+                currentVelocity +=
+                    motor.CharacterUp *
+                    (targetVerticalSpeed - currentVerticalSpeed);
+            }
+            else
             {
                 _timeSinceJumpRequest += deltaTime;
                 var canJumpLater = _timeSinceJumpRequest < coyoteTime;
@@ -465,7 +460,7 @@ else
     public void PostGroundingUpdate(float deltaTime)
     {
         if (!motor.GroundingStatus.IsStableOnGround && _state.Stance is Stance.Slide)
-        _state.Stance = Stance.Crouch;
+            _state.Stance = Stance.Crouch;
     }
 
     public void AfterCharacterUpdate(float deltaTime)
@@ -509,59 +504,31 @@ else
             }
         }
 
-        _state.Grounded =
-            motor.GroundingStatus.IsStableOnGround;
+        _state.Grounded = motor.GroundingStatus.IsStableOnGround;
         _state.Velocity = motor.Velocity;
 
         _lastState = _tempState;
     }
 
-    public void OnGroundHit
-    (
-        Collider hitCollider,
-        Vector3 hitNormal,
-        Vector3 hitPoint,
-        ref HitStabilityReport hitStabilityReport
-    ) { }
-
-    public void OnMovementHit
-    (
-        Collider hitCollider,
-        Vector3 hitNormal,
-        Vector3 hitPoint,
-        ref HitStabilityReport hitStabilityReport
-    ) { }
-
+    public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport) { }
+    public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport) { }
     public bool IsColliderValidForCollisions(Collider coll) => true;
-
     public void OnDiscreteCollisionDetected(Collider hitCollider) { }
-
-    public void ProcessHitStabilityReport
-    (
-        Collider hitCollider,
-        Vector3 hitNormal,
-        Vector3 hitPoint,
-        Vector3 atCharacterPosition,
-        Quaternion atCharacterRotation,
-        ref HitStabilityReport hitStabilityReport
-    ) { }
+    public void ProcessHitStabilityReport(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, Vector3 atCharacterPosition, Quaternion atCharacterRotation, ref HitStabilityReport hitStabilityReport) { }
 
     public Transform GetCameraTarget() => cameraTarget;
-
     public CharacterState GetState() => _state;
-    public CharacterState GetLastState() => _lastState; 
+    public CharacterState GetLastState() => _lastState;
+
     public void SetPosition(Vector3 position, bool killvelocity = true)
     {
         motor.SetPosition(position);
-
-        if (killvelocity)
-        
-            motor.BaseVelocity = Vector3.zero;
-        
+        if (killvelocity) motor.BaseVelocity = Vector3.zero;
     }
-public void AgregarSaltoExtra(int cantidad = 1)
-{
-    maxJumps += cantidad;
-    Debug.Log("Nuevo maxJumps = " + maxJumps);
-}
+
+    public void AgregarSaltoExtra(int cantidad = 1)
+    {
+        maxJumps += cantidad;
+        Debug.Log("Nuevo maxJumps = " + maxJumps);
+    }
 }

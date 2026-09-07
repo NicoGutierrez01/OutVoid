@@ -23,6 +23,11 @@ public class PlayerAbilities : MonoBehaviour
     public float dashCooldown = 7f;
     public bool canDash = true;
 
+    [Header("Mejora Dinamita Colosal")]
+    public bool dinamitaPotenciada = false;
+    public float multiplicadorAreaDinamita = 1.6f;
+    public float multiplicadorDanoDinamita = 1.5f;
+
     [Header("Melee")]
     public float meleeDamage = 35f;
     public float meleeRange = 2f;
@@ -71,6 +76,12 @@ public class PlayerAbilities : MonoBehaviour
         }
     }
 
+    public void PotenciarDinamita(float factor)
+    {
+        dinamitaPotenciada = true;
+        dynamiteCooldown = Mathf.Max(2f, dynamiteCooldown * 0.5f);
+    }
+
     public void UpdateInput(CharacterInput input)
     {
         if (input.AbilityE && canUseE) StartCoroutine(UseDynamite());
@@ -103,6 +114,12 @@ public class PlayerAbilities : MonoBehaviour
 
         GameObject dyn = Instantiate(dynamitePrefab, posicionSpawn, Quaternion.identity);
         Dynamite dynamiteScript = dyn.GetComponent<Dynamite>();
+
+        if (dynamiteScript != null && dinamitaPotenciada)
+        {
+            dynamiteScript.radioExplosion *= multiplicadorAreaDinamita;
+            dynamiteScript.dañoExplosion *= multiplicadorDanoDinamita;
+        }
 
         Collider[] playerColliders = transform.root.GetComponentsInChildren<Collider>();
 
@@ -204,7 +221,7 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator UseMelee()
     {
         canMelee = false;
-            MusicManager.Instance.PlayMelee();
+        MusicManager.Instance.PlayMelee();
 
         if (weaponScript != null)
         {

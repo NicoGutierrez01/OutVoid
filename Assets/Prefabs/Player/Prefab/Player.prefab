@@ -496,6 +496,7 @@ GameObject:
   - component: {fileID: 4289937473960210004}
   - component: {fileID: 8775199690991540283}
   - component: {fileID: 4792990378224857872}
+  - component: {fileID: 2022372758775734870}
   - component: {fileID: 497603190433963851}
   m_Layer: 0
   m_Name: Character
@@ -710,7 +711,8 @@ MonoBehaviour:
   canMelee: 1
   dynamitePrefab: {fileID: 883501954159504122, guid: 4927d69f179aa844987a9832017d6f04, type: 3}
   muzzle: {fileID: 777995885764841250}
-  throwForce: 15
+  throwForceFrontal: 35
+  throwForceArriba: 8
   ultDuration: 6
   isUltActive: 0
   dashDuration: 2.5
@@ -718,6 +720,18 @@ MonoBehaviour:
   revolverIzquierdo: {fileID: 6088363281133270476}
   auraDerecha: {fileID: 0}
   auraIzquierda: {fileID: 0}
+--- !u!114 &2022372758775734870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6621127772820771944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db42313b652452f4aa953600a8b7d5e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventario
 --- !u!54 &497603190433963851
 Rigidbody:
   m_ObjectHideFlags: 0
