@@ -73,12 +73,9 @@ public class Kamikaze : MonoBehaviour
                 if (CheckVisionYProximidad() || ZonaDefensa.jugadorEnZona)
                 {
                     isAlerted = true;
-                    agent.isStopped = false;
-                    agent.speed = velocidadPersecucion;
                 }
                 else
                 {
-                    agent.speed = velocidadPatrulla;
                     ManejarPatrullaPasiva();
                     return; 
                 }
@@ -250,6 +247,13 @@ public class Kamikaze : MonoBehaviour
 
                     Rigidbody rb = GetComponent<Rigidbody>();
                     if (rb != null) rb.isKinematic = true;
+
+                    if (MapManager.nivelBucle == 1)
+                    {
+                        isAlerted = true;
+                        agent.isStopped = false;
+                        agent.speed = velocidadPersecucion;
+                    }
                 }
             }
         }

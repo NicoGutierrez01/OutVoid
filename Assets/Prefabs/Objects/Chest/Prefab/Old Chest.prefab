@@ -332,7 +332,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CofreRecompensa
   animCofre: {fileID: 8310923797439083497}
-  tiempoAnimacion: 1.2
+  tiempoAnimacion: 0.5
   radioInteraccion: 5
   canvasFlotante: {fileID: 8333038682232691699}
 --- !u!65 &8518108302218529648

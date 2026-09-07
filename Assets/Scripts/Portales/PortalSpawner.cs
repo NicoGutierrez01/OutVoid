@@ -48,6 +48,11 @@ IEnumerator CicloDeOleadas()
                 Debug.Log("El portal va a lanzar una oleada de: " + enemigoDeEstePortal.name);
             }
 
+            if (MapManager.Instance != null)
+            {
+                transform.position = MapManager.Instance.ObtenerPosicionAleatoriaPortal();
+            }
+
             CambiarEstadoPortal(true);
             yield return new WaitForSeconds(1f);
 

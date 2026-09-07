@@ -66,8 +66,6 @@ public class WeaponSystem : MonoBehaviour
             damage *= AdministradorDeProgreso.Instancia.multiplicadorDaño;
             tiempoRecarga *= AdministradorDeProgreso.Instancia.multiplicadorRecarga;
             tieneFuego = AdministradorDeProgreso.Instancia.balasDeFuego;
-            
-            // Cargar estado guardado de penetración y disparo triple
             balasPenetrantes = AdministradorDeProgreso.Instancia.balasPenetrantes;
             disparoTriple = AdministradorDeProgreso.Instancia.disparoTriple;
         }
@@ -83,10 +81,8 @@ public class WeaponSystem : MonoBehaviour
 
     void Update()
     {
-        // 1. Bloqueo total si el juego está en pausa
         if (Time.timeScale <= 0f) return;
 
-        // 2. Bloqueo si el clic se hace sobre elementos de UI (botones de menú, ajustes, etc.)
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
         bool r2RecienPresionado = false;
@@ -149,10 +145,6 @@ public class WeaponSystem : MonoBehaviour
 
         MusicManager.Instance.PlayShoot();
 
-        // ==============================
-        // ANIMACIÓN Y MUZZLE FLASH
-        // ==============================
-
         if (isUltActive && gunAnimIzquierda != null)
         {
             if (dispararDerecha)
@@ -180,16 +172,8 @@ public class WeaponSystem : MonoBehaviour
                 muzzleFlash.Play();
         }
 
-        // ==============================
-        // COMPROBAR CÁMARA
-        // ==============================
-
         if (cam == null)
             return;
-
-        // ==============================
-        // ORIGEN DEL TRACER
-        // ==============================
 
         Transform origenTracer = null;
 
@@ -209,10 +193,6 @@ public class WeaponSystem : MonoBehaviour
             origenTracer = muzzleFlash.transform;
         }
 
-        // ==============================
-        // DIRECCIONES DE DISPARO
-        // ==============================
-
         Vector3[] direcciones;
 
         if (disparoTriple)
@@ -229,10 +209,6 @@ public class WeaponSystem : MonoBehaviour
             direcciones[0] = cam.forward;
         }
 
-        // ==============================
-        // EJECUTAR CADA DISPARO
-        // ==============================
-
         foreach (Vector3 direccion in direcciones)
         {
             ProcesarDisparo(
@@ -241,10 +217,6 @@ public class WeaponSystem : MonoBehaviour
                 origenTracer
             );
         }
-
-        // ==============================
-        // RECARGA AUTOMÁTICA
-        // ==============================
 
         if (balasActuales <= 0 && !isUltActive && balasReserva > 0)
         {
@@ -378,10 +350,7 @@ public class WeaponSystem : MonoBehaviour
         Destroy(tracerObject, 0.02f);
     }
 
-    void ProcesarDisparo(
-        Vector3 origen,
-        Vector3 direccion,
-        Transform origenTracer)
+    void ProcesarDisparo(Vector3 origen,Vector3 direccion,Transform origenTracer)
     {
         if (!balasPenetrantes)
         {
@@ -466,6 +435,15 @@ public class WeaponSystem : MonoBehaviour
 
     void ProcesarImpacto(RaycastHit hit)
     {
+        Dynamite dinamita = hit.collider.GetComponentInParent<Dynamite>();
+        if (dinamita != null)
+        {
+            BuscarCrosshairFeedback();
+            if (crosshairFeedback != null) crosshairFeedback.OnTargetHit(true);
+
+            dinamita.RecibirDisparo();
+            return;
+        }
         bool esHeadshot = hit.collider.CompareTag("Head");
         float danoFinal = esHeadshot ? damage * multiplicadorHeadshot : damage;
 
