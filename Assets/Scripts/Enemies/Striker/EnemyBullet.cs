@@ -7,6 +7,8 @@ public class EnemyBullet : MonoBehaviour
     public float dano = 10f;
     public float tiempoDeVida = 5f; 
 
+    [HideInInspector] public Vector3 origenDisparo;
+
     void Start()
     {
         Destroy(gameObject, tiempoDeVida);
@@ -26,14 +28,17 @@ public class EnemyBullet : MonoBehaviour
             {
                 pm.TakeDamage(dano);
             }
+
+            if (DirectionalIndicatorHUD.Instance != null && origenDisparo != Vector3.zero)
+            {
+                DirectionalIndicatorHUD.Instance.RegistrarImpacto(origenDisparo);
+            }
+
             Destroy(gameObject);
             return; 
         }
 
-        if (other.isTrigger) 
-        {
-            return; 
-        }
+        if (other.isTrigger) return; 
 
         if (other.CompareTag("Enemigo") || other.GetComponent<Kamikaze>() != null || other.GetComponent<Artillero>() != null)
         {

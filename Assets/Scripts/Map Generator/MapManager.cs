@@ -65,6 +65,7 @@ public class MapManager : MonoBehaviour
     private List<GameObject> portalesActivos = new List<GameObject>();
     private NavMeshSurface navSurface;
     private int ultimoIndiceZona;
+    private List<Vector3> posicionesPortalesOcupadas = new List<Vector3>();
     
     public static MapManager Instance;
     #endregion
@@ -382,14 +383,67 @@ public class MapManager : MonoBehaviour
         Destroy(portal); 
     }
 
-    public Vector3 ObtenerPosicionAleatoriaPortal()
+public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = default)
     {
+        // 1. Liberamos la posición vieja del portal que está pidiendo reubicarse
+        if (posicionActualPortal != default && posicionesPortalesOcupadas.Contains(posicionActualPortal))
+        {
+            posicionesPortalesOcupadas.Remove(posicionActualPortal);
+        }
+
         if (datosNivelActual != null && datosNivelActual.spawnPointsPortales != null && datosNivelActual.spawnPointsPortales.Length > 0)
         {
-            int index = Random.Range(0, datosNivelActual.spawnPointsPortales.Length);
-            return datosNivelActual.spawnPointsPortales[index];
+            // 2. Filtramos cuáles de los spawn points NO están ocupados actualmente
+            List<Vector3> posicionesDisponibles = new List<Vector3>();
+
+            foreach (Vector3 punto in datosNivelActual.spawnPointsPortales)
+            {
+                bool ocupado = false;
+                foreach (Vector3 ocupada in posicionesPortalesOcupadas)
+                {
+                    // Comprobamos distancia corta por seguridad contra flotantes
+                    if (Vector3.Distance(punto, ocupada) < 1f)
+                    {
+                        ocupado = true;
+                        break;
+                    }
+                }
+
+                if (!ocupado)
+                {
+                    posicionesDisponibles.Add(punto);
+                }
+            }
+
+            // 3. Si hay posiciones libres, elegimos una y la reservamos
+            if (posicionesDisponibles.Count > 0)
+            {
+                int index = Random.Range(0, posicionesDisponibles.Count);
+                Vector3 puntoElegido = posicionesDisponibles[index];
+                posicionesPortalesOcupadas.Add(puntoElegido);
+                return puntoElegido;
+            }
+
+            // Fallback: si por alguna razón no quedaran libres, usa cualquiera al azar
+            int fallbackIndex = Random.Range(0, datosNivelActual.spawnPointsPortales.Length);
+            Vector3 fallbackPunto = datosNivelActual.spawnPointsPortales[fallbackIndex];
+            posicionesPortalesOcupadas.Add(fallbackPunto);
+            return fallbackPunto;
         }
+
         return transform.position;
+    }
+
+    public void LiberarPosicionPortal(Vector3 posicion)
+    {
+        for (int i = posicionesPortalesOcupadas.Count - 1; i >= 0; i--)
+        {
+            if (Vector3.Distance(posicionesPortalesOcupadas[i], posicion) < 1f)
+            {
+                posicionesPortalesOcupadas.RemoveAt(i);
+                break;
+            }
+        }
     }
     #endregion
 
@@ -535,6 +589,7 @@ public class MapManager : MonoBehaviour
             if (portal != null) portal.SetActive(false); 
         }
         portalesActivos.Clear(); 
+        posicionesPortalesOcupadas.Clear();
     }
     #endregion
 
