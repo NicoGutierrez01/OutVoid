@@ -70,25 +70,6 @@ public class Player : MonoBehaviour
         playerCharacter.UpdateBody(deltaTime);
         playerAbilities.UpdateInput(characterInput);
 
-        float distanciaInteraccion = 3.5f; 
-        
-        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out RaycastHit hitInteract, distanciaInteraccion))
-        {
-            if (hitInteract.transform.CompareTag("ItemBoss"))
-            {
-                ItemInteractable itemMirado = hitInteract.transform.GetComponent<ItemInteractable>();
-                if (itemMirado != null && itemMirado.data != null)
-                {
-                    Debug.Log("MIRANDO: " + itemMirado.data.nombreItem + " | " + itemMirado.data.descripcion + " | Presiona F para agarrar");
-
-                    if (input.Interact.WasPressedThisFrame())
-                    {
-                        itemMirado.Recoger(gameObject);
-                    }
-                }
-            }
-        }
-
     #if UNITY_EDITOR
         if (Keyboard.current.tKey.wasPressedThisFrame)
         {

@@ -56,6 +56,12 @@ public class WeaponSystem : MonoBehaviour
     public float grosorTracer = 0.0025f;
     public Material materialTracer;
 
+    [Header("Munición Explosiva")]
+    public bool balasExplosivas = false;
+    public float radioExplosionBala = 3.5f;
+    public float porcentajeDanoExplosion = 0.6f;
+    public GameObject prefabMicroExplosion;
+
     void Start()
     {
         balasActuales = balasMaximas;
@@ -482,6 +488,10 @@ public class WeaponSystem : MonoBehaviour
                 Destroy(polvo, 1.5f);
             }
         }
+        if (balasExplosivas)
+        {
+            GenerarMicroExplosion(hit.point, danoFinal * porcentajeDanoExplosion); // Con 'r' al final
+        }
 
         EnemyHealth enemy = hit.collider.GetComponentInParent<EnemyHealth>();
         if (enemy != null)
@@ -508,6 +518,38 @@ public class WeaponSystem : MonoBehaviour
             if (tieneFuego && Random.value <= 0.25f)
             {
                 minion.Quemar();
+            }
+        }
+    }
+
+    void GenerarMicroExplosion(Vector3 punto, float danoArea)
+    {
+        if (prefabMicroExplosion != null)
+        {
+            GameObject fx = Instantiate(prefabMicroExplosion, punto, Quaternion.identity);
+            Destroy(fx, 1.5f);
+        }
+
+        Collider[] afectados = Physics.OverlapSphere(punto, radioExplosionBala);
+        System.Collections.Generic.HashSet<GameObject> golpeados = new System.Collections.Generic.HashSet<GameObject>();
+
+        foreach (Collider col in afectados)
+        {
+            if (col.CompareTag("Enemigo") || (col.transform.root != null && col.transform.root.CompareTag("Enemigo")))
+            {
+                EnemyHealth enemy = col.GetComponentInParent<EnemyHealth>();
+                if (enemy != null && !golpeados.Contains(enemy.gameObject))
+                {
+                    golpeados.Add(enemy.gameObject);
+                    enemy.TakeDamage(danoArea, false);
+                }
+
+                Boss boss = col.GetComponentInParent<Boss>();
+                if (boss != null && !golpeados.Contains(boss.gameObject))
+                {
+                    golpeados.Add(boss.gameObject);
+                    boss.TakeDamage(danoArea);
+                }
             }
         }
     }

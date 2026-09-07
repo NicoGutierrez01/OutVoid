@@ -207,11 +207,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95cfac570c721424d936d758a969259b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossLootSpawner
-  prefabItemBase: {fileID: 2186307301653019825, guid: a70a5481a2374d343879573f50e536b6, type: 3}
-  poolItemsLegendarios:
-  - {fileID: 11400000, guid: 86b541f37c546cb479830f117307fef9, type: 2}
-  - {fileID: 11400000, guid: d46a62d305606f24e8aa115f1da161b8, type: 2}
-  - {fileID: 11400000, guid: b59b29f9c06b3d24cb07842cbab52269, type: 2}
+  prefabCofre: {fileID: 3386048660251865897, guid: 2d35a0b009bae2c40b885964aaee7111, type: 3}
 --- !u!4 &3192435247431701074 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a6d2a084854fe44469e7fc058883847c, type: 3}

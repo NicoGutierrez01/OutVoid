@@ -1,15 +1,28 @@
 using UnityEngine;
 
 public enum RarezaPowerUp { Comun, Rara, Epica, Legendaria }
+
 public enum StatModificado 
 { 
+    // Comunes
     VidaMaxima, 
     EscudoMaximo, 
     DanoArma, 
     VelocidadRecarga, 
+
+    // Raras
     BalasDeFuego,
+    VelocidadMovimiento,
+
+    // Épicas
     BalasPenetrantes,
-    DisparoTriple
+    DisparoTriple,
+    EscudoEmergencia,
+
+    // Legendarias (Boss)
+    SaludPorBaja,
+    DinamitaDevastadora,
+    BalasExplosivas
 }
 
 [CreateAssetMenu(fileName = "NuevoPowerUp", menuName = "Out-Void/Power Up de Cofre")]

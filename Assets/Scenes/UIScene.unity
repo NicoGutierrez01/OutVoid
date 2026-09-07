@@ -4999,6 +4999,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 498651ff40ef77c46b483f2c9da4d615, type: 2}
   - {fileID: 11400000, guid: ef455ae7950b6a844a39e91d12ea4b8a, type: 2}
   - {fileID: 11400000, guid: b53b29cbb354987478124a76c7d48a8c, type: 2}
+  - {fileID: 11400000, guid: 3c2cb82a4a43d424da828d6a6c130094, type: 2}
+  - {fileID: 11400000, guid: 92ee665f7a265394c80705518b5686a9, type: 2}
+  - {fileID: 11400000, guid: a22b41c735e1b9f4e8029985d879e115, type: 2}
+  - {fileID: 11400000, guid: 4a1ca1c89e392a940bd39fe7baba4ff4, type: 2}
+  - {fileID: 11400000, guid: 5683ab6f30c3bb642a78b691584c8153, type: 2}
+  probComun: 60
+  probRara: 30
+  probEpica: 10
   panelPowerUps: {fileID: 1051512878}
   botonesCartas:
   - {fileID: 221447054}
@@ -6022,7 +6030,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DirectionalIndicatorHUD
   contenedorCentro: {fileID: 438903574}
   prefabFlecha: {fileID: 2554723399134403446, guid: 05cb0c0af3239e14cad0498adf3de252, type: 3}
-  radioOrbita: 120
+  radioOrbita: 150
   duracionImpacto: 1.6
   detectarEnemigosCercanos: 1
   rangoDeteccion: 18

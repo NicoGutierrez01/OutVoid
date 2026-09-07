@@ -9,6 +9,10 @@ public class CofreRecompensa : MonoBehaviour
     public float tiempoAnimacion = 1.2f; 
     public float radioInteraccion = 3.5f;
 
+    [Header("Tipo de Cofre")]
+    [Tooltip("Si está activo, filtrará las recompensas para dar solo Power-ups Legendarios")]
+    public bool esCofreBoss = false;
+
     [Header("UI Flotante")]
     public GameObject canvasFlotante; 
     private Transform camaraJugador; 
@@ -75,7 +79,7 @@ public class CofreRecompensa : MonoBehaviour
 
         if (PowerUpUIManager.Instancia != null)
         {
-           PowerUpUIManager.Instancia.MostrarOpciones(this.gameObject);
+            PowerUpUIManager.Instancia.MostrarOpciones(this.gameObject);
         }
     }
 
