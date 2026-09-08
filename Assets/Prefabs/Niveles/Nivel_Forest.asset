@@ -37,7 +37,7 @@ MonoBehaviour:
   - {x: 69, y: 30.6, z: -160}
   bossPrefab: {fileID: 2811968405897873640, guid: b450d5c152800f74fa93f4a754f8f5f6, type: 3}
   portalBossPrefab: {fileID: 2148023456166452146, guid: 9c21d9309ee67ea4cb6833b8313b6223, type: 3}
-  lapidaPrefab: {fileID: 1640529776990550443, guid: 31cc64558ddc5e44b8b3e9833d1d9c1f, type: 3}
+  lapidaPrefab: {fileID: 1732824193767410980, guid: 4d85a715dd0dedc48b82221b294b8232, type: 3}
   spawnPointsPortalBoss:
   - {x: 69, y: 68, z: -160}
   prefabsDecoracionPrincipal: []

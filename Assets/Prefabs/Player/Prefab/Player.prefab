@@ -669,7 +669,8 @@ MonoBehaviour:
   gunAnim: {fileID: 5805259136780962198}
   gunAnimIzquierda: {fileID: 2329186590522129858}
   isUltActive: 0
-  fireRate: 0.25
+  fireRate: 0.28
+  sincronizarCadenciaConClip: 0
   muzzleFlash: {fileID: 4433444021008789325}
   muzzleFlashIzquierda: {fileID: 2327999085102558659}
   prefabImpactoRobot: {fileID: 1000011945391522, guid: 78b71003e8b357d4bbf89c8b5e5e4f0e, type: 3}
@@ -714,14 +715,14 @@ MonoBehaviour:
   multiplicadorAreaDinamita: 1.6
   multiplicadorDanoDinamita: 1.5
   meleeDamage: 35
-  meleeRange: 2
+  meleeRange: 4
   meleeCooldown: 0.5
   canMelee: 1
   dynamitePrefab: {fileID: 883501954159504122, guid: 4927d69f179aa844987a9832017d6f04, type: 3}
   muzzle: {fileID: 777995885764841250}
   throwForceFrontal: 35
   throwForceArriba: 8
-  ultDuration: 6
+  ultDuration: 10
   isUltActive: 0
   dashDuration: 2.5
   ghostSpeedMultiplier: 1.3

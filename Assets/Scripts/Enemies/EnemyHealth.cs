@@ -40,6 +40,7 @@ public class EnemyHealth : MonoBehaviour
     private Vector3 escalaInicialCanvas;
     private Transform canvasTransform;
     private Coroutine corrutinaOcultarBarra;
+    private Coroutine corrutinaQuemadura;
 
     void Start()
     {
@@ -168,6 +169,43 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
+    public void AplicarQuemadura(float danoTotal = 20f, float duracion = 2f)
+    {
+        if (isDead) return;
+
+        if (corrutinaQuemadura != null)
+        {
+            StopCoroutine(corrutinaQuemadura);
+        }
+        corrutinaQuemadura = StartCoroutine(RutinaQuemadura(danoTotal, duracion));
+    }
+
+    private IEnumerator RutinaQuemadura(float danoTotal, float duracion)
+    {
+        float intervaloTicks = 0.4f; // 5 ticks a lo largo de 2 segundos
+        int totalTicks = Mathf.RoundToInt(duracion / intervaloTicks);
+        float danoPorTick = danoTotal / totalTicks;
+
+        for (int i = 0; i < totalTicks; i++)
+        {
+            yield return new WaitForSeconds(intervaloTicks);
+
+            if (isDead) yield break;
+
+            StartCoroutine(FlashColorRoutine(new Color(1f, 0.35f, 0f) * 4f));
+            TakeDamage(danoPorTick, false);
+        }
+
+        corrutinaQuemadura = null;
+    }
+
+    private IEnumerator FlashColorRoutine(Color color)
+    {
+        EncenderBrillo(color);
+        yield return new WaitForSeconds(0.08f);
+        ApagarBrillo();
+    }
+
     void Die()
     {
         if (corrutinaOcultarBarra != null) StopCoroutine(corrutinaOcultarBarra);
@@ -196,10 +234,9 @@ public class EnemyHealth : MonoBehaviour
             AdministradorDeProgreso.Instancia.puntosTotales += Random.Range(120, 350); 
         }
         
-        // Pacto de Sangre: cura 12 HP al jugador al conseguir la baja
         if (healthPerKillActive && playerScript != null) 
         { 
-            playerScript.Heal(12f);
+            playerScript.AumentarVidaMaxima(1f);
         }
 
         if (Random.value * 100 <= probabilidadDrop)

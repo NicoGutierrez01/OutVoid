@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PowerUpsChest
   nombrePowerUp: 
   descripcion: "Mas Da\xF1o"
-  iconoUI: {fileID: 0}
+  iconoUI: {fileID: 21300000, guid: 421c27d5f7fc11c49a8021b87950538a, type: 3}
   marcoUI: {fileID: 21300000, guid: 91bd009e180e5754eb973e7607c5e1df, type: 3}
   rareza: 0
   statAMejorar: 2
-  valorSuma: 5
+  valorSuma: 10
