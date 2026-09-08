@@ -30,7 +30,9 @@ public class WeaponSystem : MonoBehaviour
     [HideInInspector] public bool isUltActive = false; 
 
     [Header("Cadencia de Tiro")]
+    [Tooltip("Si la animación contiene 'Shoot', se sobreescribe automáticamente en Start().")]
     public float fireRate = 0.25f; 
+    public bool sincronizarCadenciaConClip = true;
     private float proximoTiempoDisparo = 0f;
     public ParticleSystem muzzleFlash;
     public ParticleSystem muzzleFlashIzquierda;
@@ -67,6 +69,11 @@ public class WeaponSystem : MonoBehaviour
         balasActuales = balasMaximas;
         if (gunAnim == null) gunAnim = GetComponentInChildren<Animator>();
 
+        if (sincronizarCadenciaConClip)
+        {
+            SincronizarCadenciaConAnimacion();
+        }
+
         if (AdministradorDeProgreso.Instancia != null)
         {
             damage *= AdministradorDeProgreso.Instancia.multiplicadorDaño;
@@ -74,6 +81,21 @@ public class WeaponSystem : MonoBehaviour
             tieneFuego = AdministradorDeProgreso.Instancia.balasDeFuego;
             balasPenetrantes = AdministradorDeProgreso.Instancia.balasPenetrantes;
             disparoTriple = AdministradorDeProgreso.Instancia.disparoTriple;
+        }
+    }
+
+    private void SincronizarCadenciaConAnimacion()
+    {
+        if (gunAnim != null && gunAnim.runtimeAnimatorController != null)
+        {
+            foreach (AnimationClip clip in gunAnim.runtimeAnimatorController.animationClips)
+            {
+                if (clip.name.IndexOf("Shoot", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    fireRate = clip.length;
+                    break;
+                }
+            }
         }
     }
 
@@ -126,7 +148,7 @@ public class WeaponSystem : MonoBehaviour
                 {
                     ReproducirNoBullet();
                     MusicManager.Instance.PlayOutOfAmmo();
-                    proximoTiempoDisparo = Time.time + fireRate; 
+                    proximoTiempoDisparo = Time.time + fireRate;
                 }
             }
         }
@@ -490,7 +512,7 @@ public class WeaponSystem : MonoBehaviour
         }
         if (balasExplosivas)
         {
-            GenerarMicroExplosion(hit.point, danoFinal * porcentajeDanoExplosion); // Con 'r' al final
+            GenerarMicroExplosion(hit.point, danoFinal * porcentajeDanoExplosion);
         }
 
         EnemyHealth enemy = hit.collider.GetComponentInParent<EnemyHealth>();
