@@ -16,6 +16,6 @@ MonoBehaviour:
   descripcion: Escudo De Emergencia
   iconoUI: {fileID: 0}
   marcoUI: {fileID: 21300000, guid: 46cff28f71450124a83ef13438e50d67, type: 3}
-  rareza: 0
+  rareza: 2
   statAMejorar: 8
   valorSuma: 1
