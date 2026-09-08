@@ -16,9 +16,13 @@ public class MainMenu : MonoBehaviour
     [Header("Escena de Juego")]
     public string nombreEscenaJuego = "Desert"; 
 
-    [Header("Opciones - Sensibilidad")]
-    public Slider sliderSensibilidad;
-    public TextMeshProUGUI textoSensibilidad;
+    [Header("Opciones - Sensibilidad Mouse")]
+    public Slider sliderSensibilidadMouse;
+    public TextMeshProUGUI textoSensibilidadMouse;
+
+    [Header("Opciones - Sensibilidad Joystick")]
+    public Slider sliderSensibilidadGamepad;
+    public TextMeshProUGUI textoSensibilidadGamepad;
 
     [Header("Botón Salir")]
     public GameObject botonSalir;
@@ -40,11 +44,24 @@ public class MainMenu : MonoBehaviour
 
         if (panelOpciones != null) panelOpciones.SetActive(false);
 
-        float sensibilidadGuardada = PlayerPrefs.GetFloat("SensibilidadMouse", 1f);
-        if (sliderSensibilidad != null)
+        // Cargar sensibilidad Mouse
+        float sensMouse = PlayerPrefs.GetFloat("SensibilidadMouse", 1f);
+        if (sliderSensibilidadMouse != null)
         {
-            sliderSensibilidad.value = sensibilidadGuardada;
-            ActualizarTextoSensibilidad(sensibilidadGuardada);
+            sliderSensibilidadMouse.minValue = 0.1f;
+            sliderSensibilidadMouse.maxValue = 15f;
+            sliderSensibilidadMouse.value = sensMouse;
+            ActualizarTextoMouse(sensMouse);
+        }
+
+        // Cargar sensibilidad Joystick
+        float sensGamepad = PlayerPrefs.GetFloat("SensibilidadGamepad", 5f);
+        if (sliderSensibilidadGamepad != null)
+        {
+            sliderSensibilidadGamepad.minValue = 0.5f;
+            sliderSensibilidadGamepad.maxValue = 15f;
+            sliderSensibilidadGamepad.value = sensGamepad;
+            ActualizarTextoGamepad(sensGamepad);
         }
 
         #if UNITY_WEBGL
@@ -79,18 +96,30 @@ public class MainMenu : MonoBehaviour
         panelPrincipal.SetActive(true);
     }
 
-    public void CambiarSensibilidad(float valor)
+    public void CambiarSensibilidadMouse(float valor)
     {
         PlayerPrefs.SetFloat("SensibilidadMouse", valor);
-        ActualizarTextoSensibilidad(valor);
+        PlayerPrefs.Save();
+        ActualizarTextoMouse(valor);
     }
 
-    void ActualizarTextoSensibilidad(float valor)
+    public void CambiarSensibilidadGamepad(float valor)
     {
-        if (textoSensibilidad != null)
-        {
-            textoSensibilidad.text = valor.ToString("F2"); 
-        }
+        PlayerPrefs.SetFloat("SensibilidadGamepad", valor);
+        PlayerPrefs.Save();
+        ActualizarTextoGamepad(valor);
+    }
+
+    void ActualizarTextoMouse(float valor)
+    {
+        if (textoSensibilidadMouse != null)
+            textoSensibilidadMouse.text = valor.ToString("F2");
+    }
+
+    void ActualizarTextoGamepad(float valor)
+    {
+        if (textoSensibilidadGamepad != null)
+            textoSensibilidadGamepad.text = valor.ToString("F2");
     }
 
     public void SalirDelJuego()

@@ -603,6 +603,7 @@ MonoBehaviour:
   root: {fileID: 776891707974602014}
   cameraTarget: {fileID: 7045548413959980449}
   stepInterval: 0.4
+  multiplicadorVelocidadExtra: 1
   walkSpeed: 16
   crouchSpeed: 7
   walkResponse: 16
@@ -681,6 +682,10 @@ MonoBehaviour:
   duracionTracer: 0.08
   grosorTracer: 0.0025
   materialTracer: {fileID: 0}
+  balasExplosivas: 0
+  radioExplosionBala: 3.5
+  porcentajeDanoExplosion: 0.6
+  prefabMicroExplosion: {fileID: 0}
 --- !u!114 &4792990378224857872
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -705,6 +710,9 @@ MonoBehaviour:
   canUseQ: 1
   dashCooldown: 7
   canDash: 1
+  dinamitaPotenciada: 0
+  multiplicadorAreaDinamita: 1.6
+  multiplicadorDanoDinamita: 1.5
   meleeDamage: 35
   meleeRange: 2
   meleeCooldown: 0.5
@@ -807,8 +815,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ceefe20e090904e189adc82ebf43e294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCamera
-  multiplicadorDesktop: 0.05
-  multiplicadorWebGL: 0.02
+  sensMouse: 1
+  sensGamepad: 5
+  simularWebGLEnEditor: 0
+  pitchMin: -85
+  pitchMax: 85
+  mainCam: {fileID: 0}
+  defaultFOV: 60
+  fovTransitionSpeed: 10
 --- !u!1001 &2362158665572133134
 PrefabInstance:
   m_ObjectHideFlags: 0

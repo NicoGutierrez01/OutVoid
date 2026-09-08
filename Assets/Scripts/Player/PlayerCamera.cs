@@ -1,5 +1,5 @@
-using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public struct CameraInput
 {
@@ -8,87 +8,119 @@ public struct CameraInput
 
 public class PlayerCamera : MonoBehaviour
 {
-    [Header("Multiplicadores de Plataforma")]
-    [Tooltip("Ajuste interno para que el slider (ej: 1 a 10) se sienta bien en Windows")]
-    [SerializeField] private float multiplicadorDesktop = 0.05f;
+    [Header("Sensibilidades")]
+    public float sensMouse = 1f;
+    public float sensGamepad = 5f;
 
-    [Tooltip("Ajuste interno para el navegador (suele necesitar menos sensibilidad)")]
-    [SerializeField] private float multiplicadorWebGL = 0.02f;
+    [Header("Debug")]
+    [Tooltip("Activalo en el Editor para probar la velocidad de WebGL sin compilar.")]
+    public bool simularWebGLEnEditor = false;
 
-    private float currentSensitivity;
-private float pitch;
-private float yaw;
-    private Camera cam;
-    private float defaultFOV;
-    private float targetFOV;
+    [Header("Límites de Ángulo Vertical")]
+    public float pitchMin = -85f;
+    public float pitchMax = 85f;
 
-    private Vector3 _eulerAngles;
+    [Header("FOV Settings (Dash / Habilidades)")]
+    public Camera mainCam;
+    public float defaultFOV = 60f;
+    public float fovTransitionSpeed = 10f;
 
-    public void Initialize(Transform target)
+    private float _pitch;
+    private float _yaw;
+    private float _multiplicadorPlataformaGamepad = 1f;
+    private float _targetFOV;
+
+    void Awake()
     {
-        cam = GetComponent<Camera>();
+        if (mainCam == null) mainCam = GetComponentInChildren<Camera>();
+        if (mainCam == null) mainCam = Camera.main;
 
-        if (cam == null)
-            cam = Camera.main;
-
-        defaultFOV = cam.fieldOfView;
-        targetFOV = defaultFOV;
-
-     transform.position = target.position;
-
-yaw = target.eulerAngles.y;
-pitch = 0f;
-
-transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
+        if (mainCam != null) defaultFOV = mainCam.fieldOfView;
+        _targetFOV = defaultFOV;
 
         ActualizarSensibilidad();
     }
 
-    public void ActualizarSensibilidad()
+    void Update()
     {
-        float sensibilidadUI = PlayerPrefs.GetFloat("SensibilidadMouse", 1f);
-
-#if UNITY_WEBGL
-        currentSensitivity = sensibilidadUI * multiplicadorWebGL;
-#else
-        currentSensitivity = sensibilidadUI * multiplicadorDesktop;
-#endif
-
-        Debug.Log($"[CÁMARA] Sensibilidad aplicada: {currentSensitivity}");
+        ProcesarFOV();
     }
 
-public void UpdateRotation(CameraInput input)
-{
-    yaw += input.Look.x * currentSensitivity;
-
-    pitch -= input.Look.y * currentSensitivity;
-
-    pitch = Mathf.Clamp(pitch, -85f, 85f);
-
-    transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
-}
-
-    public void UpdatePosition(Transform target)
+    public void Initialize(Transform cameraTarget)
     {
-        transform.position = target.position;
-
-        if (cam != null)
+        if (cameraTarget != null)
         {
-            cam.fieldOfView = Mathf.Lerp(
-                cam.fieldOfView,
-                targetFOV,
-                8f * Time.deltaTime
-            );
+            transform.position = cameraTarget.position;
+            transform.rotation = cameraTarget.rotation;
+        }
+
+        Vector3 euler = transform.eulerAngles;
+        _pitch = euler.x;
+        _yaw = euler.y;
+
+        if (_pitch > 180f) _pitch -= 360f;
+
+        ActualizarSensibilidad();
+    }
+
+    public void UpdatePosition(Transform cameraTarget)
+    {
+        if (cameraTarget != null)
+        {
+            transform.position = cameraTarget.position;
         }
     }
 
-    public void SetDashFOV(float extra)
+    public void UpdateRotation(CameraInput input)
     {
-        targetFOV = defaultFOV + extra;
+        bool esGamepad = Gamepad.current != null && (Gamepad.current.rightStick.ReadValue().sqrMagnitude > 0.001f);
+
+        Vector2 lookDelta;
+
+        if (esGamepad)
+        {
+            lookDelta = input.Look * (sensGamepad * 45f * _multiplicadorPlataformaGamepad * Time.unscaledDeltaTime);
+        }
+        else
+        {
+            lookDelta = input.Look * (sensMouse * 0.1f);
+        }
+
+        _yaw += lookDelta.x;
+        _pitch -= lookDelta.y;
+
+        _pitch = Mathf.Clamp(_pitch, pitchMin, pitchMax);
+
+        transform.rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+    }
+
+    public void ActualizarSensibilidad()
+    {
+        sensMouse = PlayerPrefs.GetFloat("SensibilidadMouse", 1f);
+        sensGamepad = PlayerPrefs.GetFloat("SensibilidadGamepad", 5f);
+
+        #if UNITY_WEBGL
+            _multiplicadorPlataformaGamepad = 4.0f;
+        #else
+            _multiplicadorPlataformaGamepad = simularWebGLEnEditor ? 4.0f : 1.0f;
+        #endif
+    }
+
+    private void ProcesarFOV()
+    {
+        if (mainCam != null && Mathf.Abs(mainCam.fieldOfView - _targetFOV) > 0.05f)
+        {
+            mainCam.fieldOfView = Mathf.Lerp(mainCam.fieldOfView, _targetFOV, fovTransitionSpeed * Time.deltaTime);
+        }
+    }
+
+    public void SetDashFOV(float fovBonus)
+    {
+        _targetFOV = defaultFOV + fovBonus;
     }
 
     public void ResetFOV()
     {
-        targetFOV = defaultFOV;
+        _targetFOV = defaultFOV;
     }
 }

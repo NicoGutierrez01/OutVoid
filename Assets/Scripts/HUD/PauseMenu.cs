@@ -9,9 +9,13 @@ public class PauseMenu : MonoBehaviour
     [Header("UI del Menú de Pausa")]
     public GameObject ventanaPausa; 
 
-    [Header("Opciones - Sensibilidad")]
-    public Slider sliderSensibilidad;
-    public TextMeshProUGUI textoSensibilidad;
+    [Header("Opciones - Sensibilidad Mouse")]
+    public Slider sliderSensibilidadMouse;
+    public TextMeshProUGUI textoSensibilidadMouse;
+
+    [Header("Opciones - Sensibilidad Joystick")]
+    public Slider sliderSensibilidadGamepad;
+    public TextMeshProUGUI textoSensibilidadGamepad;
 
     [Header("Referencias")]
     public PlayerCamera playerCamera; 
@@ -23,11 +27,22 @@ public class PauseMenu : MonoBehaviour
         ventanaPausa.SetActive(false);
         Time.timeScale = 1f;
 
-        float sensibilidadGuardada = PlayerPrefs.GetFloat("SensibilidadMouse", 1f);
-        if (sliderSensibilidad != null)
+        float sensMouse = PlayerPrefs.GetFloat("SensibilidadMouse", 1f);
+        if (sliderSensibilidadMouse != null)
         {
-            sliderSensibilidad.value = sensibilidadGuardada;
-            ActualizarTextoSensibilidad(sensibilidadGuardada);
+            sliderSensibilidadMouse.minValue = 0.1f;
+            sliderSensibilidadMouse.maxValue = 15f;
+            sliderSensibilidadMouse.value = sensMouse;
+            ActualizarTextoMouse(sensMouse);
+        }
+
+        float sensGamepad = PlayerPrefs.GetFloat("SensibilidadGamepad", 5f);
+        if (sliderSensibilidadGamepad != null)
+        {
+            sliderSensibilidadGamepad.minValue = 0.5f;
+            sliderSensibilidadGamepad.maxValue = 15f;
+            sliderSensibilidadGamepad.value = sensGamepad;
+            ActualizarTextoGamepad(sensGamepad);
         }
 
         if (playerCamera == null)
@@ -68,29 +83,41 @@ public class PauseMenu : MonoBehaviour
         Cursor.visible = false;
     }
 
-    public void CambiarSensibilidad(float valor)
+    public void CambiarSensibilidadMouse(float valor)
     {
         PlayerPrefs.SetFloat("SensibilidadMouse", valor);
         PlayerPrefs.Save();
-        ActualizarTextoSensibilidad(valor); // Ahora esto funciona
-
-        if (playerCamera == null)
-        {
-            playerCamera = FindAnyObjectByType<PlayerCamera>();
-        }
-
-        if (playerCamera != null)
-        {
-            playerCamera.ActualizarSensibilidad();
-        }
+        ActualizarTextoMouse(valor);
+        NotificarCamara();
     }
 
-    private void ActualizarTextoSensibilidad(float valor)
+    public void CambiarSensibilidadGamepad(float valor)
     {
-        if (textoSensibilidad != null)
-        {
-            textoSensibilidad.text = valor.ToString("F2");
-        }
+        PlayerPrefs.SetFloat("SensibilidadGamepad", valor);
+        PlayerPrefs.Save();
+        ActualizarTextoGamepad(valor);
+        NotificarCamara();
+    }
+
+    private void NotificarCamara()
+    {
+        if (playerCamera == null)
+            playerCamera = FindAnyObjectByType<PlayerCamera>();
+
+        if (playerCamera != null)
+            playerCamera.ActualizarSensibilidad();
+    }
+
+    private void ActualizarTextoMouse(float valor)
+    {
+        if (textoSensibilidadMouse != null)
+            textoSensibilidadMouse.text = valor.ToString("F2");
+    }
+
+    private void ActualizarTextoGamepad(float valor)
+    {
+        if (textoSensibilidadGamepad != null)
+            textoSensibilidadGamepad.text = valor.ToString("F2");
     }
 
     public void SalirAlMenu()
