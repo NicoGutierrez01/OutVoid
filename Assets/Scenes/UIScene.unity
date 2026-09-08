@@ -5432,14 +5432,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a22b41c735e1b9f4e8029985d879e115, type: 2}
   - {fileID: 11400000, guid: 4a1ca1c89e392a940bd39fe7baba4ff4, type: 2}
   - {fileID: 11400000, guid: 5683ab6f30c3bb642a78b691584c8153, type: 2}
+  - {fileID: 11400000, guid: b98dab983fe6645488ae2d56ba78ef4a, type: 2}
+  - {fileID: 11400000, guid: 2690357afd0cce44180a6617e26822be, type: 2}
   probabilidadesRondas:
   - nombreRonda: Ronda 1
     probComun: 60
     probRara: 30
     probEpica: 10
   - nombreRonda: Ronda 2
-    probComun: 40
-    probRara: 35
+    probComun: 25
+    probRara: 50
     probEpica: 25
   - nombreRonda: Ronda 3
     probComun: 20

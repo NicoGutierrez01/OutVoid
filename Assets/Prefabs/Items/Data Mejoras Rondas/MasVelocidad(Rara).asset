@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PowerUpsChest
   nombrePowerUp: 
   descripcion: Mas Velocidad
-  iconoUI: {fileID: 0}
+  iconoUI: {fileID: 21300000, guid: 082b98a31ea9e6c4a9b8e57fd75827f6, type: 3}
   marcoUI: {fileID: 21300000, guid: 645d0e2309b9459439b41aab13ad48b6, type: 3}
   rareza: 1
   statAMejorar: 5
-  valorSuma: 1
+  valorSuma: 0.15

@@ -92,7 +92,8 @@ public class WeaponSystem : MonoBehaviour
             {
                 if (clip.name.IndexOf("Shoot", System.StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    fireRate = clip.length;
+                    float speed = gunAnim.speed > 0 ? gunAnim.speed : 1f;
+                    fireRate = clip.length / speed; 
                     break;
                 }
             }
@@ -519,6 +520,11 @@ public class WeaponSystem : MonoBehaviour
         if (enemy != null)
         {
             enemy.TakeDamage(danoFinal, esHeadshot);
+
+            if (tieneFuego)
+            {
+                enemy.AplicarQuemadura(20f, 2f);
+            }
         }
 
         Boss boss = hit.collider.GetComponentInParent<Boss>();
@@ -564,6 +570,11 @@ public class WeaponSystem : MonoBehaviour
                 {
                     golpeados.Add(enemy.gameObject);
                     enemy.TakeDamage(danoArea, false);
+
+                    if (tieneFuego)
+                    {
+                        enemy.AplicarQuemadura(20f, 2f);
+                    }
                 }
 
                 Boss boss = col.GetComponentInParent<Boss>();

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PowerUpsChest
   nombrePowerUp: 
   descripcion: Balas Explosivas
-  iconoUI: {fileID: 0}
+  iconoUI: {fileID: 21300000, guid: 7fed6fefb19b173418b8b9003b4ba25c, type: 3}
   marcoUI: {fileID: 21300000, guid: 2583983a0cdac1544a5c367e68c75727, type: 3}
   rareza: 3
-  statAMejorar: 0
+  statAMejorar: 11
   valorSuma: 0

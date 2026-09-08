@@ -172,4 +172,16 @@ public class PlayerStats : MonoBehaviour
                 tieneEscudoEmergencia;
         }
     }
+
+    public void AumentarVidaMaxima(float cantidad)
+    {
+        maxHealth += cantidad;
+        currentHealth += cantidad;
+
+        if (AdministradorDeProgreso.Instancia != null)
+        {
+            AdministradorDeProgreso.Instancia.vidaMaximaGuardada = maxHealth;
+            AdministradorDeProgreso.Instancia.vidaActualGuardada = currentHealth;
+        }
+    }
 }
