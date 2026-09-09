@@ -372,8 +372,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36f70159c6746bb48a68ab10a49fd7c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteraccionLapida
-  radioInteraccion: 3
+  radioInteraccion: 15
   canvasFlotante: {fileID: 5434672156175731068}
+  duracionSacudida: 2
+  intensidadSacudida: 0.2
 --- !u!1 &5434672156175731068
 GameObject:
   m_ObjectHideFlags: 0

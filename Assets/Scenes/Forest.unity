@@ -796,7 +796,7 @@ MonoBehaviour:
   incrementoKillsPorBucle: 5
   enemigosParaJefe: 15
   enemigosMuertosActuales: 0
-  tiempoDefensa: 60
+  tiempoDefensa: 1
   tiempoDefensaActual: 0
   zonasRestantesEnRonda: 1
   rondaActual: 1
