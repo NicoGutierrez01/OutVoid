@@ -4,9 +4,9 @@ using UnityEngine;
 public class ItemDespawnTemporal : MonoBehaviour
 {
     [Header("Ajustes de Tiempo")]
-    public float tiempoVidaNormal = 10f;
-    public float tiempoParpadeo = 5f;
-    public float velocidadParpadeo = 0.2f;
+    public float tiempoVidaNormal = 200f;
+    public float tiempoParpadeo = 50f;
+    public float velocidadParpadeo = 0.25f;
 
     private Renderer renderItem;
 

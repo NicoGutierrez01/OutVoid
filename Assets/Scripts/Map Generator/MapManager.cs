@@ -158,6 +158,7 @@ public class MapManager : MonoBehaviour
 
             SpawnearJugador();
             SpawnearPortales();
+            SpawnearMagneto(); // <-- AGREGA ESTA LÍNEA AQUÍ
 
             if (barraCargaEscena != null) barraCargaEscena.value = 0.7f;
             yield return null;
@@ -166,7 +167,6 @@ public class MapManager : MonoBehaviour
             if (barraCargaEscena != null) barraCargaEscena.value = 0.95f;
             yield return new WaitForSeconds(0.2f);
         }
-
         else
         {
             SessionData.level = nivelBucle;
@@ -183,6 +183,7 @@ public class MapManager : MonoBehaviour
 
             SpawnearJugador();
             SpawnearPortales();
+            SpawnearMagneto(); // <-- Y TAMBIÉN AQUÍ POR SI ACASO EN RONDA FINAL
         }
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(false);
@@ -560,7 +561,17 @@ public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = def
          
         if (popupLapidaInvocada != null) StartCoroutine(ManejarPopupLapida(4f));
     }
+void SpawnearMagneto()
+{
+    if (datosNivelActual == null || datosNivelActual.magnetoPrefab == null) return;
+    if (datosNivelActual.spawnPointsMagneto == null || datosNivelActual.spawnPointsMagneto.Length == 0) return;
 
+    int randomIndex = Random.Range(0, datosNivelActual.spawnPointsMagneto.Length);
+    Vector3 spawnPos = datosNivelActual.spawnPointsMagneto[randomIndex];
+    
+    // Se instancia sin emparentarlo a MapManager para que quede libre en la jerarquía de la escena
+    Instantiate(datosNivelActual.magnetoPrefab, spawnPos, Quaternion.identity);
+}
     void SpawnearMejoraMenor()
     {
         if (prefabCofre == null) return;
@@ -608,6 +619,7 @@ public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = def
         yield return new WaitForSeconds(tiempo);
         popupInstrucciones.SetActive(false);
     }
+    
 
     System.Collections.IEnumerator ManejarPopupLapida(float tiempo)
     {

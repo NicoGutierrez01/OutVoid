@@ -25,6 +25,10 @@ public class DatosDeNivel : ScriptableObject
     public GameObject lapidaPrefab;
     public Vector3[] spawnPointsPortalBoss;
 
+    [Header("Magneto")]
+    public GameObject magnetoPrefab;
+    public Vector3[] spawnPointsMagneto;
+
     [Header("Decoración del Nivel")]
     public List<GameObject> prefabsDecoracionPrincipal;
     public int cantidadDecoracionPrincipal = 50; 
