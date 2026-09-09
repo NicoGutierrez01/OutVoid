@@ -364,12 +364,60 @@ public class MapManager : MonoBehaviour
             posPortalBoss = datosNivelActual.spawnPointsPortalBoss[Random.Range(0, datosNivelActual.spawnPointsPortalBoss.Length)];
         }
 
+        Quaternion rotPortalBoss;
+
+        if (nivelBucle == 1)
+        {
+            // Nivel 1 (Desierto): acostado plano para que el boss caiga desde arriba
+            rotPortalBoss = Quaternion.identity;
+        }
+        else
+        {
+            // Nivel 2 (Cueva): rotación vertical hacia el centro del mapa respetando el -90° en X
+            Vector3 dirHaciaCentro = (Vector3.zero - posPortalBoss).normalized;
+            dirHaciaCentro.y = 0;
+
+            Quaternion rotacionHorizontal = dirHaciaCentro != Vector3.zero 
+                ? Quaternion.LookRotation(dirHaciaCentro) 
+                : Quaternion.identity;
+
+            // Multiplica la orientación horizontal por los -90° en X que necesita el cilindro para estar parado
+            rotPortalBoss = rotacionHorizontal * Quaternion.Euler(-90f, 0f, 0f);
+        }
+
         if (popupLapidaInvocada != null) popupLapidaInvocada.SetActive(false);
 
-        GameObject portal = Instantiate(datosNivelActual.portalBossPrefab, posPortalBoss, Quaternion.identity);
-        portal.transform.localScale = Vector3.one * 5f; 
+        GameObject portal = Instantiate(datosNivelActual.portalBossPrefab, posPortalBoss, rotPortalBoss);
+        portal.transform.localScale = Vector3.one * 5f;
         
-        StartCoroutine(SecuenciaSpawnBoss(portal, posPortalBoss));
+        StartCoroutine(SecuenciaSpawnBoss(portal, posPortalBoss, rotPortalBoss));
+    }
+
+    System.Collections.IEnumerator SecuenciaSpawnBoss(GameObject portal, Vector3 posicionPortal, Quaternion rotacionPortal)
+    {
+        yield return new WaitForSeconds(retrasoSpawnBoss);
+
+        if (datosNivelActual.bossPrefab != null)
+        {
+            if (nivelBucle == 1)
+            {
+                // Nivel 1: cae 2 unidades abajo del portal en el cielo
+                Vector3 posBoss = posicionPortal + Vector3.down * 2f;
+                Instantiate(datosNivelActual.bossPrefab, posBoss, Quaternion.identity);
+            }
+            else
+            {
+                // Nivel 2: rotación hacia adelante (sin el -90° de X porque el Boss es humanoide bípedo)
+                Vector3 dirHaciaCentro = (Vector3.zero - posicionPortal).normalized;
+                dirHaciaCentro.y = 0;
+                Quaternion rotBoss = dirHaciaCentro != Vector3.zero ? Quaternion.LookRotation(dirHaciaCentro) : Quaternion.identity;
+
+                Instantiate(datosNivelActual.bossPrefab, posicionPortal, rotBoss);
+            }
+        }
+
+        yield return new WaitForSeconds(1.5f);
+        Destroy(portal);
     }
 
     System.Collections.IEnumerator SecuenciaSpawnBoss(GameObject portal, Vector3 posicionPortal)

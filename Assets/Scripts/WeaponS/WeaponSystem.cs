@@ -427,15 +427,18 @@ public class WeaponSystem : MonoBehaviour
             puntoImpactoPenetrante = hit.point;
 
             EnemyHealth enemy = hit.collider.GetComponentInParent<EnemyHealth>();
-            Boss boss = hit.collider.GetComponentInParent<Boss>();
+            BossHealth bossHealth = hit.collider.GetComponentInParent<BossHealth>();
+            Boss oldBoss = hit.collider.GetComponentInParent<Boss>();
             MiniCube minion = hit.collider.GetComponentInParent<MiniCube>();
 
             GameObject objetivo = null;
 
             if (enemy != null)
                 objetivo = enemy.gameObject;
-            else if (boss != null)
-                objetivo = boss.gameObject;
+            else if (bossHealth != null)
+                objetivo = bossHealth.gameObject;
+            else if (oldBoss != null)
+                objetivo = oldBoss.gameObject;
             else if (minion != null)
                 objetivo = minion.gameObject;
 
@@ -526,15 +529,24 @@ public class WeaponSystem : MonoBehaviour
                 enemy.AplicarQuemadura(20f, 2f);
             }
         }
-
-        Boss boss = hit.collider.GetComponentInParent<Boss>();
-        if (boss != null)
+        BossHealth bossHealth = hit.collider.GetComponentInParent<BossHealth>();
+        if (bossHealth != null)
         {
-            boss.TakeDamage(danoFinal);
+            bossHealth.TakeDamage(danoFinal);
 
             if (tieneFuego && Random.value <= 0.25f)
             {
-                boss.Quemar();
+                bossHealth.Quemar();
+            }
+        }
+        else
+        {
+            // Mantener compatibilidad si el Boss 1 todavía usa el Boss.cs viejo
+            Boss oldBoss = hit.collider.GetComponentInParent<Boss>();
+            if (oldBoss != null)
+            {
+                oldBoss.TakeDamage(danoFinal);
+                if (tieneFuego && Random.value <= 0.25f) oldBoss.Quemar();
             }
         }
 
