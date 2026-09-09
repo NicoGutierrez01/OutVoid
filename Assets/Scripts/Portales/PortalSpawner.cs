@@ -1,22 +1,23 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class PortalSpawner : MonoBehaviour
 {
     [Header("Referencias")]
-    public GameObject[] posiblesEnemigos; 
+    public GameObject[] posiblesEnemigos;
 
     [Header("Configuración de Oleada")]
-    public int cantidadEnemigos = 5;   
-    public float tiempoEntreSpawns = 2f; 
-    public float radioDispersion = 3f;  
-    public float distanciaCaida = 3f; 
+    public int cantidadEnemigosNivel1 = 5; 
+    public int cantidadEnemigosNivel2 = 2; 
+    public float tiempoEntreSpawns = 2f;
+    public float radioDispersion = 2f;
+    public float distanciaCaida = 3f;
 
     [Header("Tiempos de Juego")]
-    public float tiempoEntreOleadas = 20f; 
+    public float tiempoEntreOleadas = 20f;
 
     private GameObject enemigoDeEstePortal;
-    
     private Renderer[] componentesVisuales;
     private Collider[] componentesFisicos;
 
@@ -45,38 +46,79 @@ public class PortalSpawner : MonoBehaviour
             {
                 int indiceAlAzar = Random.Range(0, posiblesEnemigos.Length);
                 enemigoDeEstePortal = posiblesEnemigos[indiceAlAzar];
-                
-                Debug.Log("El portal va a lanzar una oleada de: " + enemigoDeEstePortal.name);
             }
 
             if (MapManager.Instance != null)
             {
-                transform.position = MapManager.Instance.ObtenerPosicionAleatoriaPortal(transform.position);
+                Vector3 nuevaPos = MapManager.Instance.ObtenerPosicionAleatoriaPortal(transform.position);
+                transform.position = nuevaPos;
+
+                if (MapManager.nivelBucle == 2)
+                {
+                    Vector3 dirHaciaCentro = (Vector3.zero - nuevaPos).normalized;
+                    dirHaciaCentro.y = 0;
+                    if (dirHaciaCentro != Vector3.zero)
+                    {
+                        transform.rotation = Quaternion.LookRotation(dirHaciaCentro) * Quaternion.Euler(-90f, 0f, 0f);
+                    }
+                }
             }
 
             CambiarEstadoPortal(true);
             yield return new WaitForSeconds(1f);
 
-            for (int i = 0; i < cantidadEnemigos; i++)
-            {
-                Vector3 spawnOffset = new Vector3(
-                    Random.Range(-radioDispersion, radioDispersion),
-                    -distanciaCaida,
-                    Random.Range(-radioDispersion, radioDispersion)
-                );
+            int totalEnemigos = (MapManager.nivelBucle == 2) ? cantidadEnemigosNivel2 : cantidadEnemigosNivel1;
 
-                Vector3 posicionFinal = transform.position + spawnOffset;
+            for (int i = 0; i < totalEnemigos; i++)
+            {
+                Vector3 posicionFinal;
+                Quaternion rotacionFinal = Quaternion.identity;
+
+                if (MapManager.nivelBucle == 1)
+                {
+                    Vector3 spawnOffset = new Vector3(
+                        Random.Range(-radioDispersion, radioDispersion),
+                        -distanciaCaida,
+                        Random.Range(-radioDispersion, radioDispersion)
+                    );
+                    posicionFinal = transform.position + spawnOffset;
+                }
+                else
+                {
+                    Vector3 direccionSalida = (Vector3.zero - transform.position).normalized;
+                    direccionSalida.y = 0;
+
+                    Vector3 lateral = Vector3.Cross(Vector3.up, direccionSalida);
+                    Vector3 offsetFrontal = (direccionSalida * 1.5f) + (lateral * Random.Range(-radioDispersion * 0.5f, radioDispersion * 0.5f));
+                    
+                    posicionFinal = transform.position + offsetFrontal;
+
+                    if (NavMesh.SamplePosition(posicionFinal, out NavMeshHit hit, 3.0f, NavMesh.AllAreas))
+                    {
+                        posicionFinal = hit.position;
+                    }
+
+                    if (direccionSalida != Vector3.zero)
+                    {
+                        rotacionFinal = Quaternion.LookRotation(direccionSalida);
+                    }
+                }
 
                 if (enemigoDeEstePortal != null)
                 {
-                    Instantiate(enemigoDeEstePortal, posicionFinal, Quaternion.identity);
+                    GameObject nuevoEnemigo = Instantiate(enemigoDeEstePortal, posicionFinal, rotacionFinal);
+
+                    NavMeshAgent agent = nuevoEnemigo.GetComponent<NavMeshAgent>();
+                    if (agent != null)
+                    {
+                        agent.Warp(posicionFinal);
+                    }
                 }
 
                 yield return new WaitForSeconds(tiempoEntreSpawns);
             }
 
             CambiarEstadoPortal(false);
-
             yield return new WaitForSeconds(tiempoEntreOleadas);
         }
     }
