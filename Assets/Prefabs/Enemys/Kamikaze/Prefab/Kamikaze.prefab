@@ -490,6 +490,8 @@ MonoBehaviour:
   agent: {fileID: 0}
   maxHealth: 90
   flashDuration: 0.05
+  rb: {fileID: 0}
+  fuerzaKnockback: 5
   healthBar: {fileID: 361033141033522978}
   escalarConDistancia: 1
   multiplicadorEscalaLejos: 1.25

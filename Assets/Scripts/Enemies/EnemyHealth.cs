@@ -12,7 +12,9 @@ public class EnemyHealth : MonoBehaviour
     [Header("Efectos Visuales")] 
     public float flashDuration = 0.1f;
     private SkinnedMeshRenderer[] renderers; 
-
+[Header("Físicas y Knockback")]
+public Rigidbody rb;
+public float fuerzaKnockback = 5f;
     [Header("UI y Drops de Recursos")]
     public Slider healthBar;
     [Tooltip("¿Mantener tamaño relativo a la distancia para que se distinga de lejos?")]
@@ -44,6 +46,8 @@ public class EnemyHealth : MonoBehaviour
 
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
+if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo controle
         renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
         camaraPrincipal = Camera.main;
         
@@ -116,6 +120,20 @@ public class EnemyHealth : MonoBehaviour
         if (currentHealth > 0)
         {
             StartCoroutine(StunRoutine());
+            if (currentHealth > 0)
+        {
+            StartCoroutine(StunRoutine());
+            
+            // --- NUEVO: Calcular y aplicar el Knockback ---
+            // Tomamos la posición del jugador como punto de origen del golpe para empujarlo en dirección contraria
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                Vector3 direccionEmpuje = (transform.position - playerObj.transform.position).normalized;
+                direccionEmpuje.y = 0; // Evita que salga volando hacia arriba
+                StartCoroutine(KnockbackRoutine(direccionEmpuje));
+            }
+        }
         }
         
         if (currentHealth <= 0)
@@ -287,7 +305,41 @@ public class EnemyHealth : MonoBehaviour
 
         StartCoroutine(RutinaMuerteExplosiva());
     }
+IEnumerator KnockbackRoutine(Vector3 direccion)
+{
+    if (rb == null) yield break;
 
+    // Desactivamos temporalmente el NavMeshAgent para que las físicas manden
+    if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+    {
+        agent.isStopped = true;
+        agent.enabled = false;
+    }
+
+    // Activamos el Rigidbody temporalmente
+    rb.isKinematic = false;
+    rb.linearVelocity = Vector3.zero; // Limpia velocidad acumulada
+    rb.AddForce(direccion * fuerzaKnockback, ForceMode.Impulse);
+
+    // Esperamos un momento corto que dura el empuje (coincide con el Stun)
+    yield return new WaitForSeconds(0.2f);
+
+    // Devolvemos el control a la IA y al NavMesh
+    if (rb != null)
+    {
+        rb.isKinematic = true;
+    }
+
+    if (agent != null)
+    {
+        // Validamos que siga sobre el terreno antes de prenderlo para evitar el error de SetDestination
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 1.5f, NavMesh.AllAreas))
+        {
+            agent.enabled = true;
+            agent.isStopped = false;
+        }
+    }
+}
     IEnumerator RutinaMuerteExplosiva()
     {
         if (prefabParticulasMuerte != null)
