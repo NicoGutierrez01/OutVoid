@@ -18,8 +18,8 @@ public enum TipoObjetivo
 public class MapManager : MonoBehaviour
 {
     #region Variables y Referencias
-    [Header("Oredn de Escenas")]
-    public string[] ordenDeNiveles = new string[] { "Desert", "Forest"};
+    [Header("Orden de Escenas")]
+    public string[] ordenDeNiveles = new string[] { "Desert", "Forest" };
 
     [Header("Datos del Nivel (el cartucho)")]
     public DatosDeNivel datosNivelActual;
@@ -29,7 +29,7 @@ public class MapManager : MonoBehaviour
 
     [Header("Logica Objetivo 1: Eliminar Enemigos")]
     [Tooltip("Cantidad base de kills para la Ronda 1")]
-    public int killsBasePorRonda = 5; 
+    public int killsBasePorRonda = 5;
     [Tooltip("Cuántas kills suma cada ronda que avanza (Ej: si base es 5 y esto es 3: R1=5, R2=8, R3=11)")]
     public int incrementoKillsPorRonda = 3;
     [Tooltip("Cuántas kills extra suma por cada bucle/loop de mapa")]
@@ -52,16 +52,14 @@ public class MapManager : MonoBehaviour
 
     [Header("UI y Pantallas de Carga")]
     public GameObject panelCargaEscena;
-    public UnityEngine.UI.Slider barraCargaEscena;
     public GameObject popupInstrucciones;
     public GameObject popupLapidaInvocada;
 
     [Header("Recompensas Globales")]
-    public GameObject prefabCofre; // Solo queda el cofre
+    public GameObject prefabCofre;
 
     private GameObject zonaDefensaInstanciada;
     private GameObject lapidaInstanciada;
-    private Vector3 alturaPortalBossDinamica; 
     private List<GameObject> portalesActivos = new List<GameObject>();
     private NavMeshSurface navSurface;
     private int ultimoIndiceZona;
@@ -96,7 +94,6 @@ public class MapManager : MonoBehaviour
         }
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(true);
-        if (barraCargaEscena != null) barraCargaEscena.value = 0;
 
         StartCoroutine(SecuenciaDeGeneracionAsincrona());
 
@@ -109,22 +106,22 @@ public class MapManager : MonoBehaviour
         {
             if (ZonaDefensa.jugadorEnZona)
             {
-                tiempoDefensaActual -= Time.deltaTime; 
+                tiempoDefensaActual -= Time.deltaTime;
 
-                if (tiempoDefensaActual < 0) 
+                if (tiempoDefensaActual < 0)
                 {
                     tiempoDefensaActual = 0;
                 }
 
                 if (tiempoDefensaActual <= 0)
                 {
-                    ZonaDefensa.jugadorEnZona = false; 
-                    zonasRestantesEnRonda--; 
+                    ZonaDefensa.jugadorEnZona = false;
+                    zonasRestantesEnRonda--;
                     
                     if (zonasRestantesEnRonda > 0)
                     {
                         MoverZonaAOtroPunto();
-                        tiempoDefensaActual = tiempoDefensa; 
+                        tiempoDefensaActual = tiempoDefensa;
                     }
                     else
                     {
@@ -136,55 +133,49 @@ public class MapManager : MonoBehaviour
     }
     #endregion
 
-    #region Generacion Asíncrona Controlada
-    System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
+    #region Generación Asíncrona Controlada
+System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
     {
-        yield return new WaitForSeconds(0.1f);
+        // 1. Mostrar pantalla de carga y esperar a que la UI dibuje el primer frame
+        if (panelCargaEscena != null) panelCargaEscena.SetActive(true);
+        yield return null;
+        yield return new WaitForSecondsRealtime(0.2f);
+
+        SessionData.level = nivelBucle;
+        SessionData.round = rondaActual;
 
         if (rondaActual < maxRondas)
         {
-            SessionData.level = nivelBucle;
-            SessionData.round = rondaActual;
-
             ConfigurarRondaPorObjetivo();
-
-            GenerarMapa();
-            if (barraCargaEscena != null) barraCargaEscena.value = 0.3f;
-            yield return null;
-
-            ActualizarNavMesh();
-            if (barraCargaEscena != null) barraCargaEscena.value = 0.5f;
-            yield return null;
-
-            SpawnearJugador();
-            SpawnearPortales();
-            SpawnearMagneto(); // <-- AGREGA ESTA LÍNEA AQUÍ
-
-            if (barraCargaEscena != null) barraCargaEscena.value = 0.7f;
-            yield return null;
-
-            PoblarEscenarioConDecoracion();
-            if (barraCargaEscena != null) barraCargaEscena.value = 0.95f;
-            yield return new WaitForSeconds(0.2f);
         }
         else
         {
-            SessionData.level = nivelBucle;
-            SessionData.round = rondaActual;
             enemigosParaJefe = 0;
-
-            GenerarMapa();
-            if (barraCargaEscena != null) barraCargaEscena.value = 0.3f;
-            yield return null;
-
-            ActualizarNavMesh();
-            if (barraCargaEscena != null) barraCargaEscena.value = 0.5f;
-            yield return null;
-
-            SpawnearJugador();
-            SpawnearPortales();
-            SpawnearMagneto(); // <-- Y TAMBIÉN AQUÍ POR SI ACASO EN RONDA FINAL
         }
+
+        // 2. Instanciar mapa
+        GenerarMapa();
+        yield return null;
+
+        // 3. Hornear NavMesh
+        ActualizarNavMesh();
+        yield return null;
+
+        // 4. Spawns
+        SpawnearJugador();
+        SpawnearPortales();
+        SpawnearMagneto();
+        yield return null;
+
+        // 5. Decoración (si aplica)
+        if (rondaActual < maxRondas)
+        {
+            PoblarEscenarioConDecoracion();
+            yield return null;
+        }
+
+        // Pequeño retardo visual para que la animación no se corte de golpe
+        yield return new WaitForSecondsRealtime(0.4f);
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(false);
         if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));
@@ -221,6 +212,7 @@ public class MapManager : MonoBehaviour
     {
         if (datosNivelActual == null || datosNivelActual.spawnPointsPortales.Length == 0) return;
 
+        // 2 portales en nivel 2 por el tamaño del mapa, 4 en nivel 1
         int cantidadAIntercalar = (nivelBucle == 2) ? 2 : 4;
 
         List<int> indicesDisponibles = new List<int>();
@@ -249,8 +241,8 @@ public class MapManager : MonoBehaviour
             {
                 Vector3 dirHaciaCentro = (Vector3.zero - posPortal).normalized;
                 dirHaciaCentro.y = 0;
-                Quaternion rotHorizontal = dirHaciaCentro != Vector3.zero 
-                    ? Quaternion.LookRotation(dirHaciaCentro) 
+                Quaternion rotHorizontal = dirHaciaCentro != Vector3.zero
+                    ? Quaternion.LookRotation(dirHaciaCentro)
                     : Quaternion.identity;
 
                 rotPortal = rotHorizontal * Quaternion.Euler(-90f, 0f, 0f);
@@ -288,7 +280,7 @@ public class MapManager : MonoBehaviour
         Bounds limitesSuelo = sueloCollider.bounds;
         int creados = 0;
         int intentos = 0;
-        int intentosMaximos = cantidad * 15; 
+        int intentosMaximos = cantidad * 15;
 
         while (creados < cantidad && intentos < intentosMaximos)
         {
@@ -307,7 +299,7 @@ public class MapManager : MonoBehaviour
                     Quaternion rotacionFinal = Quaternion.Euler(rotacionOriginal.x, Random.Range(0f, 360f), rotacionOriginal.z);
 
                     GameObject deco = Instantiate(prefabElegido, hit.point, rotacionFinal);
-                    deco.transform.parent = this.transform; 
+                    deco.transform.parent = this.transform;
                     creados++;
                 }
             }
@@ -318,19 +310,19 @@ public class MapManager : MonoBehaviour
     {
         if (objetivoActual == TipoObjetivo.EliminarEnemigos)
         {
-            enemigosMuertosActuales = 0; 
+            enemigosMuertosActuales = 0;
 
             enemigosParaJefe = killsBasePorRonda + ((rondaActual - 1) * incrementoKillsPorRonda) + ((nivelBucle - 1) * incrementoKillsPorBucle);
             
-            if (zonaDefensaInstanciada != null) 
+            if (zonaDefensaInstanciada != null)
             {
                 Destroy(zonaDefensaInstanciada);
             }
         }
         else if (objetivoActual == TipoObjetivo.DefenderZona)
         {
-            zonasRestantesEnRonda = rondaActual; 
-            tiempoDefensaActual = tiempoDefensa; 
+            zonasRestantesEnRonda = rondaActual;
+            tiempoDefensaActual = tiempoDefensa;
             
             MoverZonaAOtroPunto();
         }
@@ -341,7 +333,7 @@ public class MapManager : MonoBehaviour
         if (zonaDefensaInstanciada != null)
         {
             Destroy(zonaDefensaInstanciada);
-            zonaDefensaInstanciada = null; 
+            zonaDefensaInstanciada = null;
         }
 
         if (datosNivelActual != null && datosNivelActual.zonaDefensaPrefab != null)
@@ -364,12 +356,12 @@ public class MapManager : MonoBehaviour
                     } while (nuevoIndice == ultimoIndiceZona);
                 }
 
-                ultimoIndiceZona = nuevoIndice; 
+                ultimoIndiceZona = nuevoIndice;
                 posicionZona = datosNivelActual.spawnPointsZonas[nuevoIndice];
             }
             
             zonaDefensaInstanciada = Instantiate(datosNivelActual.zonaDefensaPrefab, posicionZona, Quaternion.identity);
-            zonaDefensaInstanciada.transform.parent = this.transform; 
+            zonaDefensaInstanciada.transform.parent = this.transform;
         }
     }
 
@@ -394,8 +386,8 @@ public class MapManager : MonoBehaviour
             Vector3 dirHaciaCentro = (Vector3.zero - posPortalBoss).normalized;
             dirHaciaCentro.y = 0;
 
-            Quaternion rotacionHorizontal = dirHaciaCentro != Vector3.zero 
-                ? Quaternion.LookRotation(dirHaciaCentro) 
+            Quaternion rotacionHorizontal = dirHaciaCentro != Vector3.zero
+                ? Quaternion.LookRotation(dirHaciaCentro)
                 : Quaternion.identity;
 
             rotPortalBoss = rotacionHorizontal * Quaternion.Euler(-90f, 0f, 0f);
@@ -422,28 +414,29 @@ public class MapManager : MonoBehaviour
             }
             else
             {
-                Vector3 dirHaciaCentro = (Vector3.zero - posicionPortal).normalized;
+                Vector3 posBoss = posicionPortal;
+
+                if (NavMesh.SamplePosition(posicionPortal, out NavMeshHit hit, 6.0f, NavMesh.AllAreas))
+                {
+                    posBoss = hit.position;
+                }
+
+                Vector3 dirHaciaCentro = (Vector3.zero - posBoss).normalized;
                 dirHaciaCentro.y = 0;
                 Quaternion rotBoss = dirHaciaCentro != Vector3.zero ? Quaternion.LookRotation(dirHaciaCentro) : Quaternion.identity;
 
-                Instantiate(datosNivelActual.bossPrefab, posicionPortal, rotBoss);
+                GameObject nuevoBoss = Instantiate(datosNivelActual.bossPrefab, posBoss, rotBoss);
+
+                NavMeshAgent agent = nuevoBoss.GetComponent<NavMeshAgent>();
+                if (agent != null)
+                {
+                    agent.Warp(posBoss);
+                }
             }
         }
 
         yield return new WaitForSeconds(1.5f);
         Destroy(portal);
-    }
-
-    System.Collections.IEnumerator SecuenciaSpawnBoss(GameObject portal, Vector3 posicionPortal)
-    {
-        yield return new WaitForSeconds(retrasoSpawnBoss);
-        if (datosNivelActual.bossPrefab != null)
-        {
-            Vector3 posBoss = posicionPortal + Vector3.down * 2f;
-            Instantiate(datosNivelActual.bossPrefab, posBoss, Quaternion.identity);
-        }
-        yield return new WaitForSeconds(1f);
-        Destroy(portal); 
     }
 
     public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = default)
@@ -508,12 +501,11 @@ public class MapManager : MonoBehaviour
     #region Lógica del Loop de Juego y Recompensas
     public void RegistrarMuerte()
     {
-        if (rondaActual >= maxRondas) return; 
+        if (rondaActual >= maxRondas) return;
 
         if (objetivoActual == TipoObjetivo.EliminarEnemigos)
         {
             enemigosMuertosActuales++;
-
 
             if (enemigosMuertosActuales >= enemigosParaJefe)
             {
@@ -526,7 +518,7 @@ public class MapManager : MonoBehaviour
     {
         AnalyticsBridge.EnviarLevelComplete(SessionData.level, rondaActual);
             
-        if (rondaActual < (maxRondas - 1)) 
+        if (rondaActual < (maxRondas - 1))
         {
             AvanzarRonda();
         }
@@ -550,47 +542,47 @@ public class MapManager : MonoBehaviour
 
     public void AvanzarSiguienteNivel()
     {
-    AnalyticsBridge.EnviarLevelComplete(SessionData.level, maxRondas);
+        AnalyticsBridge.EnviarLevelComplete(SessionData.level, maxRondas);
 
-    GameObject jugador = GameObject.FindGameObjectWithTag("Player");
+        GameObject jugador = GameObject.FindGameObjectWithTag("Player");
 
-    if (jugador != null && AdministradorDeProgreso.Instancia != null)
-    {
-        AdministradorDeProgreso.Instancia.GuardarEstadoJugador(jugador);
-        Debug.Log("[MAP MANAGER] Estado del jugador guardado antes de cambiar de escena.");
-    }
-    else
-    {
-        Debug.LogWarning("[MAP MANAGER] No se pudo guardar el estado del jugador.");
-    }
+        if (jugador != null && AdministradorDeProgreso.Instancia != null)
+        {
+            AdministradorDeProgreso.Instancia.GuardarEstadoJugador(jugador);
+            Debug.Log("[MAP MANAGER] Estado del jugador guardado antes de cambiar de escena.");
+        }
+        else
+        {
+            Debug.LogWarning("[MAP MANAGER] No se pudo guardar el estado del jugador.");
+        }
 
-    nivelBucle++;
-    SessionData.level = nivelBucle;
+        nivelBucle++;
+        SessionData.level = nivelBucle;
 
-    int indiceSiguienteMapa = nivelBucle - 1;
+        int indiceSiguienteMapa = nivelBucle - 1;
 
-    if (indiceSiguienteMapa >= ordenDeNiveles.Length)
-    {
-        SceneManager.LoadScene("GameOver");
-    }
-    else
-    {
-        SceneManager.LoadScene(ordenDeNiveles[indiceSiguienteMapa]);
-    }
+        if (indiceSiguienteMapa >= ordenDeNiveles.Length)
+        {
+            SceneManager.LoadScene("GameOver");
+        }
+        else
+        {
+            SceneManager.LoadScene(ordenDeNiveles[indiceSiguienteMapa]);
+        }
     }
 
     public void ColapsarMapa()
     {
-        foreach (Transform child in transform) 
+        foreach (Transform child in transform)
         {
             Destroy(child.gameObject);
         }
         AvanzarSiguienteNivel();
     }
 
-    void SpawnearLapida()                                                           
+    void SpawnearLapida()
     {
-        if (lapidaInstanciada != null || datosNivelActual == null) return; 
+        if (lapidaInstanciada != null || datosNivelActual == null) return;
 
         if (zonaDefensaInstanciada != null)
         {
@@ -598,7 +590,7 @@ public class MapManager : MonoBehaviour
             zonaDefensaInstanciada = null;
         }
 
-        if (nivelBucle < 4) 
+        if (nivelBucle < 4)
         {
             SpawnearMejoraMenor();
         }
@@ -618,6 +610,7 @@ public class MapManager : MonoBehaviour
          
         if (popupLapidaInvocada != null) StartCoroutine(ManejarPopupLapida(4f));
     }
+
     void SpawnearMagneto()
     {
         if (datosNivelActual == null || datosNivelActual.magnetoPrefab == null) return;
@@ -628,6 +621,7 @@ public class MapManager : MonoBehaviour
 
         Instantiate(datosNivelActual.magnetoPrefab, spawnPos, Quaternion.identity);
     }
+
     void SpawnearMejoraMenor()
     {
         if (prefabCofre == null) return;
@@ -636,12 +630,12 @@ public class MapManager : MonoBehaviour
 
         Vector3 posInicial = player.transform.position + player.transform.forward * 3f + Vector3.up * 5f;
         
-        Vector3 spawnPos = posInicial; 
+        Vector3 spawnPos = posInicial;
         RaycastHit hit;
 
         if (Physics.Raycast(posInicial, Vector3.down, out hit, 15f, datosNivelActual.capaSuelo))
         {
-            spawnPos = hit.point + Vector3.up * 0.8f; 
+            spawnPos = hit.point + Vector3.up * 0.8f;
         }
 
         GameObject cofre = Instantiate(prefabCofre, spawnPos, Quaternion.identity);
@@ -653,9 +647,9 @@ public class MapManager : MonoBehaviour
     {
         foreach (GameObject portal in portalesActivos)
         {
-            if (portal != null) portal.SetActive(false); 
+            if (portal != null) portal.SetActive(false);
         }
-        portalesActivos.Clear(); 
+        portalesActivos.Clear();
         posicionesPortalesOcupadas.Clear();
     }
     #endregion
@@ -675,7 +669,6 @@ public class MapManager : MonoBehaviour
         yield return new WaitForSeconds(tiempo);
         popupInstrucciones.SetActive(false);
     }
-    
 
     System.Collections.IEnumerator ManejarPopupLapida(float tiempo)
     {
