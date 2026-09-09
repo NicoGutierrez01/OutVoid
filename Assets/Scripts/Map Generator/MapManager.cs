@@ -221,9 +221,10 @@ public class MapManager : MonoBehaviour
     {
         if (datosNivelActual == null || datosNivelActual.spawnPointsPortales.Length == 0) return;
 
-        int cantidadAIntercalar = 4;
+        int cantidadAIntercalar = (nivelBucle == 2) ? 2 : 4;
+
         List<int> indicesDisponibles = new List<int>();
-        for (int i = 0; i < datosNivelActual.spawnPointsPortales.Length; i++) 
+        for (int i = 0; i < datosNivelActual.spawnPointsPortales.Length; i++)
         {
             indicesDisponibles.Add(i);
         }
@@ -237,7 +238,25 @@ public class MapManager : MonoBehaviour
             indicesDisponibles.RemoveAt(randomIndexList);
 
             Vector3 posPortal = datosNivelActual.spawnPointsPortales[portalIndex];
-            GameObject nuevoPortal = Instantiate(datosNivelActual.portalEnemigoPrefab, posPortal, Quaternion.identity);
+            posicionesPortalesOcupadas.Add(posPortal);
+
+            Quaternion rotPortal;
+            if (nivelBucle == 1)
+            {
+                rotPortal = Quaternion.identity;
+            }
+            else
+            {
+                Vector3 dirHaciaCentro = (Vector3.zero - posPortal).normalized;
+                dirHaciaCentro.y = 0;
+                Quaternion rotHorizontal = dirHaciaCentro != Vector3.zero 
+                    ? Quaternion.LookRotation(dirHaciaCentro) 
+                    : Quaternion.identity;
+
+                rotPortal = rotHorizontal * Quaternion.Euler(-90f, 0f, 0f);
+            }
+
+            GameObject nuevoPortal = Instantiate(datosNivelActual.portalEnemigoPrefab, posPortal, rotPortal);
             portalesActivos.Add(nuevoPortal);
         }
     }
@@ -368,12 +387,10 @@ public class MapManager : MonoBehaviour
 
         if (nivelBucle == 1)
         {
-            // Nivel 1 (Desierto): acostado plano para que el boss caiga desde arriba
             rotPortalBoss = Quaternion.identity;
         }
         else
         {
-            // Nivel 2 (Cueva): rotación vertical hacia el centro del mapa respetando el -90° en X
             Vector3 dirHaciaCentro = (Vector3.zero - posPortalBoss).normalized;
             dirHaciaCentro.y = 0;
 
@@ -381,7 +398,6 @@ public class MapManager : MonoBehaviour
                 ? Quaternion.LookRotation(dirHaciaCentro) 
                 : Quaternion.identity;
 
-            // Multiplica la orientación horizontal por los -90° en X que necesita el cilindro para estar parado
             rotPortalBoss = rotacionHorizontal * Quaternion.Euler(-90f, 0f, 0f);
         }
 
@@ -401,13 +417,11 @@ public class MapManager : MonoBehaviour
         {
             if (nivelBucle == 1)
             {
-                // Nivel 1: cae 2 unidades abajo del portal en el cielo
                 Vector3 posBoss = posicionPortal + Vector3.down * 2f;
                 Instantiate(datosNivelActual.bossPrefab, posBoss, Quaternion.identity);
             }
             else
             {
-                // Nivel 2: rotación hacia adelante (sin el -90° de X porque el Boss es humanoide bípedo)
                 Vector3 dirHaciaCentro = (Vector3.zero - posicionPortal).normalized;
                 dirHaciaCentro.y = 0;
                 Quaternion rotBoss = dirHaciaCentro != Vector3.zero ? Quaternion.LookRotation(dirHaciaCentro) : Quaternion.identity;
@@ -432,9 +446,8 @@ public class MapManager : MonoBehaviour
         Destroy(portal); 
     }
 
-public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = default)
+    public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = default)
     {
-        // 1. Liberamos la posición vieja del portal que está pidiendo reubicarse
         if (posicionActualPortal != default && posicionesPortalesOcupadas.Contains(posicionActualPortal))
         {
             posicionesPortalesOcupadas.Remove(posicionActualPortal);
@@ -442,7 +455,6 @@ public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = def
 
         if (datosNivelActual != null && datosNivelActual.spawnPointsPortales != null && datosNivelActual.spawnPointsPortales.Length > 0)
         {
-            // 2. Filtramos cuáles de los spawn points NO están ocupados actualmente
             List<Vector3> posicionesDisponibles = new List<Vector3>();
 
             foreach (Vector3 punto in datosNivelActual.spawnPointsPortales)
@@ -450,7 +462,6 @@ public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = def
                 bool ocupado = false;
                 foreach (Vector3 ocupada in posicionesPortalesOcupadas)
                 {
-                    // Comprobamos distancia corta por seguridad contra flotantes
                     if (Vector3.Distance(punto, ocupada) < 1f)
                     {
                         ocupado = true;
@@ -464,7 +475,6 @@ public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = def
                 }
             }
 
-            // 3. Si hay posiciones libres, elegimos una y la reservamos
             if (posicionesDisponibles.Count > 0)
             {
                 int index = Random.Range(0, posicionesDisponibles.Count);
@@ -473,7 +483,6 @@ public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = def
                 return puntoElegido;
             }
 
-            // Fallback: si por alguna razón no quedaran libres, usa cualquiera al azar
             int fallbackIndex = Random.Range(0, datosNivelActual.spawnPointsPortales.Length);
             Vector3 fallbackPunto = datosNivelActual.spawnPointsPortales[fallbackIndex];
             posicionesPortalesOcupadas.Add(fallbackPunto);
@@ -609,17 +618,16 @@ public Vector3 ObtenerPosicionAleatoriaPortal(Vector3 posicionActualPortal = def
          
         if (popupLapidaInvocada != null) StartCoroutine(ManejarPopupLapida(4f));
     }
-void SpawnearMagneto()
-{
-    if (datosNivelActual == null || datosNivelActual.magnetoPrefab == null) return;
-    if (datosNivelActual.spawnPointsMagneto == null || datosNivelActual.spawnPointsMagneto.Length == 0) return;
+    void SpawnearMagneto()
+    {
+        if (datosNivelActual == null || datosNivelActual.magnetoPrefab == null) return;
+        if (datosNivelActual.spawnPointsMagneto == null || datosNivelActual.spawnPointsMagneto.Length == 0) return;
 
-    int randomIndex = Random.Range(0, datosNivelActual.spawnPointsMagneto.Length);
-    Vector3 spawnPos = datosNivelActual.spawnPointsMagneto[randomIndex];
-    
-    // Se instancia sin emparentarlo a MapManager para que quede libre en la jerarquía de la escena
-    Instantiate(datosNivelActual.magnetoPrefab, spawnPos, Quaternion.identity);
-}
+        int randomIndex = Random.Range(0, datosNivelActual.spawnPointsMagneto.Length);
+        Vector3 spawnPos = datosNivelActual.spawnPointsMagneto[randomIndex];
+
+        Instantiate(datosNivelActual.magnetoPrefab, spawnPos, Quaternion.identity);
+    }
     void SpawnearMejoraMenor()
     {
         if (prefabCofre == null) return;

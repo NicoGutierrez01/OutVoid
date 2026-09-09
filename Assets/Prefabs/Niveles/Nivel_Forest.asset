@@ -21,18 +21,16 @@ MonoBehaviour:
   - {x: 73.17178, y: 26.32742, z: -204.50899}
   portalEnemigoPrefab: {fileID: 2148023456166452146, guid: ecc1c68241d7b764d96464dbb4fbfa87, type: 3}
   spawnPointsPortales:
-  - {x: 42.06, y: 36.73, z: -170.79}
-  - {x: 51.76, y: 45.24, z: -79.4}
-  - {x: 70.77, y: 37, z: -135.3}
-  - {x: 90.44, y: 37, z: -148.84}
-  - {x: 88.39, y: 37, z: -190.82}
-  - {x: 81.87, y: 37, z: -214.96}
-  - {x: 50.78, y: 37, z: -214.96}
-  - {x: 32.77, y: 37, z: -202.68}
-  - {x: 26.15, y: 37, z: -168.13}
-  - {x: 23.37, y: 37, z: -126.76}
-  - {x: 76, y: 37, z: -138}
-  - {x: 47.73, y: 37, z: -135.97}
+  - {x: 81.87, y: 30.89, z: -214.96}
+  - {x: 33.07, y: 29.72, z: -186.65}
+  - {x: 59.79, y: 29.21, z: -172.46}
+  - {x: 23.39, y: 29.21, z: -125.73}
+  - {x: 52.81, y: 36.4, z: -79.17}
+  - {x: 52.81, y: 30.13, z: -117.13}
+  - {x: 92.78, y: 31.72, z: -143.99}
+  - {x: 59.62, y: 30.48, z: -184.38}
+  - {x: 67.86, y: 30.84, z: -231.6}
+  - {x: 29.6, y: 30.42, z: -233.93}
   spawnPointsLapida:
   - {x: 69, y: 30.6, z: -160}
   bossPrefab: {fileID: 1196710410993419956, guid: 6fd1b36db8ad369488a1a3e08b6da663, type: 3}
@@ -44,7 +42,7 @@ MonoBehaviour:
   spawnPointsMagneto: []
   prefabsDecoracionPrincipal: []
   cantidadDecoracionPrincipal: 15
-  zonaDefensaPrefab: {fileID: 4618040435622777381, guid: baecbdaaa4f923944a08e40217c484ed, type: 3}
+  zonaDefensaPrefab: {fileID: 3230250897361486733, guid: 052f6f8b253a2204198c93be0382e710, type: 3}
   spawnPointsZonas:
   - {x: 50.49, y: 31.67, z: -93.42}
   - {x: 50.49, y: 27.61, z: -131.33}
