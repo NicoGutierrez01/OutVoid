@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem; 
+using System.Collections; // Necesario para las corrutinas
 
 public class InteraccionLapida : MonoBehaviour
 {
@@ -10,6 +11,10 @@ public class InteraccionLapida : MonoBehaviour
     [Header("UI Flotante")]
     public GameObject canvasFlotante; 
     private Transform camaraJugador; 
+
+    [Header("Configuración Camera Shake")]
+    public float duracionSacudida = 2f;
+    public float intensidadSacudida = 0.2f;
 
     void Start()
     {
@@ -60,14 +65,37 @@ public class InteraccionLapida : MonoBehaviour
 
         if (canvasFlotante != null) canvasFlotante.SetActive(false);
 
+        // Disparamos el terremoto en la cámara
+        StartCoroutine(RutinaCameraShake());
+
         MapManager.Instance.SpawnearPortalBoss();
 
-        Destroy(gameObject, 1f);
+        // Aumenté ligeramente el tiempo de destrucción para que coincida con el shake si lo deseas, 
+        // o se destruye la lápida mientras la cámara vibra.
+        Destroy(gameObject, duracionSacudida); 
     }
 
-    private void OnDrawGizmosSelected()
+   System.Collections.IEnumerator RutinaCameraShake()
+{
+    if (camaraJugador == null) yield break;
+
+    float tiempoTranscurrido = 0f;
+
+    while (tiempoTranscurrido < duracionSacudida)
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, radioInteraccion);
+        // Generamos un desplazamiento aleatorio pequeño en X e Y
+        float offsetX = Random.Range(-1f, 1f) * intensidadSacudida;
+        float offsetY = Random.Range(-1f, 1f) * intensidadSacudida;
+
+        // Movemos la cámara sumándole el temblor a su posición local actual (respetando el movimiento del jugador)
+        camaraJugador.localPosition += new Vector3(offsetX, offsetY, 0f);
+
+        tiempoTranscurrido += Time.deltaTime;
+        yield return null;
+
+        // Al terminar el frame, revertimos inmediatamente ese desplazamiento aleatorio 
+        // para que la lógica de la cámara en primera persona del jugador no pierda su referencia real.
+        camaraJugador.localPosition -= new Vector3(offsetX, offsetY, 0f);
     }
+}
 }
