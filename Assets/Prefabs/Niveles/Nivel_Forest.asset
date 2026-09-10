@@ -38,8 +38,9 @@ MonoBehaviour:
   lapidaPrefab: {fileID: 1732824193767410980, guid: 4d85a715dd0dedc48b82221b294b8232, type: 3}
   spawnPointsPortalBoss:
   - {x: 52, y: 32, z: -128}
-  magnetoPrefab: {fileID: 0}
+  magnetoPrefab: {fileID: 4990399000650638707, guid: cc704085b3e614166ab33b6e932508b6, type: 3}
   spawnPointsMagneto: []
+  spawnPointsCofres: []
   prefabsDecoracionPrincipal: []
   cantidadDecoracionPrincipal: 15
   zonaDefensaPrefab: {fileID: 3230250897361486733, guid: 052f6f8b253a2204198c93be0382e710, type: 3}
