@@ -678,7 +678,7 @@ MonoBehaviour:
   rondaActual: 1
   maxRondas: 4
   retrasoSpawnBoss: 2
-  panelCargaEscena: {fileID: 0}
+  panelCargaEscena: {fileID: 661221694}
   popupInstrucciones: {fileID: 0}
   popupLapidaInvocada: {fileID: 0}
   prefabCofre: {fileID: 3386048660251865897, guid: 2d35a0b009bae2c40b885964aaee7111, type: 3}

@@ -16,10 +16,6 @@ MonoBehaviour:
   capaSuelo:
     serializedVersion: 2
     m_Bits: 8
-  spawnPointsCofres:
-  - {x: -86, y: -4, z: 9}
-  - {x: -23, y: -4, z: -75}
-  - {x: 92, y: -5.5, z: -50}
   playerPrefab: {fileID: 663390133554984710, guid: 1c42ed567325a4898965abdee55fa808, type: 3}
   spawnPointsPlayer:
   - {x: -23.2, y: -4.48, z: 23.4}
@@ -48,7 +44,7 @@ MonoBehaviour:
   - {x: -59.9, y: 6.2, z: 41.9}
   - {x: -55, y: 6.2, z: 4.5}
   spawnPointsLapida:
-  - {x: -23.2, y: -4.48, z: 23.4}
+  - {x: -23.2, y: -6.33, z: 23.4}
   bossPrefab: {fileID: 2811968405897873640, guid: b450d5c152800f74fa93f4a754f8f5f6, type: 3}
   portalBossPrefab: {fileID: 2148023456166452146, guid: 9c21d9309ee67ea4cb6833b8313b6223, type: 3}
   lapidaPrefab: {fileID: 4155036918023908458, guid: 0b2903d39c1997c41aba32e3e2a0e7d5, type: 3}
@@ -57,6 +53,10 @@ MonoBehaviour:
   magnetoPrefab: {fileID: 4990399000650638707, guid: cc704085b3e614166ab33b6e932508b6, type: 3}
   spawnPointsMagneto:
   - {x: 13, y: -6, z: -6}
+  spawnPointsCofres:
+  - {x: 92, y: -5.5, z: -48.85}
+  - {x: -15.37, y: -5.2, z: -75}
+  - {x: -86, y: -3.97, z: 9}
   prefabsDecoracionPrincipal:
   - {fileID: 6554328710291321494, guid: d35a37cd401117046937e655b7069cc6, type: 3}
   - {fileID: 6963621031325828773, guid: 878eca668dbce0e42a685d5f023f9d55, type: 3}
