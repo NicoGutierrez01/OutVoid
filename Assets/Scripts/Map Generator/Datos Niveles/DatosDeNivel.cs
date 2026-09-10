@@ -7,6 +7,7 @@ public class DatosDeNivel : ScriptableObject
     [Header("Escenario y Entorno")]
     public GameObject mapaPrefab;
     public LayerMask capaSuelo;
+ 
 
     [Header("Jugador")]
     public GameObject playerPrefab;
@@ -28,6 +29,8 @@ public class DatosDeNivel : ScriptableObject
     [Header("Magneto")]
     public GameObject magnetoPrefab;
     public Vector3[] spawnPointsMagneto;
+       [Header("Spawns de Cofres de Exploración")]
+    public Vector3[] spawnPointsCofres;
 
     [Header("Decoración del Nivel")]
     public List<GameObject> prefabsDecoracionPrincipal;

@@ -165,6 +165,8 @@ System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
         SpawnearJugador();
         SpawnearPortales();
         SpawnearMagneto();
+SpawnearCofresExploracion();        
+
         yield return null;
 
         // 5. Decoración (si aplica)
@@ -611,16 +613,33 @@ System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
         if (popupLapidaInvocada != null) StartCoroutine(ManejarPopupLapida(4f));
     }
 
-    void SpawnearMagneto()
+void SpawnearMagneto()
+{
+    if (datosNivelActual == null || datosNivelActual.magnetoPrefab == null) return;
+    if (datosNivelActual.spawnPointsMagneto == null || datosNivelActual.spawnPointsMagneto.Length == 0) return;
+
+    int randomIndex = Random.Range(0, datosNivelActual.spawnPointsMagneto.Length);
+    Vector3 spawnPos = datosNivelActual.spawnPointsMagneto[randomIndex];
+
+    Instantiate(datosNivelActual.magnetoPrefab, spawnPos, Quaternion.identity);
+}
+
+void SpawnearCofresExploracion()
+{
+    if (prefabCofre == null) return;
+    if (datosNivelActual == null) return;
+
+    if (datosNivelActual.spawnPointsCofres == null ||
+        datosNivelActual.spawnPointsCofres.Length == 0)
+        return;
+
+    foreach (Vector3 spawnPos in datosNivelActual.spawnPointsCofres)
     {
-        if (datosNivelActual == null || datosNivelActual.magnetoPrefab == null) return;
-        if (datosNivelActual.spawnPointsMagneto == null || datosNivelActual.spawnPointsMagneto.Length == 0) return;
-
-        int randomIndex = Random.Range(0, datosNivelActual.spawnPointsMagneto.Length);
-        Vector3 spawnPos = datosNivelActual.spawnPointsMagneto[randomIndex];
-
-        Instantiate(datosNivelActual.magnetoPrefab, spawnPos, Quaternion.identity);
+        Instantiate(prefabCofre, spawnPos, Quaternion.identity);
     }
+
+    Debug.Log($"[COFRES] Se generaron {datosNivelActual.spawnPointsCofres.Length} cofres de exploración.");
+}
 
     void SpawnearMejoraMenor()
     {

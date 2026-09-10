@@ -16,6 +16,10 @@ MonoBehaviour:
   capaSuelo:
     serializedVersion: 2
     m_Bits: 8
+  spawnPointsCofres:
+  - {x: -86, y: -4, z: 9}
+  - {x: -23, y: -4, z: -75}
+  - {x: 92, y: -5.5, z: -50}
   playerPrefab: {fileID: 663390133554984710, guid: 1c42ed567325a4898965abdee55fa808, type: 3}
   spawnPointsPlayer:
   - {x: -23.2, y: -4.48, z: 23.4}
