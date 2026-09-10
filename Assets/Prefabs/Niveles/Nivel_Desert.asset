@@ -52,7 +52,7 @@ MonoBehaviour:
   - {x: -23.2, y: 20.28, z: 23.4}
   magnetoPrefab: {fileID: 4990399000650638707, guid: cc704085b3e614166ab33b6e932508b6, type: 3}
   spawnPointsMagneto:
-  - {x: 13, y: -13, z: -6}
+  - {x: 13, y: -6, z: -6}
   prefabsDecoracionPrincipal:
   - {fileID: 6554328710291321494, guid: d35a37cd401117046937e655b7069cc6, type: 3}
   - {fileID: 6963621031325828773, guid: 878eca668dbce0e42a685d5f023f9d55, type: 3}
