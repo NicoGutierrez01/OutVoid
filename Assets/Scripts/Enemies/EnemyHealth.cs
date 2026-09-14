@@ -257,6 +257,11 @@ if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo 
             playerScript.AumentarVidaMaxima(1f);
         }
 
+        if (weaponScript != null && Random.value <= weaponScript.chanceDevolverBalaKill)
+        {
+            weaponScript.ReembolsarBala();
+        }
+
         if (Random.value * 100 <= probabilidadDrop)
         {
             Vector3 posicionSpawn = transform.position;
@@ -305,41 +310,36 @@ if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo 
 
         StartCoroutine(RutinaMuerteExplosiva());
     }
-IEnumerator KnockbackRoutine(Vector3 direccion)
-{
-    if (rb == null) yield break;
-
-    // Desactivamos temporalmente el NavMeshAgent para que las físicas manden
-    if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+    IEnumerator KnockbackRoutine(Vector3 direccion)
     {
-        agent.isStopped = true;
-        agent.enabled = false;
-    }
+        if (rb == null) yield break;
 
-    // Activamos el Rigidbody temporalmente
-    rb.isKinematic = false;
-    rb.linearVelocity = Vector3.zero; // Limpia velocidad acumulada
-    rb.AddForce(direccion * fuerzaKnockback, ForceMode.Impulse);
-
-    // Esperamos un momento corto que dura el empuje (coincide con el Stun)
-    yield return new WaitForSeconds(0.2f);
-
-    // Devolvemos el control a la IA y al NavMesh
-    if (rb != null)
-    {
-        rb.isKinematic = true;
-    }
-
-    if (agent != null)
-    {
-        // Validamos que siga sobre el terreno antes de prenderlo para evitar el error de SetDestination
-        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 1.5f, NavMesh.AllAreas))
+        if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
         {
-            agent.enabled = true;
-            agent.isStopped = false;
+            agent.isStopped = true;
+            agent.enabled = false;
+        }
+
+        rb.isKinematic = false;
+        rb.linearVelocity = Vector3.zero;
+        rb.AddForce(direccion * fuerzaKnockback, ForceMode.Impulse);
+
+        yield return new WaitForSeconds(0.2f);
+
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+        }
+
+        if (agent != null)
+        {
+            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 1.5f, NavMesh.AllAreas))
+            {
+                agent.enabled = true;
+                agent.isStopped = false;
+            }
         }
     }
-}
     IEnumerator RutinaMuerteExplosiva()
     {
         if (prefabParticulasMuerte != null)

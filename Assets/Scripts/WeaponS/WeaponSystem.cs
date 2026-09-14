@@ -64,6 +64,9 @@ public class WeaponSystem : MonoBehaviour
     public float porcentajeDanoExplosion = 0.6f;
     public GameObject prefabMicroExplosion;
 
+    [Header("Reembolso de Balas")]
+    [Range(0f, 1f)] public float chanceDevolverBalaKill = 0.35f; 
+
     void Start()
     {
         balasActuales = balasMaximas;
@@ -479,6 +482,11 @@ public class WeaponSystem : MonoBehaviour
         bool esHeadshot = hit.collider.CompareTag("Head");
         float danoFinal = esHeadshot ? damage * multiplicadorHeadshot : damage;
 
+        if (esHeadshot)
+        {
+            ReembolsarBala();
+        }
+
         if (hit.collider.CompareTag("Enemigo") ||
             hit.collider.CompareTag("MinionBoss") ||
             esHeadshot)
@@ -599,11 +607,34 @@ public class WeaponSystem : MonoBehaviour
         }
     }
 
+    public void ReembolsarBala()
+    {
+        if (balasActuales < balasMaximas)
+        {
+            balasActuales++;
+        }
+        else
+        {
+            balasReserva++;
+        }
+
+        BuscarCrosshairFeedback();
+        if (crosshairFeedback != null)
+        {
+            crosshairFeedback.ShowReward(CrosshairFeedbackManager.RewardType.Bullets);
+        }
+    }
+
     public void AddAmmo(int amount)
     {
         balasReserva += amount;
 
         BuscarCrosshairFeedback();
         if (crosshairFeedback != null) crosshairFeedback.ShowReward(CrosshairFeedbackManager.RewardType.Bullets);
+
+        if (balasActuales <= 0 && !recargando && gameObject.activeInHierarchy)
+        {
+            StartCoroutine(RutinaRecarga());
+        }
     }
 }

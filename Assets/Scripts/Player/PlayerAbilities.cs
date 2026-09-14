@@ -29,8 +29,10 @@ public class PlayerAbilities : MonoBehaviour
     public float multiplicadorDanoDinamita = 1.5f;
 
     [Header("Melee")]
-    public float meleeDamage = 35f;
-    public float meleeRange = 2f;
+    public float meleeDamage = 99999f;    
+    public float meleeBossDamage = 150f;  
+    public float meleeRange = 2.5f;      
+    public float meleeRadius = 0.5f;     
     public float meleeCooldown = 0.5f;
     public bool canMelee = true;
     private bool usarHit2 = false;
@@ -221,7 +223,7 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator UseMelee()
     {
         canMelee = false;
-        MusicManager.Instance.PlayMelee();
+        if (MusicManager.Instance != null) MusicManager.Instance.PlayMelee();
 
         if (weaponScript != null)
         {
@@ -239,16 +241,30 @@ public class PlayerAbilities : MonoBehaviour
         Ray ray = new Ray(cam.position, cam.forward);
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit, meleeRange))
+        if (Physics.SphereCast(ray, meleeRadius, out hit, meleeRange))
         {
-            EnemyHealth enemy = hit.transform.GetComponent<EnemyHealth>();
-            if (enemy != null) enemy.TakeDamage(meleeDamage);
+            EnemyHealth enemy = hit.collider.GetComponentInParent<EnemyHealth>();
+            if (enemy != null)
+            {
+                enemy.TakeDamage(meleeDamage, false);
+            }
 
-            Boss boss = hit.transform.GetComponent<Boss>();
-            if (boss != null) boss.TakeDamage(meleeDamage);
+            MiniCube minion = hit.collider.GetComponentInParent<MiniCube>();
+            if (minion != null)
+            {
+                minion.TakeDamage(meleeDamage);
+            }
 
-            MiniCube minion = hit.transform.GetComponent<MiniCube>();
-            if (minion != null) minion.TakeDamage(meleeDamage);
+            BossHealth bossHealth = hit.collider.GetComponentInParent<BossHealth>();
+            if (bossHealth != null)
+            {
+                bossHealth.TakeDamage(meleeBossDamage);
+            }
+            else
+            {
+                Boss boss = hit.collider.GetComponentInParent<Boss>();
+                if (boss != null) boss.TakeDamage(meleeBossDamage);
+            }
         }
 
         yield return new WaitForSeconds(meleeCooldown);
