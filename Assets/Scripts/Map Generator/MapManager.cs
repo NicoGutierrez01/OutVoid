@@ -134,9 +134,8 @@ public class MapManager : MonoBehaviour
     #endregion
 
     #region Generación Asíncrona Controlada
-System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
+    System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
     {
-        // 1. Mostrar pantalla de carga y esperar a que la UI dibuje el primer frame
         if (panelCargaEscena != null) panelCargaEscena.SetActive(true);
         yield return null;
         yield return new WaitForSecondsRealtime(0.2f);
@@ -153,30 +152,25 @@ System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
             enemigosParaJefe = 0;
         }
 
-        // 2. Instanciar mapa
         GenerarMapa();
         yield return null;
 
-        // 3. Hornear NavMesh
         ActualizarNavMesh();
         yield return null;
 
-        // 4. Spawns
         SpawnearJugador();
         SpawnearPortales();
         SpawnearMagneto();
-SpawnearCofresExploracion();        
+        // SpawnearCofresExploracion();        
 
         yield return null;
 
-        // 5. Decoración (si aplica)
         if (rondaActual < maxRondas)
         {
             PoblarEscenarioConDecoracion();
             yield return null;
         }
 
-        // Pequeño retardo visual para que la animación no se corte de golpe
         yield return new WaitForSecondsRealtime(0.4f);
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(false);
@@ -613,33 +607,58 @@ SpawnearCofresExploracion();
         if (popupLapidaInvocada != null) StartCoroutine(ManejarPopupLapida(4f));
     }
 
-void SpawnearMagneto()
-{
-    if (datosNivelActual == null || datosNivelActual.magnetoPrefab == null) return;
-    if (datosNivelActual.spawnPointsMagneto == null || datosNivelActual.spawnPointsMagneto.Length == 0) return;
-
-    int randomIndex = Random.Range(0, datosNivelActual.spawnPointsMagneto.Length);
-    Vector3 spawnPos = datosNivelActual.spawnPointsMagneto[randomIndex];
-
-    Instantiate(datosNivelActual.magnetoPrefab, spawnPos, Quaternion.identity);
-}
-
-void SpawnearCofresExploracion()
-{
-    if (prefabCofre == null) return;
-    if (datosNivelActual == null) return;
-
-    if (datosNivelActual.spawnPointsCofres == null ||
-        datosNivelActual.spawnPointsCofres.Length == 0)
-        return;
-
-    foreach (Vector3 spawnPos in datosNivelActual.spawnPointsCofres)
+    void SpawnearMagneto()
     {
-        Instantiate(prefabCofre, spawnPos, Quaternion.identity);
+        if (datosNivelActual == null || datosNivelActual.magnetoPrefab == null) return;
+        if (datosNivelActual.spawnPointsMagneto == null || datosNivelActual.spawnPointsMagneto.Length == 0) return;
+
+        int randomIndex = Random.Range(0, datosNivelActual.spawnPointsMagneto.Length);
+        Vector3 spawnPos = datosNivelActual.spawnPointsMagneto[randomIndex];
+
+        Instantiate(datosNivelActual.magnetoPrefab, spawnPos, Quaternion.identity);
     }
 
-    Debug.Log($"[COFRES] Se generaron {datosNivelActual.spawnPointsCofres.Length} cofres de exploración.");
-}
+    public Vector3 ObtenerNuevaPosicionMagneto(Vector3 posicionActual)
+    {
+        if (datosNivelActual == null || datosNivelActual.spawnPointsMagneto == null || datosNivelActual.spawnPointsMagneto.Length == 0)
+            return posicionActual;
+
+        if (datosNivelActual.spawnPointsMagneto.Length == 1)
+            return datosNivelActual.spawnPointsMagneto[0];
+
+        List<Vector3> puntosDisponibles = new List<Vector3>();
+        foreach (Vector3 p in datosNivelActual.spawnPointsMagneto)
+        {
+            if (Vector3.Distance(p, posicionActual) > 1.5f)
+            {
+                puntosDisponibles.Add(p);
+            }
+        }
+
+        if (puntosDisponibles.Count > 0)
+        {
+            return puntosDisponibles[Random.Range(0, puntosDisponibles.Count)];
+        }
+
+        return datosNivelActual.spawnPointsMagneto[Random.Range(0, datosNivelActual.spawnPointsMagneto.Length)];
+    }
+
+    // void SpawnearCofresExploracion()
+    // {
+    //     if (prefabCofre == null) return;
+    //     if (datosNivelActual == null) return;
+
+    //     if (datosNivelActual.spawnPointsCofres == null ||
+    //         datosNivelActual.spawnPointsCofres.Length == 0)
+    //         return;
+
+    //     foreach (Vector3 spawnPos in datosNivelActual.spawnPointsCofres)
+    //     {
+    //         Instantiate(prefabCofre, spawnPos, Quaternion.identity);
+    //     }
+
+    //     Debug.Log($"[COFRES] Se generaron {datosNivelActual.spawnPointsCofres.Length} cofres de exploración.");
+    // }
 
     void SpawnearMejoraMenor()
     {

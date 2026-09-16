@@ -243,29 +243,22 @@ public class Stalker : MonoBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
-        Vector3 posicionAtrasPlayer = playerTransform.position - playerTransform.forward * Random.Range(3f, 5f);
-        Vector3 puntoTeleport = posicionAtrasPlayer + Random.insideUnitSphere * 2f;
+        Vector3 puntoTeleportValido;
+        if (CalcularPuntoTeleportValido(out puntoTeleportValido))
+        {
+            agent.Warp(puntoTeleportValido);
 
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(puntoTeleport, out hit, 6.0f, NavMesh.AllAreas))
-        {
-            agent.Warp(hit.position);
-        }
-        else if (NavMesh.SamplePosition(playerTransform.position, out hit, 6.0f, NavMesh.AllAreas))
-        {
-            agent.Warp(hit.position);
-        }
+            Vector3 dirAlJugador = (playerTransform.position - transform.position).normalized;
+            dirAlJugador.y = 0;
+            if (dirAlJugador != Vector3.zero)
+            {
+                transform.rotation = Quaternion.LookRotation(dirAlJugador);
+            }
 
-        Vector3 dirAlJugador = (playerTransform.position - transform.position).normalized;
-        dirAlJugador.y = 0;
-        if (dirAlJugador != Vector3.zero)
-        {
-            transform.rotation = Quaternion.LookRotation(dirAlJugador);
-        }
-
-        if (particulasTeleport != null)
-        {
-            Instantiate(particulasTeleport, transform.position, Quaternion.identity);
+            if (particulasTeleport != null)
+            {
+                Instantiate(particulasTeleport, transform.position, Quaternion.identity);
+            }
         }
 
         teleportTimer = 0f;
@@ -276,6 +269,44 @@ public class Stalker : MonoBehaviour
         estaHaciendoTeleport = false;
         agent.isStopped = false;
         currentState = State.Chase;
+    }
+
+    bool CalcularPuntoTeleportValido(out Vector3 resultado)
+    {
+        resultado = transform.position;
+        if (playerTransform == null) return false;
+
+        float distanciaAtras = Random.Range(3.5f, 5f);
+        Vector3 centroJugador = playerTransform.position + Vector3.up * 0.5f;
+
+        float[] angulosPrueba = new float[] { 180f, 150f, -150f, 120f, -120f, 90f, -90f };
+
+        foreach (float angulo in angulosPrueba)
+        {
+            Vector3 direccionPrueba = Quaternion.Euler(0, angulo, 0) * playerTransform.forward;
+            Vector3 puntoTentativo = playerTransform.position + (direccionPrueba * distanciaAtras);
+
+            if (Physics.Raycast(centroJugador, direccionPrueba, out RaycastHit hitObstaculo, distanciaAtras, capaObstaculosVision))
+            {
+                if (hitObstaculo.distance < 2.2f) continue;
+                puntoTentativo = playerTransform.position + (direccionPrueba * (hitObstaculo.distance - 0.8f));
+            }
+
+            if (NavMesh.SamplePosition(puntoTentativo, out NavMeshHit navHit, 3.0f, NavMesh.AllAreas))
+            {
+                NavMeshHit bloqueoHit;
+                if (!NavMesh.Raycast(playerTransform.position, navHit.position, out bloqueoHit, NavMesh.AllAreas))
+                {
+                    if (!Physics.CheckSphere(navHit.position + Vector3.up * 1f, 0.6f, capaObstaculosVision))
+                    {
+                        resultado = navHit.position;
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false; 
     }
 
     private void OnCollisionEnter(Collision collision)

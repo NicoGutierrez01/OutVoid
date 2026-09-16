@@ -20,21 +20,25 @@ public class Magnet : MonoBehaviour
 
     private readonly List<ItemRecurso> recursosAtraidos = new List<ItemRecurso>();
 
+    // Referencias para ocultar el pickup mientras está activo
+    private MeshRenderer[] renderers;
+    private Collider col;
+
+    private void Awake()
+    {
+        renderers = GetComponentsInChildren<MeshRenderer>();
+        col = GetComponent<Collider>();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"[MAGNET] Trigger detectado con: {other.name} | Tag: {other.tag}");
-
         if (activo)
             return;
 
-        // Buscamos el Player aunque el collider que entre
-        // pertenezca a un hijo del jugador.
-        if (other.CompareTag("Player") || other.GetComponentInParent<Player>() != null)
+        if (other.CompareTag("Player") || other.GetComponentInParent<PlayerCharacter>() != null)
         {
-            jugador = other.GetComponentInParent<Player>()?.transform;
-
-            if (jugador == null)
-                jugador = other.transform;
+            Transform foundPlayer = other.GetComponentInParent<PlayerCharacter>()?.transform;
+            jugador = foundPlayer != null ? foundPlayer : other.transform;
 
             ActivarMagneto();
         }
@@ -45,33 +49,31 @@ public class Magnet : MonoBehaviour
         activo = true;
         tiempoRestante = duracionMagneto;
 
-        Debug.Log("[MAGNET] ¡¡¡MAGNETO ACTIVADO!!!");
+        // Ocultar visualmente y apagar collider para que no se pueda interactuar mientras está activo
+        SetVisuales(false);
 
         BuscarRecursos();
     }
 
     private void Update()
     {
-     
-        transform.Rotate(
-            Vector3.up,
-            velocidadGiro * Time.deltaTime,
-            Space.World
-        );
         if (!activo)
-            return;
-
-        if (jugador == null)
         {
-            Debug.LogWarning("[MAGNET] Se perdió la referencia del jugador.");
+            transform.Rotate(
+                Vector3.up,
+                velocidadGiro * Time.deltaTime,
+                Space.World
+            );
             return;
         }
+
+        if (jugador == null) return;
 
         tiempoRestante -= Time.deltaTime;
 
         if (tiempoRestante <= 0f)
         {
-            DesactivarMagneto();
+            DesactivarYReubicarMagneto();
             return;
         }
 
@@ -81,33 +83,19 @@ public class Magnet : MonoBehaviour
 
     private void BuscarRecursos()
     {
-        ItemRecurso[] recursos = FindObjectsByType<ItemRecurso>(
-            FindObjectsSortMode.None
-        );
+        ItemRecurso[] recursos = FindObjectsByType<ItemRecurso>(FindObjectsSortMode.None);
 
         foreach (ItemRecurso recurso in recursos)
         {
-            if (recurso == null)
+            if (recurso == null || recursosAtraidos.Contains(recurso))
                 continue;
 
-            if (recursosAtraidos.Contains(recurso))
-                continue;
-
-            float distancia = Vector3.Distance(
-                jugador.position,
-                recurso.transform.position
-            );
+            float distancia = Vector3.Distance(jugador.position, recurso.transform.position);
 
             if (distancia <= radioAtraccion)
             {
                 recurso.ActivarAtraccion();
-
-recursosAtraidos.Add(recurso);
-
-Debug.Log(
-    $"[MAGNET] Atrayendo recurso: {recurso.name} | " +
-    $"Distancia: {distancia:F1}m"
-);
+                recursosAtraidos.Add(recurso);
             }
         }
     }
@@ -124,26 +112,13 @@ Debug.Log(
                 continue;
             }
 
-            Vector3 direccion =
-                (jugador.position - recurso.transform.position).normalized;
+            Vector3 direccion = (jugador.position - recurso.transform.position).normalized;
+            float distancia = Vector3.Distance(jugador.position, recurso.transform.position);
+            float factorDistancia = 1f - Mathf.Clamp01(distancia / radioAtraccion);
+            float velocidad = velocidadAtraccion + (velocidadAtraccion * 2f * factorDistancia);
 
-            float distancia = Vector3.Distance(
-                jugador.position,
-                recurso.transform.position
-            );
+            recurso.transform.position += direccion * velocidad * Time.deltaTime;
 
-            float factorDistancia = 1f -
-                Mathf.Clamp01(distancia / radioAtraccion);
-
-            float velocidad =
-                velocidadAtraccion +
-                (velocidadAtraccion * 2f * factorDistancia);
-
-            recurso.transform.position +=
-                direccion * velocidad * Time.deltaTime;
-
-            // Cuando está suficientemente cerca,
-            // lo llevamos al centro del Player.
             if (distancia <= distanciaRecogida)
             {
                 recurso.transform.position = jugador.position;
@@ -151,13 +126,31 @@ Debug.Log(
         }
     }
 
-    private void DesactivarMagneto()
+    private void DesactivarYReubicarMagneto()
     {
         activo = false;
         recursosAtraidos.Clear();
 
-        Debug.Log("[MAGNET] Magneto terminado.");
+        // Obtener nueva posición desde MapManager
+        if (MapManager.Instance != null)
+        {
+            transform.position = MapManager.Instance.ObtenerNuevaPosicionMagneto(transform.position);
+        }
 
-        Destroy(gameObject);
+        // Volver a mostrarlo para que el jugador lo encuentre en su nuevo punto
+        SetVisuales(true);
+    }
+
+    private void SetVisuales(bool visible)
+    {
+        if (col != null) col.enabled = visible;
+
+        if (renderers != null)
+        {
+            foreach (var r in renderers)
+            {
+                if (r != null) r.enabled = visible;
+            }
+        }
     }
 }
