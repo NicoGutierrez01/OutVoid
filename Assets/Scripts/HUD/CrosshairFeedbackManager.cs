@@ -36,38 +36,51 @@ public class CrosshairFeedbackManager : MonoBehaviour
     public enum WarningType { MinusMagazine, LowAmmo, LastMagazine }
     public enum RewardType { Health, Shield, Bullets, Magazine }
 
-    private Coroutine centralCoroutine;
+    private Coroutine hitCoroutine;
+    private Coroutine killCoroutine;
     private Coroutine warningCoroutine;
     private Coroutine rewardCoroutine;
 
     private Vector2 skullPosicionInicial;
     private RectTransform skullRectTransform;
 
-    void Start()
+    void Awake()
     {
-        if (crosshairImage != null) crosshairImage.color = colorDefault;
-        
         if (skullImage != null)
         {
             skullRectTransform = skullImage.rectTransform;
             skullPosicionInicial = skullRectTransform.anchoredPosition;
-            skullImage.gameObject.SetActive(false);
         }
+    }
 
+    void Start()
+    {
+        if (crosshairImage != null) crosshairImage.color = colorDefault;
+        ApagarCalavera();
         ApagarAlertas();
         ApagarRecompensas();
     }
 
+    void OnDisable()
+    {
+        ApagarCalavera();
+        if (crosshairImage != null) crosshairImage.color = colorDefault;
+    }
+
     public void OnTargetHit(bool isHeadshot = false)
     {
-        if (centralCoroutine != null) StopCoroutine(centralCoroutine);
-        centralCoroutine = StartCoroutine(RutinaFeedbackHit(isHeadshot));
+        if (hitCoroutine != null) StopCoroutine(hitCoroutine);
+        hitCoroutine = StartCoroutine(RutinaFeedbackHit(isHeadshot));
     }
 
     public void OnEnemyKill(bool isHeadshot = false)
     {
-        if (centralCoroutine != null) StopCoroutine(centralCoroutine);
-        centralCoroutine = StartCoroutine(RutinaFeedbackKill(isHeadshot));
+        if (killCoroutine != null)
+        {
+            StopCoroutine(killCoroutine);
+            ApagarCalavera();
+        }
+        killCoroutine = StartCoroutine(RutinaFeedbackKill(isHeadshot));
     }
 
     private IEnumerator RutinaFeedbackHit(bool isHeadshot)
@@ -78,6 +91,7 @@ public class CrosshairFeedbackManager : MonoBehaviour
         yield return new WaitForSeconds(centralFeedbackDuration * 0.5f);
 
         if (crosshairImage != null) crosshairImage.color = colorDefault;
+        hitCoroutine = null;
     }
 
     private IEnumerator RutinaFeedbackKill(bool isHeadshot)
@@ -90,6 +104,10 @@ public class CrosshairFeedbackManager : MonoBehaviour
         {
             skullImage.sprite = isHeadshot ? spriteCalaveraHeadshot : spriteCalaveraNormal;
             skullRectTransform.anchoredPosition = skullPosicionInicial;
+            
+            Color cInicial = colorActivo;
+            cInicial.a = 1f;
+            skullImage.color = cInicial;
             skullImage.gameObject.SetActive(true);
 
             Vector2 posicionDestino = skullPosicionInicial + Vector2.down * distanciaCaida;
@@ -98,7 +116,7 @@ public class CrosshairFeedbackManager : MonoBehaviour
             while (tiempoPasado < centralFeedbackDuration)
             {
                 tiempoPasado += Time.deltaTime;
-                float t = tiempoPasado / centralFeedbackDuration;
+                float t = Mathf.Clamp01(tiempoPasado / centralFeedbackDuration);
 
                 skullRectTransform.anchoredPosition = Vector2.Lerp(skullPosicionInicial, posicionDestino, t);
 
@@ -109,8 +127,7 @@ public class CrosshairFeedbackManager : MonoBehaviour
                 yield return null;
             }
 
-            skullImage.gameObject.SetActive(false);
-            skullRectTransform.anchoredPosition = skullPosicionInicial;
+            ApagarCalavera();
         }
         else
         {
@@ -118,6 +135,22 @@ public class CrosshairFeedbackManager : MonoBehaviour
         }
 
         if (crosshairImage != null) crosshairImage.color = colorDefault;
+        killCoroutine = null;
+    }
+
+    private void ApagarCalavera()
+    {
+        if (skullImage != null)
+        {
+            Color c = skullImage.color;
+            c.a = 0f;
+            skullImage.color = c;
+            skullImage.gameObject.SetActive(false);
+        }
+        if (skullRectTransform != null)
+        {
+            skullRectTransform.anchoredPosition = skullPosicionInicial;
+        }
     }
 
     public void ShowWarning(WarningType type)
@@ -135,6 +168,7 @@ public class CrosshairFeedbackManager : MonoBehaviour
         
         yield return new WaitForSeconds(warningDuration);
         ApagarAlertas();
+        warningCoroutine = null;
     }
 
     private void ApagarAlertas()
@@ -160,6 +194,7 @@ public class CrosshairFeedbackManager : MonoBehaviour
         
         yield return new WaitForSeconds(rewardDuration);
         ApagarRecompensas();
+        rewardCoroutine = null;
     }
 
     private void ApagarRecompensas()

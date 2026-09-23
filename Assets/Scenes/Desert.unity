@@ -583,11 +583,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoadingScreenAnimator
   frames:
-  - {fileID: 21300000, guid: 20b7531665cfc154c965e09febb77914, type: 3}
-  - {fileID: 21300000, guid: dfd01db43ee3ba142bd9d85b43a5480c, type: 3}
-  - {fileID: 21300000, guid: 541663c7bc8ec3c4e95f4b26f4ee9331, type: 3}
   - {fileID: 21300000, guid: 128d32252204c1d46a9a4c0db1103484, type: 3}
-  fps: 1
+  - {fileID: 21300000, guid: 541663c7bc8ec3c4e95f4b26f4ee9331, type: 3}
+  - {fileID: 21300000, guid: dfd01db43ee3ba142bd9d85b43a5480c, type: 3}
+  - {fileID: 21300000, guid: 20b7531665cfc154c965e09febb77914, type: 3}
+  fps: 3
 --- !u!114 &1178532965
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -864,7 +864,7 @@ MonoBehaviour:
   datosNivelActual: {fileID: 11400000, guid: e6db02546bfee364bbbe99a923296d42, type: 2}
   objetivoActual: 0
   killsBasePorRonda: 25
-  incrementoKillsPorRonda: 10
+  incrementoKillsPorRonda: 5
   incrementoKillsPorBucle: 5
   enemigosParaJefe: 10
   enemigosMuertosActuales: 0
@@ -875,6 +875,7 @@ MonoBehaviour:
   maxRondas: 4
   retrasoSpawnBoss: 2
   panelCargaEscena: {fileID: 1094834790}
+  tiempoMinimoPantallaCarga: 5
   popupInstrucciones: {fileID: 0}
   popupLapidaInvocada: {fileID: 0}
   prefabCofre: {fileID: 3386048660251865897, guid: 2d35a0b009bae2c40b885964aaee7111, type: 3}
