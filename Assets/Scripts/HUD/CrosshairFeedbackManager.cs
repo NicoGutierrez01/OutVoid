@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class CrosshairFeedbackManager : MonoBehaviour
 {
@@ -20,29 +21,43 @@ public class CrosshairFeedbackManager : MonoBehaviour
     [Tooltip("Distancia en píxeles que desciende el icono mientras desaparece")]
     public float distanciaCaida = 35f;
 
+    [Header("Animación de Popups Laterales (Subida)")]
+    [Tooltip("Distancia en píxeles que ascienden los íconos laterales mientras desaparecen")]
+    public float distanciaSubida = 35f;
+
     [Header("Izquierda - Alertas (Negativo)")]
-    public GameObject iconMinusMagazine;
-    public GameObject iconLowAmmo;
-    public GameObject iconLastMagazine;
-    public float warningDuration = 1.5f;
+    public Image iconMinusMagazine;
+    public Image iconLowAmmo;
+    public float warningDuration = 1.0f;
 
     [Header("Derecha - Recompensas (Positivo)")]
-    public GameObject iconPlusHealth;
-    public GameObject iconPlusShield;
-    public GameObject iconPlusBullets;
-    public GameObject iconPlusMagazine;
-    public float rewardDuration = 1.5f;
+    public Image iconPlusHealth;
+    public Image iconPlusShield;
+    public Image iconPlusBullets;
+    public Image iconPlusMagazine;
+    public float rewardDuration = 1.0f;
 
-    public enum WarningType { MinusMagazine, LowAmmo, LastMagazine }
+    public enum WarningType { MinusMagazine, LowAmmo }
     public enum RewardType { Health, Shield, Bullets, Magazine }
 
     private Coroutine hitCoroutine;
     private Coroutine killCoroutine;
-    private Coroutine warningCoroutine;
-    private Coroutine rewardCoroutine;
 
     private Vector2 skullPosicionInicial;
     private RectTransform skullRectTransform;
+
+    // Manejador por cada popup individual para evitar bugs al activar múltiples
+    private class PopupItem
+    {
+        public Image image;
+        public RectTransform rectTransform;
+        public Vector2 posicionInicial;
+        public Color colorOriginal;
+        public Coroutine corrutinaActiva;
+    }
+
+    private Dictionary<WarningType, PopupItem> itemsAlerta = new Dictionary<WarningType, PopupItem>();
+    private Dictionary<RewardType, PopupItem> itemsRecompensa = new Dictionary<RewardType, PopupItem>();
 
     void Awake()
     {
@@ -51,22 +66,47 @@ public class CrosshairFeedbackManager : MonoBehaviour
             skullRectTransform = skullImage.rectTransform;
             skullPosicionInicial = skullRectTransform.anchoredPosition;
         }
+
+        RegistrarPopup(WarningType.MinusMagazine, iconMinusMagazine, itemsAlerta);
+        RegistrarPopup(WarningType.LowAmmo, iconLowAmmo, itemsAlerta);
+
+        RegistrarPopup(RewardType.Health, iconPlusHealth, itemsRecompensa);
+        RegistrarPopup(RewardType.Shield, iconPlusShield, itemsRecompensa);
+        RegistrarPopup(RewardType.Bullets, iconPlusBullets, itemsRecompensa);
+        RegistrarPopup(RewardType.Magazine, iconPlusMagazine, itemsRecompensa);
+    }
+
+    private void RegistrarPopup<TKey>(TKey key, Image img, Dictionary<TKey, PopupItem> dict)
+    {
+        if (img == null) return;
+
+        PopupItem item = new PopupItem
+        {
+            image = img,
+            rectTransform = img.rectTransform,
+            posicionInicial = img.rectTransform.anchoredPosition,
+            colorOriginal = img.color,
+            corrutinaActiva = null
+        };
+
+        dict[key] = item;
     }
 
     void Start()
     {
         if (crosshairImage != null) crosshairImage.color = colorDefault;
         ApagarCalavera();
-        ApagarAlertas();
-        ApagarRecompensas();
+        ApagarTodosLosPopups();
     }
 
     void OnDisable()
     {
         ApagarCalavera();
+        ApagarTodosLosPopups();
         if (crosshairImage != null) crosshairImage.color = colorDefault;
     }
 
+    #region Mira y Calavera (Kill / Hit)
     public void OnTargetHit(bool isHeadshot = false)
     {
         if (hitCoroutine != null) StopCoroutine(hitCoroutine);
@@ -152,56 +192,85 @@ public class CrosshairFeedbackManager : MonoBehaviour
             skullRectTransform.anchoredPosition = skullPosicionInicial;
         }
     }
+    #endregion
 
+    #region Popups Flotantes (Ascenso y Fade Out)
     public void ShowWarning(WarningType type)
     {
-        if (warningCoroutine != null) StopCoroutine(warningCoroutine);
-        warningCoroutine = StartCoroutine(RutinaWarning(type));
-    }
-
-    private IEnumerator RutinaWarning(WarningType type)
-    {
-        ApagarAlertas();
-        if (type == WarningType.MinusMagazine && iconMinusMagazine != null) iconMinusMagazine.SetActive(true);
-        else if (type == WarningType.LowAmmo && iconLowAmmo != null) iconLowAmmo.SetActive(true);
-        else if (type == WarningType.LastMagazine && iconLastMagazine != null) iconLastMagazine.SetActive(true);
-        
-        yield return new WaitForSeconds(warningDuration);
-        ApagarAlertas();
-        warningCoroutine = null;
-    }
-
-    private void ApagarAlertas()
-    {
-        if (iconMinusMagazine != null) iconMinusMagazine.SetActive(false);
-        if (iconLowAmmo != null) iconLowAmmo.SetActive(false);
-        if (iconLastMagazine != null) iconLastMagazine.SetActive(false);
+        if (itemsAlerta.TryGetValue(type, out PopupItem item))
+        {
+            LanzarAnimacionPopup(item, warningDuration);
+        }
     }
 
     public void ShowReward(RewardType type)
     {
-        if (rewardCoroutine != null) StopCoroutine(rewardCoroutine);
-        rewardCoroutine = StartCoroutine(RutinaReward(type));
+        if (itemsRecompensa.TryGetValue(type, out PopupItem item))
+        {
+            LanzarAnimacionPopup(item, rewardDuration);
+        }
     }
 
-    private IEnumerator RutinaReward(RewardType type)
+    private void LanzarAnimacionPopup(PopupItem item, float duracion)
     {
-        ApagarRecompensas();
-        if (type == RewardType.Health && iconPlusHealth != null) iconPlusHealth.SetActive(true);
-        else if (type == RewardType.Shield && iconPlusShield != null) iconPlusShield.SetActive(true);
-        else if (type == RewardType.Bullets && iconPlusBullets != null) iconPlusBullets.SetActive(true);
-        else if (type == RewardType.Magazine && iconPlusMagazine != null) iconPlusMagazine.SetActive(true);
-        
-        yield return new WaitForSeconds(rewardDuration);
-        ApagarRecompensas();
-        rewardCoroutine = null;
+        if (item.corrutinaActiva != null)
+        {
+            StopCoroutine(item.corrutinaActiva);
+        }
+        item.corrutinaActiva = StartCoroutine(RutinaFlotacionAscendente(item, duracion));
     }
 
-    private void ApagarRecompensas()
+    private IEnumerator RutinaFlotacionAscendente(PopupItem item, float duracion)
     {
-        if (iconPlusHealth != null) iconPlusHealth.SetActive(false);
-        if (iconPlusShield != null) iconPlusShield.SetActive(false);
-        if (iconPlusBullets != null) iconPlusBullets.SetActive(false);
-        if (iconPlusMagazine != null) iconPlusMagazine.SetActive(false);
+        // 1. Restaurar posición base y opacidad completa
+        item.rectTransform.anchoredPosition = item.posicionInicial;
+        Color c = item.colorOriginal;
+        c.a = 1f;
+        item.image.color = c;
+        item.image.gameObject.SetActive(true);
+
+        // 2. Destino hacia ARRIBA
+        Vector2 posicionDestino = item.posicionInicial + Vector2.up * distanciaSubida;
+        float tiempoPasado = 0f;
+
+        while (tiempoPasado < duracion)
+        {
+            tiempoPasado += Time.deltaTime;
+            float t = Mathf.Clamp01(tiempoPasado / duracion);
+
+            item.rectTransform.anchoredPosition = Vector2.Lerp(item.posicionInicial, posicionDestino, t);
+
+            c.a = Mathf.Lerp(1f, 0f, t);
+            item.image.color = c;
+
+            yield return null;
+        }
+
+        // 3. Apagado y reseteo definitivo
+        item.image.gameObject.SetActive(false);
+        item.rectTransform.anchoredPosition = item.posicionInicial;
+        c.a = 0f;
+        item.image.color = c;
+        item.corrutinaActiva = null;
     }
+
+    private void ApagarTodosLosPopups()
+    {
+        foreach (var item in itemsAlerta.Values)
+        {
+            if (item.corrutinaActiva != null) StopCoroutine(item.corrutinaActiva);
+            item.corrutinaActiva = null;
+            item.image.gameObject.SetActive(false);
+            item.rectTransform.anchoredPosition = item.posicionInicial;
+        }
+
+        foreach (var item in itemsRecompensa.Values)
+        {
+            if (item.corrutinaActiva != null) StopCoroutine(item.corrutinaActiva);
+            item.corrutinaActiva = null;
+            item.image.gameObject.SetActive(false);
+            item.rectTransform.anchoredPosition = item.posicionInicial;
+        }
+    }
+    #endregion
 }
