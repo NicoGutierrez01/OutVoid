@@ -28,6 +28,7 @@ public float fuerzaKnockback = 5f;
     public GameObject prefabDropVida;
     public GameObject prefabDropEscudo;
     public GameObject prefabDropBalas;
+    public GameObject prefabDropExperiencia;
 
     [Header("Efecto de Explosión al Morir")]
     public GameObject prefabParticulasMuerte; 
@@ -262,12 +263,24 @@ if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo 
             weaponScript.ReembolsarBala();
         }
 
+        // --- 1. DROP DE EXPERIENCIA (Garantizado o ajustable) ---
+        if (prefabDropExperiencia != null)
+        {
+            Vector3 posicionSpawnXP = transform.position;
+            RaycastHit hitXP;
+            if (Physics.Raycast(transform.position, Vector3.down, out hitXP, 500f))
+                posicionSpawnXP = hitXP.point + Vector3.up * 0.5f;
+
+            Instantiate(prefabDropExperiencia, posicionSpawnXP + new Vector3(Random.Range(-0.3f, 0.3f), 0, Random.Range(-0.3f, 0.3f)), Quaternion.identity);
+        }
+
+        // --- 2. DROP DE RECURSOS (Vida, Escudo, Balas sin solaparse con la XP) ---
         if (Random.value * 100 <= probabilidadDrop)
         {
-            Vector3 posicionSpawn = transform.position;
-            RaycastHit hit;
-            if (Physics.Raycast(transform.position, Vector3.down, out hit, 500f))
-                posicionSpawn = hit.point + Vector3.up * 0.5f; 
+            Vector3 posicionSpawnRecurso = transform.position;
+            RaycastHit hitRecurso;
+            if (Physics.Raycast(transform.position, Vector3.down, out hitRecurso, 500f))
+                posicionSpawnRecurso = hitRecurso.point + Vector3.up * 0.5f;
 
             float dropRoll = Random.Range(1, 101);
             GameObject recursoAElegir = null;
@@ -296,7 +309,10 @@ if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo 
                 else recursoAElegir = prefabDropVida;
             }
 
-            if (recursoAElegir != null) Instantiate(recursoAElegir, posicionSpawn, Quaternion.identity);
+            if (recursoAElegir != null) 
+            {
+                Instantiate(recursoAElegir, posicionSpawnRecurso + new Vector3(Random.Range(-0.3f, 0.3f), 0, Random.Range(-0.3f, 0.3f)), Quaternion.identity);
+            }
         }
 
         try

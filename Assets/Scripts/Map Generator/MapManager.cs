@@ -71,9 +71,15 @@ public class MapManager : MonoBehaviour
     #endregion
 
     #region Ciclo de Vida
-    void Awake()
+   void Awake()
     {
         Instance = this;
+
+        // --- NUEVO: Añade automáticamente el ExperienceManager si no lo tiene ---
+        if (GetComponent<ExperienceManager>() == null)
+        {
+            gameObject.AddComponent<ExperienceManager>();
+        }
 
         if (!SceneManager.GetSceneByName("UIScene").isLoaded)
         {
