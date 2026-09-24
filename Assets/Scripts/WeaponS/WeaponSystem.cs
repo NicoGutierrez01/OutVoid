@@ -177,21 +177,21 @@ public class WeaponSystem : MonoBehaviour
 
         MusicManager.Instance.PlayShoot();
 
+        Transform origenTracer = null;
+
         if (isUltActive && gunAnimIzquierda != null)
         {
             if (dispararDerecha)
             {
                 EjecutarAnimacion(gunAnim, "Shoot");
-
-                if (muzzleFlash != null)
-                    muzzleFlash.Play();
+                if (muzzleFlash != null) muzzleFlash.Play();
+                if (muzzleFlash != null) origenTracer = muzzleFlash.transform;
             }
             else
             {
                 EjecutarAnimacion(gunAnimIzquierda, "Shoot");
-
-                if (muzzleFlashIzquierda != null)
-                    muzzleFlashIzquierda.Play();
+                if (muzzleFlashIzquierda != null) muzzleFlashIzquierda.Play();
+                if (muzzleFlashIzquierda != null) origenTracer = muzzleFlashIzquierda.transform;
             }
 
             dispararDerecha = !dispararDerecha;
@@ -199,38 +199,16 @@ public class WeaponSystem : MonoBehaviour
         else
         {
             EjecutarAnimacion(gunAnim, "Shoot");
-
-            if (muzzleFlash != null)
-                muzzleFlash.Play();
+            if (muzzleFlash != null) muzzleFlash.Play();
+            if (muzzleFlash != null) origenTracer = muzzleFlash.transform;
         }
 
-        if (cam == null)
-            return;
-
-        Transform origenTracer = null;
-
-        if (isUltActive && gunAnimIzquierda != null)
-        {
-            if (dispararDerecha && muzzleFlash != null)
-            {
-                origenTracer = muzzleFlash.transform;
-            }
-            else if (!dispararDerecha && muzzleFlashIzquierda != null)
-            {
-                origenTracer = muzzleFlashIzquierda.transform;
-            }
-        }
-        else if (muzzleFlash != null)
-        {
-            origenTracer = muzzleFlash.transform;
-        }
+        if (cam == null) return;
 
         Vector3[] direcciones;
-
         if (disparoTriple)
         {
             direcciones = new Vector3[3];
-
             direcciones[0] = cam.forward;
             direcciones[1] = Quaternion.AngleAxis(-anguloDisparoTriple, cam.up) * cam.forward;
             direcciones[2] = Quaternion.AngleAxis(anguloDisparoTriple, cam.up) * cam.forward;
@@ -243,11 +221,7 @@ public class WeaponSystem : MonoBehaviour
 
         foreach (Vector3 direccion in direcciones)
         {
-            ProcesarDisparo(
-                cam.position,
-                direccion,
-                origenTracer
-            );
+            ProcesarDisparo(cam.position, direccion, origenTracer);
         }
 
         if (balasActuales <= 0 && !isUltActive && balasReserva > 0)
@@ -292,11 +266,7 @@ public class WeaponSystem : MonoBehaviour
         BuscarCrosshairFeedback();
         if (crosshairFeedback != null && balasARecargar > 0)
         {
-            if (balasReserva == 0) 
-            {
-                crosshairFeedback.ShowWarning(CrosshairFeedbackManager.WarningType.LastMagazine);
-            }
-            else if (balasReserva <= limitePocasBalas) 
+            if (balasReserva <= limitePocasBalas) 
             {
                 crosshairFeedback.ShowWarning(CrosshairFeedbackManager.WarningType.LowAmmo);
             }
@@ -549,7 +519,7 @@ public class WeaponSystem : MonoBehaviour
         }
         else
         {
-            // Mantener compatibilidad si el Boss 1 todavía usa el Boss.cs viejo
+
             Boss oldBoss = hit.collider.GetComponentInParent<Boss>();
             if (oldBoss != null)
             {

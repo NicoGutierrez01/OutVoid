@@ -52,6 +52,8 @@ public class MapManager : MonoBehaviour
 
     [Header("UI y Pantallas de Carga")]
     public GameObject panelCargaEscena;
+    [Tooltip("Tiempo mínimo en segundos que se mantendrá visible la pantalla de carga para ver la animación")]
+    public float tiempoMinimoPantallaCarga = 5f; 
     public GameObject popupInstrucciones;
     public GameObject popupLapidaInvocada;
 
@@ -137,6 +139,8 @@ public class MapManager : MonoBehaviour
     System.Collections.IEnumerator SecuenciaDeGeneracionAsincrona()
     {
         if (panelCargaEscena != null) panelCargaEscena.SetActive(true);
+        float tiempoInicioCarga = Time.realtimeSinceStartup;
+
         yield return null;
         yield return new WaitForSecondsRealtime(0.2f);
 
@@ -171,7 +175,13 @@ public class MapManager : MonoBehaviour
             yield return null;
         }
 
-        yield return new WaitForSecondsRealtime(0.4f);
+        float tiempoTranscurrido = Time.realtimeSinceStartup - tiempoInicioCarga;
+        float tiempoRestante = tiempoMinimoPantallaCarga - tiempoTranscurrido;
+
+        if (tiempoRestante > 0f)
+        {
+            yield return new WaitForSecondsRealtime(tiempoRestante);
+        }
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(false);
         if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));

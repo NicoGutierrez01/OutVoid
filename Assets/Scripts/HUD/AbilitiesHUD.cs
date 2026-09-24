@@ -16,10 +16,23 @@ public class AbilitiesHUD : MonoBehaviour
         public TextMeshProUGUI txtCooldown; 
     }
 
+    [Serializable]
+    public struct UltiUI
+    {
+        [Tooltip("Objeto que se muestra cuando la ulti está lista (On)")]
+        public GameObject objetoOn;
+        [Tooltip("Objeto que se muestra durante cooldown (Off)")]
+        public GameObject objetoOff;
+        [Tooltip("Texto en el medio para el porcentaje")]
+        public TextMeshProUGUI txtPorcentaje;
+        [Tooltip("Tiempo base de recarga de la ulti")]
+        public float cooldownTotalBase;
+    }
+
     [Header("Configuración de Slots")]
     public HabilidadUI UI_Dash;
     public HabilidadUI UI_Bomba;
-    public HabilidadUI UI_Ulti;
+    public UltiUI UI_Ulti;
 
     void Update()
     {
@@ -33,7 +46,8 @@ public class AbilitiesHUD : MonoBehaviour
 
         ActualizarSlot(playerAbilities.canDash, playerAbilities.dashCooldownTimer, UI_Dash);
         ActualizarSlot(playerAbilities.canUseE, playerAbilities.dynamiteCooldownTimer, UI_Bomba);
-        ActualizarSlot(playerAbilities.canUseQ, playerAbilities.ultCooldownTimer, UI_Ulti);
+
+        ActualizarUlti(playerAbilities.canUseQ, playerAbilities.ultCooldownTimer, UI_Ulti);
     }
 
     void ActualizarSlot(bool listo, float tiempoRestante, HabilidadUI ui)
@@ -58,6 +72,40 @@ public class AbilitiesHUD : MonoBehaviour
             if (ui.txtCooldown != null)
             {
                 ui.txtCooldown.text = Mathf.CeilToInt(tiempoRestante).ToString();
+            }
+        }
+    }
+
+    void ActualizarUlti(bool listo, float tiempoRestante, UltiUI ui)
+    {
+        if (ui.objetoOn == null || ui.objetoOff == null) return;
+
+        if (listo || tiempoRestante <= 0f)
+        {
+            ui.objetoOn.SetActive(true);
+            ui.objetoOff.SetActive(false);
+
+            if (ui.txtPorcentaje != null)
+            {
+                ui.txtPorcentaje.text = "";
+            }
+        }
+        else
+        {
+            ui.objetoOn.SetActive(false);
+            ui.objetoOff.SetActive(true);
+
+            if (ui.txtPorcentaje != null)
+            {
+                if (ui.cooldownTotalBase > 0f)
+                {
+                    float progreso = Mathf.Clamp01(1f - (tiempoRestante / ui.cooldownTotalBase));
+                    ui.txtPorcentaje.text = $"{Mathf.FloorToInt(progreso * 100f)}";
+                }
+                else
+                {
+                    ui.txtPorcentaje.text = $"{Mathf.CeilToInt(tiempoRestante)}s";
+                }
             }
         }
     }

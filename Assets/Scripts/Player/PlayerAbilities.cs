@@ -49,6 +49,9 @@ public class PlayerAbilities : MonoBehaviour
     public float dashDuration = 4f;
     [Tooltip("Por cuánto se multiplica tu velocidad actual. 2 = el doble de rápido.")]
     public float ghostSpeedMultiplier = 1.3f;
+    [Tooltip("Objeto visual del brazo/arma derecha que se oculta durante el dash")]
+    public GameObject brazoDerechoVisual; 
+    public GameObject brazoIzquierdoVisual;
 
     [Header("Configuración Akimbo (Q)")]
     [Tooltip("Arrastrá acá el GameObject completo de la mano izquierda de tu compañero")]
@@ -71,6 +74,11 @@ public class PlayerAbilities : MonoBehaviour
 
         if (cam == null) cam = Camera.main.transform;
 
+        if (brazoDerechoVisual == null && weaponScript != null)
+        {
+            brazoDerechoVisual = weaponScript.gameObject;
+        }
+
         if (AdministradorDeProgreso.Instancia != null)
         {
             dashCooldown *= AdministradorDeProgreso.Instancia.multiplicadorDashCooldown;
@@ -89,7 +97,7 @@ public class PlayerAbilities : MonoBehaviour
         if (input.AbilityE && canUseE) StartCoroutine(UseDynamite());
         if (input.Ultimate && canUseQ && !isUltActive) StartCoroutine(HandleUltimate());
         if (input.Dash && canDash) StartCoroutine(GhostDash());
-        if (input.Melee && canMelee) StartCoroutine(UseMelee());
+        if (input.Melee && canMelee && !isUltActive) StartCoroutine(UseMelee());
     }
 
     IEnumerator UseDynamite()
@@ -192,6 +200,9 @@ public class PlayerAbilities : MonoBehaviour
         moveScript.isGhostMode = true;
         if (weaponScript != null) weaponScript.enabled = false;
 
+        if (brazoDerechoVisual != null) brazoDerechoVisual.SetActive(false);
+        if (brazoIzquierdoVisual != null) brazoIzquierdoVisual.SetActive(false);
+
         if (playerCharacter != null)
         {
             float velocidadNormal = playerCharacter.walkSpeed;
@@ -207,6 +218,9 @@ public class PlayerAbilities : MonoBehaviour
             yield return new WaitForSeconds(dashDuration);
             if (playerCamera != null) playerCamera.ResetFOV();
         }
+
+        if (brazoDerechoVisual != null) brazoDerechoVisual.SetActive(true);
+        if (brazoIzquierdoVisual != null) brazoIzquierdoVisual.SetActive(true);
 
         moveScript.isGhostMode = false;
         if (weaponScript != null) weaponScript.enabled = true;
