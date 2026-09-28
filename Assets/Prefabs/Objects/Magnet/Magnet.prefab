@@ -10,11 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 44a77faf332a2464c8e2e1cc858a218b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.5
+      value: 0.75753003
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 44a77faf332a2464c8e2e1cc858a218b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.5
+      value: 0.75753003
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44a77faf332a2464c8e2e1cc858a218b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.50502
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 44a77faf332a2464c8e2e1cc858a218b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -93,6 +97,7 @@ MonoBehaviour:
   aceleracion: 30
   distanciaRecogida: 1.2
   duracionMagneto: 3
+  velocidadGiro: 90
 --- !u!65 &8688763974488296977
 BoxCollider:
   m_ObjectHideFlags: 0
