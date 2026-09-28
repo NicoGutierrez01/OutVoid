@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b39d7b29f4c39444dba54c13bef3d3ea, type: 3}
   m_Name: Nivel_Desert
   m_EditorClassIdentifier: Assembly-CSharp::DatosDeNivel
-  mapaPrefab: {fileID: 7914907432012892536, guid: 30228d338501f9b4797a031dc9f16c39, type: 3}
+  mapaPrefab: {fileID: 2493762281671024757, guid: e320356df2092d3478d6883d1fbee784, type: 3}
   capaSuelo:
     serializedVersion: 2
     m_Bits: 8
