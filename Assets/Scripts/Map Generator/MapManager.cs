@@ -283,7 +283,7 @@ public class MapManager : MonoBehaviour
     {
         if (poolPrefabs == null || poolPrefabs.Count == 0) return;
 
-        GameObject objetoSuelo = GameObject.Find("Ground_Baked.001");
+        GameObject objetoSuelo = GameObject.Find("Floor");
         if (objetoSuelo == null) return;
 
         MeshCollider sueloCollider = objetoSuelo.GetComponent<MeshCollider>();
@@ -304,7 +304,7 @@ public class MapManager : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(origenRaycast, Vector3.down, out hit, 150f))
             {
-                if (hit.collider.name == "Ground_Baked.001")
+                if (hit.collider.name == "Floor")
                 {
                     GameObject prefabElegido = poolPrefabs[Random.Range(0, poolPrefabs.Count)];
                     Vector3 rotacionOriginal = prefabElegido.transform.rotation.eulerAngles;
