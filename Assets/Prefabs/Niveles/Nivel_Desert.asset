@@ -53,13 +53,22 @@ MonoBehaviour:
   - {x: -66.2, y: -14.26, z: 18.2}
   - {x: -65.98, y: -14.032, z: 51.28}
   - {x: 24.6, y: -14.726, z: -60.4}
-  spawnPointsCofres: []
   prefabsDecoracionPrincipal:
   - {fileID: 6554328710291321494, guid: d35a37cd401117046937e655b7069cc6, type: 3}
   - {fileID: 6963621031325828773, guid: 878eca668dbce0e42a685d5f023f9d55, type: 3}
   cantidadDecoracionPrincipal: 15
   zonaDefensaPrefab: {fileID: 0}
   spawnPointsZonas: []
+  portalSiguienteNivelPrefab: {fileID: 3505483735853972175, guid: 2c79998a3fde87848a48f23dbc106470, type: 3}
+  spawnPointsPortalSiguienteNivel:
+  - {x: -65.99, y: -10.31, z: -10.22}
+  - {x: 9.33, y: -8.53, z: -49.92}
+  altarPrefab: {fileID: 4155036918023908458, guid: 479fb2d514b451c48a4094e97a18505b, type: 3}
+  spawnPointsAltar:
+  - {x: 24.76, y: -14.15, z: 40.88}
+  - {x: 38.98, y: -15.36, z: 15.93}
+  - {x: -31.28, y: -15.53, z: -56.67}
+  - {x: -114.11, y: -15.62, z: -19.78}
   prefabsDecoracionSecundaria:
   - {fileID: 8775978792791231413, guid: 7ffe4924f6901284ab1d3dcedea29c39, type: 3}
   - {fileID: 1687128777873670659, guid: 08ea27e48771e95409b53b44c1e73e05, type: 3}

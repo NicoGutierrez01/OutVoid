@@ -69,9 +69,30 @@ public AudioClip melee;
         EvaluateScene(SceneManager.GetActiveScene().name);
     }
 
+    public void PlayGameplayMusic()
+    {
+        ApplyMusic("Gameplay", gameplayMusic);
+    }
+
+    public void StopMusic()
+    {
+        if (audioSource != null)
+        {
+            audioSource.Stop();
+            currentState = "";
+        }
+    }
+
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        EvaluateScene(scene.name);
+        if (scene.name.Contains("Menu") || scene.name.Contains("GameOver"))
+        {
+            EvaluateScene(scene.name);
+        }
+        else
+        {
+            StopMusic();
+        }
     }
 
     public void EvaluateScene(string sceneName)

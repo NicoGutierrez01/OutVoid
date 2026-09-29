@@ -42,8 +42,7 @@ public class Boss : MonoBehaviour
     private float timerAtaque;
     private float timerSpawn;
     
-    private Slider bossHealthBarGlobal;
-    private TextMeshProUGUI textoVidaBoss; 
+    private int slotBarraAsignado = 0;
     private bool isDead = false;
 
     void Awake() 
@@ -55,7 +54,10 @@ public class Boss : MonoBehaviour
     {
         maxHealth = maxHealth + ((MapManager.nivelBucle - 1) * 1300f);
         currentHealth = maxHealth;
+        
+        if (MusicManager.Instance != null)
             MusicManager.Instance.PlayBossMusic();
+
         posicionInicial = transform.position;
         
         GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -65,28 +67,10 @@ public class Boss : MonoBehaviour
 
         if (bossRenderer != null) originalColor = bossRenderer.sharedMaterial.color;
 
-        Slider[] todosLosSliders = Resources.FindObjectsOfTypeAll<Slider>();
-        
-        foreach (Slider s in todosLosSliders)
+        // Registro con el nuevo sistema de 3 barras
+        if (BossHealthUIManager.Instance != null)
         {
-            if (s.name == "BossHealthBar" && s.gameObject.scene.isLoaded)
-            {
-                bossHealthBarGlobal = s;
-                bossHealthBarGlobal.maxValue = maxHealth;
-                bossHealthBarGlobal.value = currentHealth;
-                
-                bossHealthBarGlobal.gameObject.SetActive(true); 
-                
-                textoVidaBoss = bossHealthBarGlobal.GetComponentInChildren<TextMeshProUGUI>();
-                ActualizarTextoVida();
-
-                break;
-            }
-        }
-
-        if (bossHealthBarGlobal == null)
-        {
-            Debug.LogError("No se encontró el BossHealthBar deshabilitado. Verificá que el nombre sea exacto.");
+            BossHealthUIManager.Instance.RegistrarBoss(maxHealth, out slotBarraAsignado);
         }
     }
 
@@ -164,23 +148,13 @@ public class Boss : MonoBehaviour
 
         currentHealth -= amount;
         
-        if (bossHealthBarGlobal != null)
-            bossHealthBarGlobal.value = currentHealth;
-
-        ActualizarTextoVida();
+        if (BossHealthUIManager.Instance != null)
+        {
+            BossHealthUIManager.Instance.ActualizarVidaBoss(slotBarraAsignado, currentHealth, maxHealth);
+        }
 
         if (bossRenderer != null && gameObject.activeInHierarchy) StartCoroutine(FlashRed());
         if (currentHealth <= 0) Die();
-    }
-
-    void ActualizarTextoVida()
-    {
-        if (textoVidaBoss != null)
-        {
-            int vidaActualMostrada = Mathf.Max(0, Mathf.CeilToInt(currentHealth));
-            int vidaMaximaMostrada = Mathf.CeilToInt(maxHealth);
-            textoVidaBoss.text = vidaActualMostrada.ToString() + " / " + vidaMaximaMostrada.ToString();
-        }
     }
 
     public void Quemar() { StartCoroutine(EfectoFuego()); }
@@ -216,9 +190,11 @@ public class Boss : MonoBehaviour
     {
         isDead = true;
         this.enabled = false; 
-        MusicManager.Instance.StopBossMusic();
 
-        if (bossHealthBarGlobal != null) bossHealthBarGlobal.gameObject.SetActive(false);
+        if (BossHealthUIManager.Instance != null)
+        {
+            BossHealthUIManager.Instance.DesactivarBarraBoss(slotBarraAsignado);
+        }
 
         if (anim != null) anim.SetTrigger("Dead");
 
@@ -240,20 +216,12 @@ public class Boss : MonoBehaviour
         BossLootSpawner lootSpawner = GetComponent<BossLootSpawner>();
         if (lootSpawner != null)
         {
-            Debug.Log("Spawneando las 3 mejoras del Boss en el mapa.");
             lootSpawner.SpawnearRecompensas();
         }
-        else
-        {
-            if (MapManager.Instance != null)
-            {
-                MapManager.Instance.AvanzarSiguienteNivel();
-            }
-        }
 
-        if (MapManager.Instance == null)
+        if (MapManager.Instance != null)
         {
-            AnalyticsBridge.EnviarLevelComplete(MapManager.nivelBucle, 4);
+            MapManager.Instance.RegistrarMuerteBoss();
         }
 
         Destroy(gameObject);

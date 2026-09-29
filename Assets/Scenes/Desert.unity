@@ -863,8 +863,8 @@ MonoBehaviour:
   - Forest
   datosNivelActual: {fileID: 11400000, guid: e6db02546bfee364bbbe99a923296d42, type: 2}
   objetivoActual: 0
-  killsBasePorRonda: 25
-  incrementoKillsPorRonda: 5
+  killsBasePorRonda: 1
+  incrementoKillsPorRonda: 0
   incrementoKillsPorBucle: 5
   enemigosParaJefe: 10
   enemigosMuertosActuales: 0
@@ -874,11 +874,14 @@ MonoBehaviour:
   rondaActual: 1
   maxRondas: 4
   retrasoSpawnBoss: 2
+  retoDobleBossActivo: 0
   panelCargaEscena: {fileID: 1094834790}
   tiempoMinimoPantallaCarga: 5
   popupInstrucciones: {fileID: 0}
   popupLapidaInvocada: {fileID: 0}
   prefabCofre: {fileID: 3386048660251865897, guid: 2d35a0b009bae2c40b885964aaee7111, type: 3}
+  bossesVivos: 0
+  radioExclusionDecoracion: 4
 --- !u!4 &1479725374
 Transform:
   m_ObjectHideFlags: 0

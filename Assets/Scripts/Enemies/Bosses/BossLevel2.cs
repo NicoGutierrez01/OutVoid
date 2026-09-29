@@ -12,7 +12,7 @@ public class BossLevel2 : MonoBehaviour
     [SerializeField] private LineRenderer laserLine;
 
     [Header("Secuencia de Salida del Portal")]
-    [SerializeField] private float exitPortalDistance = 4.5f; // Metros que avanza al salir
+    [SerializeField] private float exitPortalDistance = 4.5f; 
     [SerializeField] private float exitPortalSpeed = 3.0f;
 
     [Header("Combate Melee")]
@@ -30,7 +30,7 @@ public class BossLevel2 : MonoBehaviour
     [SerializeField] private LayerMask hitLayers;
 
     private NavMeshAgent agent;
-    private bool isBusy = true; // Arranca en true para bloquear combate mientras sale del portal
+    private bool isBusy = true;
     private float nextMeleeTime = 0f;
     private float nextLaserTime = 0f;
 
@@ -55,7 +55,6 @@ public class BossLevel2 : MonoBehaviour
 
         nextLaserTime = Time.time + 5f;
 
-        // Inicia la caminata saliendo del portal
         StartCoroutine(ExitPortalRoutine());
     }
 
@@ -65,10 +64,8 @@ public class BossLevel2 : MonoBehaviour
         agent.isStopped = false;
         agent.speed = exitPortalSpeed;
 
-        // Punto unos metros hacia adelante según hacia dónde mira el portal/boss al nacer
         Vector3 targetExit = transform.position + (transform.forward * exitPortalDistance);
 
-        // Si el punto cae sobre el NavMesh, fijamos destino
         if (NavMesh.SamplePosition(targetExit, out NavMeshHit hit, 3.0f, NavMesh.AllAreas))
         {
             agent.SetDestination(hit.position);
@@ -78,7 +75,6 @@ public class BossLevel2 : MonoBehaviour
             agent.SetDestination(targetExit);
         }
 
-        // Camina hacia adelante hasta acercarse al punto o pasar 2.5 segundos
         float timer = 0f;
         while (timer < 2.5f && Vector3.Distance(transform.position, targetExit) > 0.8f)
         {
@@ -87,7 +83,6 @@ public class BossLevel2 : MonoBehaviour
             yield return null;
         }
 
-        // Habilita el combate normal
         isBusy = false;
     }
 
