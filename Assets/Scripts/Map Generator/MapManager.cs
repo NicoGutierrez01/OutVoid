@@ -586,10 +586,13 @@ public class MapManager : MonoBehaviour
             int randomIndex = Random.Range(0, datosNivelActual.spawnPointsPortalSiguienteNivel.Length);
             spawnPos = datosNivelActual.spawnPointsPortalSiguienteNivel[randomIndex];
         }
-        Quaternion rotacionPrefab = datosNivelActual.portalSiguienteNivelPrefab.transform.rotation;
 
-        Instantiate(datosNivelActual.portalSiguienteNivelPrefab, spawnPos, rotacionPrefab);
-        Debug.Log($"[MAP MANAGER] Portal de salida abierto en coordenada del cartucho: {spawnPos}");
+        Vector3 posElevada = spawnPos + Vector3.up * 1.5f;
+
+        Quaternion rotVertical = Quaternion.Euler(0f, 0f, 0f);
+
+        Instantiate(datosNivelActual.portalSiguienteNivelPrefab, posElevada, rotVertical);
+        Debug.Log($"[MAP MANAGER] Portal de salida abierto verticalmente en: {posElevada}");
     }
 
     void SpawnearAltar()
