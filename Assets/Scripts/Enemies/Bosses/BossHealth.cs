@@ -20,8 +20,7 @@ public class BossHealth : MonoBehaviour
     [SerializeField] private GameObject prefabExplosionFinal;
     [SerializeField] private float tiempoAnimacionMuerte = 2.5f;
 
-    private Slider bossHealthBarGlobal;
-    private TextMeshProUGUI textoVidaBoss;
+    private int slotBarraAsignado = 0;
     public bool isDead { get; private set; } = false;
 
     private void Awake()
@@ -44,21 +43,9 @@ public class BossHealth : MonoBehaviour
         if (bossRenderer != null && bossRenderer.sharedMaterial != null)
             originalColor = bossRenderer.sharedMaterial.color;
 
-        // Búsqueda del slider deshabilitado en UIScene
-        Slider[] todosLosSliders = Resources.FindObjectsOfTypeAll<Slider>();
-        foreach (Slider s in todosLosSliders)
+        if (BossHealthUIManager.Instance != null)
         {
-            if (s.name == "BossHealthBar" && s.gameObject.scene.isLoaded)
-            {
-                bossHealthBarGlobal = s;
-                bossHealthBarGlobal.maxValue = maxHealth;
-                bossHealthBarGlobal.value = currentHealth;
-                bossHealthBarGlobal.gameObject.SetActive(true);
-
-                textoVidaBoss = bossHealthBarGlobal.GetComponentInChildren<TextMeshProUGUI>();
-                ActualizarTextoVida();
-                break;
-            }
+            BossHealthUIManager.Instance.RegistrarBoss(maxHealth, out slotBarraAsignado);
         }
     }
 
@@ -67,12 +54,10 @@ public class BossHealth : MonoBehaviour
         if (isDead) return;
 
         currentHealth -= amount;
-        Debug.Log($"[BOSS DAMAGE] Daño recibido: {amount} | Vida restante real: {currentHealth}");
-
-        if (bossHealthBarGlobal != null)
-            bossHealthBarGlobal.value = currentHealth;
-
-        ActualizarTextoVida();
+        if (BossHealthUIManager.Instance != null)
+        {
+            BossHealthUIManager.Instance.ActualizarVidaBoss(slotBarraAsignado, currentHealth, maxHealth);
+        }
 
         if (bossRenderer != null && gameObject.activeInHierarchy)
             StartCoroutine(FlashRed());
@@ -105,16 +90,6 @@ public class BossHealth : MonoBehaviour
         }
     }
 
-    private void ActualizarTextoVida()
-    {
-        if (textoVidaBoss != null)
-        {
-            int vidaActualMostrada = Mathf.Max(0, Mathf.CeilToInt(currentHealth));
-            int vidaMaximaMostrada = Mathf.CeilToInt(maxHealth);
-            textoVidaBoss.text = $"{vidaActualMostrada} / {vidaMaximaMostrada}";
-        }
-    }
-
     private IEnumerator FlashRed()
     {
         propBlock.SetColor("_Color", Color.red);
@@ -128,17 +103,14 @@ public class BossHealth : MonoBehaviour
     {
         isDead = true;
 
-        if (MusicManager.Instance != null)
-            MusicManager.Instance.StopBossMusic();
+        if (BossHealthUIManager.Instance != null)
+        {
+            BossHealthUIManager.Instance.DesactivarBarraBoss(slotBarraAsignado);
+        }
 
-        if (bossHealthBarGlobal != null)
-            bossHealthBarGlobal.gameObject.SetActive(false);
-
-        // Desactivar IA del Boss 2 si existe
         var boss2Controller = GetComponent<BossLevel2>();
         if (boss2Controller != null) boss2Controller.enabled = false;
 
-        // Desactivar NavMeshAgent
         var agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null)
         {
@@ -148,7 +120,6 @@ public class BossHealth : MonoBehaviour
         }
 
         if (anim != null) anim.SetTrigger("Dead");
-
         StartCoroutine(RutinaMuerteBoss());
     }
 
@@ -169,14 +140,10 @@ public class BossHealth : MonoBehaviour
         {
             lootSpawner.SpawnearRecompensas();
         }
-        else if (MapManager.Instance != null)
-        {
-            MapManager.Instance.AvanzarSiguienteNivel();
-        }
 
-        if (MapManager.Instance == null)
+        if (MapManager.Instance != null)
         {
-            AnalyticsBridge.EnviarLevelComplete(MapManager.nivelBucle, 4);
+            MapManager.Instance.RegistrarMuerteBoss();
         }
 
         Destroy(gameObject);

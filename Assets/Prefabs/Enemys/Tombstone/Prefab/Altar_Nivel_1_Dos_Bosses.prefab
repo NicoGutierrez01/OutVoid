@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Presiona F para invocar
+  m_text: Presiona F
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -275,9 +275,9 @@ GameObject:
   - component: {fileID: 1437870682559461748}
   - component: {fileID: 8573279262448798489}
   - component: {fileID: 6269268402566841832}
-  - component: {fileID: 1187477061250796229}
+  - component: {fileID: 425890776124512462}
   m_Layer: 0
-  m_Name: Altar_Nivel_1
+  m_Name: Altar_Nivel_1_Dos_Bosses
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -360,7 +360,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &1187477061250796229
+--- !u!114 &425890776124512462
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -369,13 +369,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 4155036918023908458}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36f70159c6746bb48a68ab10a49fd7c4, type: 3}
+  m_Script: {fileID: 11500000, guid: df769869a1a6ec54eb6bf40f00146b67, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InteraccionLapida
-  radioInteraccion: 5
-  canvasFlotante: {fileID: 5434672156175731068}
-  duracionSacudida: 2
-  intensidadSacudida: 0.2
+  m_EditorClassIdentifier: Assembly-CSharp::AltarDobleBoss
+  textoInteractuar: {fileID: 1022351982745529407}
+  particulasActivo: {fileID: 0}
 --- !u!1 &5434672156175731068
 GameObject:
   m_ObjectHideFlags: 0

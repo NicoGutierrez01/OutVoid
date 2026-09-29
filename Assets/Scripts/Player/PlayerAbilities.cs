@@ -202,6 +202,7 @@ public class PlayerAbilities : MonoBehaviour
 
         if (brazoDerechoVisual != null) brazoDerechoVisual.SetActive(false);
         if (brazoIzquierdoVisual != null) brazoIzquierdoVisual.SetActive(false);
+        if (revolverIzquierdo != null) revolverIzquierdo.SetActive(false);
 
         if (playerCharacter != null)
         {
@@ -220,7 +221,8 @@ public class PlayerAbilities : MonoBehaviour
         }
 
         if (brazoDerechoVisual != null) brazoDerechoVisual.SetActive(true);
-        if (brazoIzquierdoVisual != null) brazoIzquierdoVisual.SetActive(true);
+        if (brazoIzquierdoVisual != null) brazoIzquierdoVisual.SetActive(isUltActive);
+        if (revolverIzquierdo != null) revolverIzquierdo.SetActive(isUltActive);
 
         moveScript.isGhostMode = false;
         if (weaponScript != null) weaponScript.enabled = true;

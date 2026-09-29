@@ -7,7 +7,6 @@ public class DatosDeNivel : ScriptableObject
     [Header("Escenario y Entorno")]
     public GameObject mapaPrefab;
     public LayerMask capaSuelo;
- 
 
     [Header("Jugador")]
     public GameObject playerPrefab;
@@ -29,8 +28,6 @@ public class DatosDeNivel : ScriptableObject
     [Header("Magneto")]
     public GameObject magnetoPrefab;
     public Vector3[] spawnPointsMagneto;
-       [Header("Spawns de Cofres de Exploración")]
-    public Vector3[] spawnPointsCofres;
 
     [Header("Decoración del Nivel")]
     public List<GameObject> prefabsDecoracionPrincipal;
@@ -39,6 +36,16 @@ public class DatosDeNivel : ScriptableObject
     [Header("Objetivos Especiales")]
     public GameObject zonaDefensaPrefab;
     public Vector3[] spawnPointsZonas;
+
+    [Header("Portal de Siguiente Nivel")]
+    public GameObject portalSiguienteNivelPrefab;
+    [Tooltip("Posibles posiciones donde puede aparecer el portal de salida (se elige una al azar)")]
+    public Vector3[] spawnPointsPortalSiguienteNivel;
+
+    [Header("Altar Doble Boss (Opcional si tiene spawns definidos)")]
+    [Tooltip("Prefab del altar interactuable para activar el segundo boss")]
+    public GameObject altarPrefab;
+    public Vector3[] spawnPointsAltar;
 
     public List<GameObject> prefabsDecoracionSecundaria;
     public int cantidadDecoracionSecundaria = 75;

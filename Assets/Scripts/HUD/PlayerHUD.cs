@@ -308,6 +308,23 @@ public class PlayerHUD : MonoBehaviour
             AnimarCambioObjetivo();
         }
 
+        if (MapManager.Instance.bossesVivos > 0)
+        {
+            if (textoDescripcion != null && textoDescripcion.gameObject.activeSelf)
+                textoDescripcion.gameObject.SetActive(false);
+
+            if (textoRonda != null && textoRonda.gameObject.activeSelf)
+                textoRonda.gameObject.SetActive(false);
+
+            return;
+        }
+
+        if (textoDescripcion != null && !textoDescripcion.gameObject.activeSelf)
+            textoDescripcion.gameObject.SetActive(true);
+
+        if (textoRonda != null && !textoRonda.gameObject.activeSelf)
+            textoRonda.gameObject.SetActive(true);
+
         if (MapManager.nivelBucle >= 4)
         {
             if (textoRonda != null) textoRonda.text = "¡ALERTA!";

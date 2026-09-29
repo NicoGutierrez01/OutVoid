@@ -49,6 +49,8 @@ public class MapManager : MonoBehaviour
     public int rondaActual = 1;
     public int maxRondas = 4;
     public float retrasoSpawnBoss = 2f;
+    [Tooltip("Indice si el jugador activo el altar para pelear contra dos bosses")]
+    public bool retoDobleBossActivo = false;
 
     [Header("UI y Pantallas de Carga")]
     public GameObject panelCargaEscena;
@@ -60,6 +62,13 @@ public class MapManager : MonoBehaviour
     [Header("Recompensas Globales")]
     public GameObject prefabCofre;
 
+    [HideInInspector]
+    public int bossesVivos = 0;
+
+    [Header("Ajustes de Exclusión de Decoración")]
+    [Tooltip("Distancia mínima entre una decoración y cualquier punto clave (portal, boss, magneto, etc.)")]
+    public float radioExclusionDecoracion = 4.0f;
+    
     private GameObject zonaDefensaInstanciada;
     private GameObject lapidaInstanciada;
     private List<GameObject> portalesActivos = new List<GameObject>();
@@ -168,13 +177,6 @@ public class MapManager : MonoBehaviour
         ActualizarNavMesh();
         yield return null;
 
-        SpawnearJugador();
-        SpawnearPortales();
-        SpawnearMagneto();
-        // SpawnearCofresExploracion();        
-
-        yield return null;
-
         if (rondaActual < maxRondas)
         {
             PoblarEscenarioConDecoracion();
@@ -190,6 +192,17 @@ public class MapManager : MonoBehaviour
         }
 
         if (panelCargaEscena != null) panelCargaEscena.SetActive(false);
+
+        SpawnearJugador();
+        SpawnearPortales();
+        SpawnearMagneto();
+        SpawnearAltar();
+
+        if (MusicManager.Instance != null)
+        {
+            MusicManager.Instance.PlayGameplayMusic(); 
+        }
+
         if (popupInstrucciones != null) StartCoroutine(ManejarPopupInstrucciones(3f));
     }
     #endregion
@@ -224,7 +237,6 @@ public class MapManager : MonoBehaviour
     {
         if (datosNivelActual == null || datosNivelActual.spawnPointsPortales.Length == 0) return;
 
-        // 2 portales en nivel 2 por el tamaño del mapa, 4 en nivel 1
         int cantidadAIntercalar = (nivelBucle == 2) ? 2 : 4;
 
         List<int> indicesDisponibles = new List<int>();
@@ -289,10 +301,12 @@ public class MapManager : MonoBehaviour
         MeshCollider sueloCollider = objetoSuelo.GetComponent<MeshCollider>();
         if (sueloCollider == null) return;
 
+        List<Vector3> puntosAExcluir = ObtenerPuntosImportantesNivel();
+
         Bounds limitesSuelo = sueloCollider.bounds;
         int creados = 0;
         int intentos = 0;
-        int intentosMaximos = cantidad * 15;
+        int intentosMaximos = cantidad * 20;
 
         while (creados < cantidad && intentos < intentosMaximos)
         {
@@ -306,6 +320,11 @@ public class MapManager : MonoBehaviour
             {
                 if (hit.collider.name == "Floor")
                 {
+                    if (EstaCercaDePuntoImportante(hit.point, puntosAExcluir, radioExclusionDecoracion))
+                    {
+                        continue; 
+                    }
+
                     GameObject prefabElegido = poolPrefabs[Random.Range(0, poolPrefabs.Count)];
                     Vector3 rotacionOriginal = prefabElegido.transform.rotation.eulerAngles;
                     Quaternion rotacionFinal = Quaternion.Euler(rotacionOriginal.x, Random.Range(0f, 360f), rotacionOriginal.z);
@@ -316,6 +335,39 @@ public class MapManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    private List<Vector3> ObtenerPuntosImportantesNivel()
+    {
+        List<Vector3> puntos = new List<Vector3>();
+        if (datosNivelActual == null) return puntos;
+
+        if (datosNivelActual.spawnPointsPlayer != null) puntos.AddRange(datosNivelActual.spawnPointsPlayer);
+        if (datosNivelActual.spawnPointsPortales != null) puntos.AddRange(datosNivelActual.spawnPointsPortales);
+        if (datosNivelActual.spawnPointsLapida != null) puntos.AddRange(datosNivelActual.spawnPointsLapida);
+        if (datosNivelActual.spawnPointsPortalBoss != null) puntos.AddRange(datosNivelActual.spawnPointsPortalBoss);
+        if (datosNivelActual.spawnPointsMagneto != null) puntos.AddRange(datosNivelActual.spawnPointsMagneto);
+        if (datosNivelActual.spawnPointsZonas != null) puntos.AddRange(datosNivelActual.spawnPointsZonas);
+        if (datosNivelActual.spawnPointsPortalSiguienteNivel != null) puntos.AddRange(datosNivelActual.spawnPointsPortalSiguienteNivel);
+        if (datosNivelActual.spawnPointsAltar != null) puntos.AddRange(datosNivelActual.spawnPointsAltar);
+
+        return puntos;
+    }
+
+    private bool EstaCercaDePuntoImportante(Vector3 punto, List<Vector3> puntosImportantes, float radioMinimo)
+    {
+        float radioCuadrado = radioMinimo * radioMinimo;
+        for (int i = 0; i < puntosImportantes.Count; i++)
+        {
+            Vector3 diff = punto - puntosImportantes[i];
+            diff.y = 0f; // Comprobación en plano horizontal 2D
+
+            if (diff.sqrMagnitude < radioCuadrado)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     void ConfigurarRondaPorObjetivo()
@@ -419,31 +471,41 @@ public class MapManager : MonoBehaviour
 
         if (datosNivelActual.bossPrefab != null)
         {
-            if (nivelBucle == 1)
-            {
-                Vector3 posBoss = posicionPortal + Vector3.down * 2f;
-                Instantiate(datosNivelActual.bossPrefab, posBoss, Quaternion.identity);
-            }
-            else
-            {
-                Vector3 posBoss = posicionPortal;
+            int bossesAInvocar = retoDobleBossActivo ? 2 : 1;
+            bossesVivos = bossesAInvocar; 
 
-                if (NavMesh.SamplePosition(posicionPortal, out NavMeshHit hit, 6.0f, NavMesh.AllAreas))
+            for (int i = 0; i < bossesAInvocar; i++)
+            {
+                Vector3 offset = (i == 0) ? Vector3.zero : new Vector3(3f, 0f, 3f);
+
+                if (nivelBucle == 1)
                 {
-                    posBoss = hit.position;
+                    Vector3 posBoss = posicionPortal + Vector3.down * 2f + offset;
+                    Instantiate(datosNivelActual.bossPrefab, posBoss, Quaternion.identity);
+                }
+                else
+                {
+                    Vector3 posBoss = posicionPortal + offset;
+
+                    if (NavMesh.SamplePosition(posBoss, out NavMeshHit hit, 6.0f, NavMesh.AllAreas))
+                    {
+                        posBoss = hit.position;
+                    }
+
+                    Vector3 dirHaciaCentro = (Vector3.zero - posBoss).normalized;
+                    dirHaciaCentro.y = 0;
+                    Quaternion rotBoss = dirHaciaCentro != Vector3.zero ? Quaternion.LookRotation(dirHaciaCentro) : Quaternion.identity;
+
+                    GameObject nuevoBoss = Instantiate(datosNivelActual.bossPrefab, posBoss, rotBoss);
+
+                    NavMeshAgent agent = nuevoBoss.GetComponent<NavMeshAgent>();
+                    if (agent != null)
+                    {
+                        agent.Warp(posBoss);
+                    }
                 }
 
-                Vector3 dirHaciaCentro = (Vector3.zero - posBoss).normalized;
-                dirHaciaCentro.y = 0;
-                Quaternion rotBoss = dirHaciaCentro != Vector3.zero ? Quaternion.LookRotation(dirHaciaCentro) : Quaternion.identity;
-
-                GameObject nuevoBoss = Instantiate(datosNivelActual.bossPrefab, posBoss, rotBoss);
-
-                NavMeshAgent agent = nuevoBoss.GetComponent<NavMeshAgent>();
-                if (agent != null)
-                {
-                    agent.Warp(posBoss);
-                }
+                if (bossesAInvocar > 1) yield return new WaitForSeconds(0.4f);
             }
         }
 
@@ -508,6 +570,39 @@ public class MapManager : MonoBehaviour
             }
         }
     }
+
+    void SpawnearPortalSalida()
+    {
+        if (datosNivelActual == null || datosNivelActual.portalSiguienteNivelPrefab == null)
+        {
+            Debug.LogWarning("[MAP MANAGER] No hay prefab de portal de siguiente nivel asignado en el cartucho.");
+            return;
+        }
+
+        Vector3 spawnPos = Vector3.zero;
+
+        if (datosNivelActual.spawnPointsPortalSiguienteNivel != null && datosNivelActual.spawnPointsPortalSiguienteNivel.Length > 0)
+        {
+            int randomIndex = Random.Range(0, datosNivelActual.spawnPointsPortalSiguienteNivel.Length);
+            spawnPos = datosNivelActual.spawnPointsPortalSiguienteNivel[randomIndex];
+        }
+        Quaternion rotacionPrefab = datosNivelActual.portalSiguienteNivelPrefab.transform.rotation;
+
+        Instantiate(datosNivelActual.portalSiguienteNivelPrefab, spawnPos, rotacionPrefab);
+        Debug.Log($"[MAP MANAGER] Portal de salida abierto en coordenada del cartucho: {spawnPos}");
+    }
+
+    void SpawnearAltar()
+    {
+        if (datosNivelActual == null || datosNivelActual.altarPrefab == null) return;
+        if (datosNivelActual.spawnPointsAltar == null || datosNivelActual.spawnPointsAltar.Length == 0) return;
+
+        int randomIndex = Random.Range(0, datosNivelActual.spawnPointsAltar.Length);
+        Vector3 spawnPos = datosNivelActual.spawnPointsAltar[randomIndex];
+
+        GameObject altar = Instantiate(datosNivelActual.altarPrefab, spawnPos, Quaternion.identity);
+        altar.transform.parent = this.transform;
+    }
     #endregion
 
     #region Lógica del Loop de Juego y Recompensas
@@ -523,6 +618,23 @@ public class MapManager : MonoBehaviour
             {
                 CompletarObjetivoRonda();
             }
+        }
+    }
+
+    public void RegistrarMuerteBoss()
+    {
+        bossesVivos--;
+
+        if (bossesVivos <= 0)
+        {
+            bossDerrotado = true;
+
+            if (MusicManager.Instance != null)
+            {
+                MusicManager.Instance.StopBossMusic();
+            }
+
+            SpawnearPortalSalida();
         }
     }
 

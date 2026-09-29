@@ -344,6 +344,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2870b470e6515bd488f09fee2aef81fd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6119398448921718123}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2870b470e6515bd488f09fee2aef81fd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2666563544722156827}
     - targetCorrespondingSourceObject: {fileID: 7909848542033764120, guid: 2870b470e6515bd488f09fee2aef81fd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 965790411081147003}
@@ -518,6 +521,19 @@ MonoBehaviour:
   anim: {fileID: 5562066208478185076}
   prefabExplosionFinal: {fileID: 8677464401101943085, guid: 5a6999e914e041d4bb1d118be6d5852c, type: 3}
   tiempoAnimacionMuerte: 2.5
+--- !u!114 &2666563544722156827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1196710410993419956}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95cfac570c721424d936d758a969259b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossLootSpawner
+  prefabCofre: {fileID: 3386048660251865897, guid: 2d35a0b009bae2c40b885964aaee7111, type: 3}
 --- !u!1 &1381669396056387903 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8109200721834718502, guid: 2870b470e6515bd488f09fee2aef81fd, type: 3}

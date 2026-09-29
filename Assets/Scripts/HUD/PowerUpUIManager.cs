@@ -212,11 +212,6 @@ public class PowerUpUIManager : MonoBehaviour
         {
             Destroy(cofreActivo);
         }
-
-        if (eraCofreBoss && MapManager.Instance != null)
-        {
-            MapManager.Instance.AvanzarSiguienteNivel();
-        }
     }
 
     private void AplicarEfecto(PowerUpsChest mejora)
