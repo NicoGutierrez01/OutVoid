@@ -372,6 +372,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df769869a1a6ec54eb6bf40f00146b67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AltarDobleBoss
+  radioInteraccion: 6
   textoInteractuar: {fileID: 1022351982745529407}
   particulasActivo: {fileID: 0}
 --- !u!1 &5434672156175731068

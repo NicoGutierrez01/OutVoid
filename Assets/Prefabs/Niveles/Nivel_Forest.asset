@@ -45,7 +45,6 @@ MonoBehaviour:
   - {x: 45.08, y: 35.3, z: -378.23}
   magnetoPrefab: {fileID: 4990399000650638707, guid: cc704085b3e614166ab33b6e932508b6, type: 3}
   spawnPointsMagneto: []
-  spawnPointsCofres: []
   prefabsDecoracionPrincipal: []
   cantidadDecoracionPrincipal: 15
   zonaDefensaPrefab: {fileID: 3230250897361486733, guid: 052f6f8b253a2204198c93be0382e710, type: 3}
@@ -56,6 +55,12 @@ MonoBehaviour:
   - {x: 80.13, y: 22.24, z: -340.98}
   - {x: -1.24, y: 23.68, z: -365.27}
   - {x: 82.34, y: 24.25, z: -268.21}
+  portalSiguienteNivelPrefab: {fileID: 0}
+  spawnPointsPortalSiguienteNivel: []
+  altarPrefab: {fileID: 1732824193767410980, guid: 7992ac4769f704f4ebfb3be14c0d2ced, type: 3}
+  spawnPointsAltar:
+  - {x: -12.91, y: 31.61, z: -437.83}
+  - {x: 19.82, y: 23.82, z: -130.61}
   prefabsDecoracionSecundaria: []
   cantidadDecoracionSecundaria: 0
   prefabDecoracionSuelo: {fileID: 3633136758112759580, guid: 943205a4b0ae0a14e98bc8ba8774348e, type: 3}
