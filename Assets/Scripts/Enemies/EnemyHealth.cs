@@ -101,52 +101,70 @@ if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo 
         ApagarBrillo();
     }
 
-    public void TakeDamage(float amount, bool esHeadshot = false)
+    public void TakeDamage(float amount, bool esHeadshot = false, bool mostrarDanio = true)
+{
+    if (isDead) return;
+
+    currentHealth -= amount;
+
+    // Buscar el Crosshair
+    CrosshairFeedbackManager crosshairManager =
+        Object.FindFirstObjectByType<CrosshairFeedbackManager>();
+
+    // Mostrar daño solamente si corresponde
+    if (mostrarDanio && crosshairManager != null)
     {
-        if (isDead) return;
+        crosshairManager.ShowDamage(amount);
+    }
 
-        currentHealth -= amount;
+    if (healthBar != null)
+    {
+        healthBar.gameObject.SetActive(true);
+        healthBar.value = currentHealth;
 
-        if (healthBar != null)
+        if (corrutinaOcultarBarra != null)
+            StopCoroutine(corrutinaOcultarBarra);
+
+        corrutinaOcultarBarra =
+            StartCoroutine(RutinaOcultarBarraPorInactividad());
+    }
+
+    StartCoroutine(FlashWhiteRoutine());
+
+    if (currentHealth > 0)
+    {
+        StartCoroutine(StunRoutine());
+
+        // Calcular y aplicar el Knockback
+        GameObject playerObj =
+            GameObject.FindGameObjectWithTag("Player");
+
+        if (playerObj != null)
         {
-            healthBar.gameObject.SetActive(true);
-            healthBar.value = currentHealth;
+            Vector3 direccionEmpuje =
+                (transform.position - playerObj.transform.position).normalized;
 
-            if (corrutinaOcultarBarra != null) StopCoroutine(corrutinaOcultarBarra);
-            corrutinaOcultarBarra = StartCoroutine(RutinaOcultarBarraPorInactividad());
-        }
+            direccionEmpuje.y = 0;
 
-        StartCoroutine(FlashWhiteRoutine());
-
-        if (currentHealth > 0)
-        {
-            StartCoroutine(StunRoutine());
-            if (currentHealth > 0)
-        {
-            StartCoroutine(StunRoutine());
-            
-            // --- NUEVO: Calcular y aplicar el Knockback ---
-            // Tomamos la posición del jugador como punto de origen del golpe para empujarlo en dirección contraria
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-            {
-                Vector3 direccionEmpuje = (transform.position - playerObj.transform.position).normalized;
-                direccionEmpuje.y = 0; // Evita que salga volando hacia arriba
-                StartCoroutine(KnockbackRoutine(direccionEmpuje));
-            }
-        }
-        }
-        
-        if (currentHealth <= 0)
-        {
-            CrosshairFeedbackManager crosshair = Object.FindFirstObjectByType<CrosshairFeedbackManager>();
-            if (crosshair != null) crosshair.OnEnemyKill(esHeadshot);
-
-            isDead = true;
-            if (healthBar != null) healthBar.gameObject.SetActive(false);
-            Die();
+            StartCoroutine(KnockbackRoutine(direccionEmpuje));
         }
     }
+
+    if (currentHealth <= 0)
+    {
+        if (crosshairManager != null)
+        {
+            crosshairManager.OnEnemyKill(esHeadshot);
+        }
+
+        isDead = true;
+
+        if (healthBar != null)
+            healthBar.gameObject.SetActive(false);
+
+        Die();
+    }
+}
 
     IEnumerator RutinaOcultarBarraPorInactividad()
     {
@@ -212,7 +230,7 @@ if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo 
             if (isDead) yield break;
 
             StartCoroutine(FlashColorRoutine(new Color(1f, 0.35f, 0f) * 4f));
-            TakeDamage(danoPorTick, false);
+            TakeDamage(danoPorTick, false, false);
         }
 
         corrutinaQuemadura = null;

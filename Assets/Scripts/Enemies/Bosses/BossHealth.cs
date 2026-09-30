@@ -50,21 +50,35 @@ public class BossHealth : MonoBehaviour
     }
 
     public void TakeDamage(float amount)
+{
+    if (isDead) return;
+
+    currentHealth -= amount;
+
+    // Mostrar daño realizado junto al Crosshair
+    CrosshairFeedbackManager crosshairManager =
+        Object.FindFirstObjectByType<CrosshairFeedbackManager>();
+
+    if (crosshairManager != null)
     {
-        if (isDead) return;
-
-        currentHealth -= amount;
-        if (BossHealthUIManager.Instance != null)
-        {
-            BossHealthUIManager.Instance.ActualizarVidaBoss(slotBarraAsignado, currentHealth, maxHealth);
-        }
-
-        if (bossRenderer != null && gameObject.activeInHierarchy)
-            StartCoroutine(FlashRed());
-
-        if (currentHealth <= 0)
-            Die();
+        crosshairManager.ShowDamage(amount);
     }
+
+    if (BossHealthUIManager.Instance != null)
+    {
+        BossHealthUIManager.Instance.ActualizarVidaBoss(
+            slotBarraAsignado,
+            currentHealth,
+            maxHealth
+        );
+    }
+
+    if (bossRenderer != null && gameObject.activeInHierarchy)
+        StartCoroutine(FlashRed());
+
+    if (currentHealth <= 0)
+        Die();
+}
 
     public void Quemar()
     {

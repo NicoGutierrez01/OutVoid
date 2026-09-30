@@ -2,9 +2,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class CrosshairFeedbackManager : MonoBehaviour
 {
+    [Header("Daño")]
+public TextMeshProUGUI damageText;
+public float damageDuration = 0.6f;
+public float damageRiseDistance = 25f;
+
+private Coroutine damageCoroutine;
+private RectTransform damageRectTransform;
+private Vector2 damagePosicionInicial;
     [Header("Centro - Mira y Calavera")]
     public Image crosshairImage;
     public Image skullImage;
@@ -61,6 +70,11 @@ public class CrosshairFeedbackManager : MonoBehaviour
 
     void Awake()
     {
+        if (damageText != null)
+{
+    damageRectTransform = damageText.rectTransform;
+    damagePosicionInicial = damageRectTransform.anchoredPosition;
+}
         if (skullImage != null)
         {
             skullRectTransform = skullImage.rectTransform;
@@ -97,15 +111,78 @@ public class CrosshairFeedbackManager : MonoBehaviour
         if (crosshairImage != null) crosshairImage.color = colorDefault;
         ApagarCalavera();
         ApagarTodosLosPopups();
+        if (damageText != null) damageText.gameObject.SetActive(false);
     }
 
     void OnDisable()
-    {
+    {if (damageCoroutine != null)
+{
+    StopCoroutine(damageCoroutine);
+    damageCoroutine = null;
+}
+
+if (damageText != null)
+{
+    damageText.gameObject.SetActive(false);
+}
         ApagarCalavera();
         ApagarTodosLosPopups();
         if (crosshairImage != null) crosshairImage.color = colorDefault;
     }
+public void ShowDamage(float damage)
+{
+    if (damageText == null)
+        return;
 
+    if (damageCoroutine != null)
+    {
+        StopCoroutine(damageCoroutine);
+    }
+
+    damageCoroutine = StartCoroutine(RutinaDamage(damage));
+}
+
+private IEnumerator RutinaDamage(float damage)
+{
+    damageText.text = Mathf.RoundToInt(damage).ToString();
+
+    damageRectTransform.anchoredPosition = damagePosicionInicial;
+
+    Color color = damageText.color;
+    color.a = 1f;
+    damageText.color = color;
+
+    damageText.gameObject.SetActive(true);
+
+    Vector2 posicionDestino =
+        damagePosicionInicial + Vector2.up * damageRiseDistance;
+
+    float tiempoPasado = 0f;
+
+    while (tiempoPasado < damageDuration)
+    {
+        tiempoPasado += Time.deltaTime;
+
+        float t = Mathf.Clamp01(tiempoPasado / damageDuration);
+
+        damageRectTransform.anchoredPosition =
+            Vector2.Lerp(
+                damagePosicionInicial,
+                posicionDestino,
+                t
+            );
+
+        color.a = Mathf.Lerp(1f, 0f, t);
+        damageText.color = color;
+
+        yield return null;
+    }
+
+    damageText.gameObject.SetActive(false);
+    damageRectTransform.anchoredPosition = damagePosicionInicial;
+
+    damageCoroutine = null;
+}
     #region Mira y Calavera (Kill / Hit)
     public void OnTargetHit(bool isHeadshot = false)
     {
