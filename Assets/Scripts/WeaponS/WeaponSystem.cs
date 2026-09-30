@@ -11,6 +11,11 @@ public class WeaponSystem : MonoBehaviour
     private bool r2EstabaPresionado = false;
     public float range = 100f; 
     public Transform cam; 
+    [Header("Daño por Distancia")]
+public float distanciaDanioMaximo = 15f;
+public float distanciaDanioMinimo = 40f;
+[Range(0f, 1f)]
+public float multiplicadorDanioLargoAlcance = 0.7f;
 
     [Header("Munición (Revólver)")]
     public int balasMaximas = 6;
@@ -450,7 +455,13 @@ public class WeaponSystem : MonoBehaviour
             return;
         }
         bool esHeadshot = hit.collider.CompareTag("Head");
-        float danoFinal = esHeadshot ? damage * multiplicadorHeadshot : damage;
+        float distancia = Vector3.Distance(cam.position, hit.point);
+
+float danoBaseDistancia = CalcularDanioPorDistancia(distancia);
+
+float danoFinal = esHeadshot
+    ? danoBaseDistancia * multiplicadorHeadshot
+    : danoBaseDistancia;
 
         if (esHeadshot)
         {
@@ -607,4 +618,24 @@ public class WeaponSystem : MonoBehaviour
             StartCoroutine(RutinaRecarga());
         }
     }
+    private float CalcularDanioPorDistancia(float distancia)
+{
+    if (distancia <= distanciaDanioMaximo)
+        return damage;
+
+    if (distancia >= distanciaDanioMinimo)
+        return damage * multiplicadorDanioLargoAlcance;
+
+    float t = Mathf.InverseLerp(
+        distanciaDanioMaximo,
+        distanciaDanioMinimo,
+        distancia
+    );
+
+    return Mathf.Lerp(
+        damage,
+        damage * multiplicadorDanioLargoAlcance,
+        t
+    );
+}
 }
