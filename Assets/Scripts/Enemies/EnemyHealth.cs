@@ -304,8 +304,8 @@ if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo 
             GameObject recursoAElegir = null;
 
             bool vidaCritica = playerScript != null && playerScript.currentHealth < 30f;
-            bool municionEscasa = weaponScript != null && weaponScript.balasReserva < 12;
-            bool municionLlena = weaponScript != null && weaponScript.balasReserva >= 30;
+            bool municionEscasa = weaponScript != null && weaponScript.balasReserva < 12 * weaponScript.escalaMunicion;
+            bool municionLlena = weaponScript != null && weaponScript.balasReserva >= 30 * weaponScript.escalaMunicion;
 
             if (vidaCritica) {
                 if (dropRoll <= 70) recursoAElegir = prefabDropVida;

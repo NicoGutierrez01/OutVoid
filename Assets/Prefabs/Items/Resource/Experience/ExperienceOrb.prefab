@@ -128,6 +128,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExperienceOrb
   cantidadExperiencia: 10
   velocidadGiro: 120
+  alturaMinimaSuelo: 0.35
   amplitudFlotacion: 0.15
   frecuenciaFlotacion: 3
 --- !u!54 &8788140448211151532
