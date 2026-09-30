@@ -19,6 +19,7 @@ public class AdministradorDeProgreso : MonoBehaviour
     public bool balasPenetrantes = false;
     public bool disparoTriple = false;
     public bool balasExplosivas = false;
+    public bool tieneUzi = false;
 
     public float multiplicadorRecarga = 1f;
     public float probabilidadDropExtra = 0f;
@@ -125,6 +126,7 @@ public class AdministradorDeProgreso : MonoBehaviour
         balasPenetrantes = false;
         disparoTriple = false;
         balasExplosivas = false;
+        tieneUzi = false;
 
         multiplicadorRecarga = 1f;
         probabilidadDropExtra = 0f;

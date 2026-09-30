@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using System.Collections;
+using UnityEngine.Serialization;
 
 public class WeaponSystem : MonoBehaviour
 {
@@ -70,12 +71,71 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
     public GameObject prefabMicroExplosion;
 
     [Header("Reembolso de Balas")]
-    [Range(0f, 1f)] public float chanceDevolverBalaKill = 0.35f; 
+    [Range(0f, 1f)] public float chanceDevolverBalaKill = 0.35f;
+
+    [Header("Uzi (reemplaza al revólver al subir de nivel)")]
+    public int nivelDesbloqueoUzi = 5;
+    public float uziDamage = 13f;
+    public float uziFireRate = 0.08f;
+    public float uziMultiplicadorHeadshot = 1.5f;
+    public float uziDistanciaDanioMaximo = 8f;
+    public float uziDistanciaDanioMinimo = 22f;
+    [Range(0f, 1f)] public float uziMultiplicadorDanioLargoAlcance = 0.5f;
+    public int uziBalasMaximas = 30;
+    public float uziTiempoRecarga = 1.8f;
+    [Tooltip("Cuántas balas de Uzi equivalen a una de revólver (drops, reembolsos, reserva).")]
+    public float uziEscalaMunicion = 5f;
+    [HideInInspector] public bool usandoUzi = false;
+    [HideInInspector] public float escalaMunicion = 1f;
+
+    [Header("Uzi - Dispersión (grados)")]
+    public float dispersionBase = 0.6f;
+    public float dispersionMaxima = 3.5f;
+    public float dispersionPorDisparo = 0.35f;
+    public float recuperacionDispersion = 6f;
+    private float dispersionActual;
+
+    [Header("Uzi - Retroceso Visual")]
+    public float retrocesoCamaraVertical = 0.5f;
+    public float retrocesoCamaraHorizontal = 0.25f;
+    public float retrocesoCamaraMaximo = 3f;
+    public float retrocesoManosDistancia = 0.03f;
+    public float retrocesoManosAngulo = 4f;
+    public float recuperacionRetroceso = 12f;
+    private Vector2 retrocesoCamara;
+    private float retrocesoManos;
+    private Quaternion rotacionBaseCam;
+
+    [Header("Uzi - Modelo y Animaciones")]
+    [Tooltip("Hands-Uzi dentro del prefab (inactivo, ya ubicado frente a la cámara).")]
+    [FormerlySerializedAs("uziPrefab")]
+    [SerializeField] private GameObject uziDerecha;
+    [Tooltip("Opcional: si se asigna, reemplaza el controller que ya tenga Hands-Uzi.")]
+    [SerializeField] private RuntimeAnimatorController uziAnimator;
+    [SerializeField] private string estadoDisparoUzi = "Armature|Shoot";
+    [SerializeField] private string estadoRecargaUzi = "Armature|Recharge";
+    [Tooltip("Hueso del modelo de la Uzi al que se mueve el muzzle flash.")]
+    [SerializeField] private string huesoCanonUzi = "Uzi";
+    [Tooltip("La Uzi de la ulti es una copia de la derecha reflejada al lado izquierdo de la cámara.")]
+    [SerializeField] private bool espejarUziIzquierda = true;
+    private Transform manosDerecha, manosIzquierda;
+    private Vector3 posBaseManosDer, posBaseManosIzq;
+    private Quaternion rotBaseManosDer, rotBaseManosIzq;
+    private float duracionClipDisparo, duracionClipRecarga;
+
+    private float danioBaseRevolver;
+    private float recargaBaseRevolver;
 
     void Start()
     {
         balasActuales = balasMaximas;
+        danioBaseRevolver = damage;
+        recargaBaseRevolver = tiempoRecarga;
         if (gunAnim == null) gunAnim = GetComponentInChildren<Animator>();
+
+        // Los Animator del revólver están en la raíz de Hands / LeftHands.
+        if (gunAnim != null) { manosDerecha = gunAnim.transform; posBaseManosDer = manosDerecha.localPosition; rotBaseManosDer = manosDerecha.localRotation; }
+        if (gunAnimIzquierda != null) { manosIzquierda = gunAnimIzquierda.transform; posBaseManosIzq = manosIzquierda.localPosition; rotBaseManosIzq = manosIzquierda.localRotation; }
 
         if (sincronizarCadenciaConClip)
         {
@@ -120,26 +180,37 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
     {
         if (Time.timeScale <= 0f) return;
 
+        // Polling en vez de OnSubioDeNivel: ExperienceManager vive en UIScene (aditiva) y puede cargar después que el jugador.
+        // Se espera a que termine la ulti/recarga para no pisar el daño que PlayerAbilities restaura al final de la ulti.
+        if (!usandoUzi && !isUltActive && !recargando && DebeUsarUzi())
+        {
+            ActivarUzi();
+        }
+
+        if (usandoUzi)
+        {
+            dispersionActual = Mathf.MoveTowards(dispersionActual, dispersionBase, recuperacionDispersion * Time.deltaTime);
+        }
+
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
+        bool r2Presionado = false;
         bool r2RecienPresionado = false;
 
         if (Gamepad.current != null)
         {
-            bool r2Presionado = Gamepad.current.rightTrigger.ReadValue() > 0.5f;
+            r2Presionado = Gamepad.current.rightTrigger.ReadValue() > 0.5f;
             r2RecienPresionado = r2Presionado && !r2EstabaPresionado;
             r2EstabaPresionado = r2Presionado;
         }
 
         if (recargando) return;
 
-        if (
-            (
-                (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-                || r2RecienPresionado
-            )
-            && Time.time >= proximoTiempoDisparo
-        )
+        bool gatilloRecienPresionado = (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) || r2RecienPresionado;
+        bool gatilloMantenido = (Mouse.current != null && Mouse.current.leftButton.isPressed) || r2Presionado;
+        bool quiereDisparar = usandoUzi ? gatilloMantenido : gatilloRecienPresionado;
+
+        if (quiereDisparar && Time.time >= proximoTiempoDisparo)
         {
             if (balasActuales > 0 || isUltActive)
             {
@@ -147,18 +218,15 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
                 float cadenciaActual = isUltActive ? fireRate * 0.75f : fireRate;
                 proximoTiempoDisparo = Time.time + cadenciaActual;
             }
-            else if (!recargando)
+            else if (balasReserva > 0)
             {
-                if (balasReserva > 0)
-                {
-                    StartCoroutine(RutinaRecarga());
-                }
-                else
-                {
-                    ReproducirNoBullet();
-                    MusicManager.Instance.PlayOutOfAmmo();
-                    proximoTiempoDisparo = Time.time + fireRate;
-                }
+                StartCoroutine(RutinaRecarga());
+            }
+            else if (gatilloRecienPresionado)
+            {
+                ReproducirNoBullet();
+                MusicManager.Instance.PlayOutOfAmmo();
+                proximoTiempoDisparo = Time.time + fireRate;
             }
         }
 
@@ -172,7 +240,167 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
         )
         {
             StartCoroutine(RutinaRecarga());
-        }   
+        }
+    }
+
+    void LateUpdate()
+    {
+        if (!usandoUzi) return;
+
+        float t = recuperacionRetroceso * Time.deltaTime;
+        retrocesoCamara = Vector2.Lerp(retrocesoCamara, Vector2.zero, t);
+        retrocesoManos = Mathf.Lerp(retrocesoManos, 0f, t);
+
+        if (cam != null) cam.localRotation = rotacionBaseCam * Quaternion.Euler(-retrocesoCamara.x, retrocesoCamara.y, 0f);
+
+        Vector3 desplazamiento = Vector3.back * (retrocesoManosDistancia * retrocesoManos);
+        Quaternion giro = Quaternion.Euler(-retrocesoManosAngulo * retrocesoManos, 0f, 0f);
+        if (manosDerecha != null)
+        {
+            manosDerecha.localPosition = posBaseManosDer + rotBaseManosDer * desplazamiento;
+            manosDerecha.localRotation = rotBaseManosDer * giro;
+        }
+        if (manosIzquierda != null)
+        {
+            manosIzquierda.localPosition = posBaseManosIzq + rotBaseManosIzq * desplazamiento;
+            manosIzquierda.localRotation = rotBaseManosIzq * giro;
+        }
+    }
+
+    private bool DebeUsarUzi()
+    {
+        if (AdministradorDeProgreso.Instancia != null && AdministradorDeProgreso.Instancia.tieneUzi) return true;
+        return ExperienceManager.Instancia != null && ExperienceManager.Instancia.nivelActual >= nivelDesbloqueoUzi;
+    }
+
+    public void ActivarUzi()
+    {
+        usandoUzi = true;
+
+        // Se conservan las mejoras ya aplicadas al revólver (multiplicador de progreso, power-ups de daño/recarga).
+        damage = uziDamage * (damage / danioBaseRevolver);
+        tiempoRecarga = uziTiempoRecarga * (tiempoRecarga / recargaBaseRevolver);
+
+        fireRate = uziFireRate;
+        multiplicadorHeadshot = uziMultiplicadorHeadshot;
+        distanciaDanioMaximo = uziDistanciaDanioMaximo;
+        distanciaDanioMinimo = uziDistanciaDanioMinimo;
+        multiplicadorDanioLargoAlcance = uziMultiplicadorDanioLargoAlcance;
+
+        escalaMunicion = uziEscalaMunicion;
+        balasMaximas = uziBalasMaximas;
+        balasActuales = balasMaximas;
+        balasReserva = Mathf.RoundToInt(balasReserva * escalaMunicion);
+
+        dispersionActual = dispersionBase;
+        if (cam != null) rotacionBaseCam = cam.localRotation;
+
+        if (uziDerecha == null)
+        {
+            Debug.LogWarning("[Uzi] WeaponSystem sin Hands-Uzi asignado: se usa la Uzi con el modelo del revólver.");
+        }
+        else
+        {
+            // Si se asignó el FBX (asset) en vez del objeto del prefab, se instancia al lado de Hands.
+            GameObject uzi = uziDerecha.scene.IsValid() ? uziDerecha : Instantiate(uziDerecha, manosDerecha != null ? manosDerecha.parent : null, false);
+
+            // La izquierda (ulti) es una copia espejada de la derecha, creada antes de montar la derecha.
+            GameObject uziIzq = null;
+            if (manosIzquierda != null)
+            {
+                uziIzq = Instantiate(uzi, uzi.transform.parent, false);
+                if (espejarUziIzquierda) Espejar(uziIzq.transform);
+            }
+
+            gunAnim = MontarUzi(uzi, manosDerecha, gunAnim, muzzleFlash);
+            gunAnimIzquierda = MontarUzi(uziIzq, manosIzquierda, gunAnimIzquierda, muzzleFlashIzquierda);
+        }
+
+        if (AdministradorDeProgreso.Instancia != null) AdministradorDeProgreso.Instancia.tieneUzi = true;
+    }
+
+    // Refleja el transform respecto del plano X del padre (Camera): la Uzi derecha pasa a la izquierda.
+    private static void Espejar(Transform t)
+    {
+        Vector3 p = t.localPosition;
+        Quaternion q = t.localRotation;
+        Vector3 s = t.localScale;
+        t.localPosition = new Vector3(-p.x, p.y, p.z);
+        t.localRotation = new Quaternion(q.x, -q.y, -q.z, q.w);
+        t.localScale = new Vector3(-s.x, s.y, s.z);
+    }
+
+    // Oculta el revólver de esas manos, activa la Uzi y la cuelga de ellas (así el dash/ulti que prenden y apagan Hands/LeftHands la afectan igual).
+    private Animator MontarUzi(GameObject uzi, Transform manos, Animator animRevolver, ParticleSystem muzzle)
+    {
+        if (uzi == null || manos == null) return animRevolver;
+
+        foreach (Renderer r in manos.GetComponentsInChildren<Renderer>(true))
+        {
+            if (!(r is ParticleSystemRenderer)) r.enabled = false;
+        }
+        if (animRevolver != null) animRevolver.enabled = false;
+
+        uzi.transform.SetParent(manos, true);
+        uzi.SetActive(true);
+        foreach (Renderer r in uzi.GetComponentsInChildren<Renderer>(true)) r.enabled = true;
+
+        Animator anim = uzi.GetComponentInChildren<Animator>(true);
+        if (anim == null) anim = uzi.AddComponent<Animator>();
+        if (uziAnimator != null) anim.runtimeAnimatorController = uziAnimator;
+
+        if (anim.runtimeAnimatorController != null)
+        {
+            foreach (AnimationClip clip in anim.runtimeAnimatorController.animationClips)
+            {
+                if (clip.name.IndexOf("Shoot", System.StringComparison.OrdinalIgnoreCase) >= 0) duracionClipDisparo = clip.length;
+                if (clip.name.IndexOf("Recharge", System.StringComparison.OrdinalIgnoreCase) >= 0) duracionClipRecarga = clip.length;
+            }
+        }
+        // El default state del controller es el disparo: se salta al final (pose de reposo) para que no dispare al aparecer.
+        anim.Play(estadoDisparoUzi, 0, 1f);
+
+        if (muzzle != null)
+        {
+            foreach (Transform t in uzi.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == huesoCanonUzi) { muzzle.transform.SetParent(t, true); break; }
+            }
+        }
+
+        return anim;
+    }
+
+    // Con la Uzi el estado se reinicia con Play (ráfagas rápidas) y la velocidad ajusta el clip a la cadencia o a tiempoRecarga.
+    private void AnimarDisparo(Animator anim)
+    {
+        if (!usandoUzi) { EjecutarAnimacion(anim, "Shoot"); return; }
+        if (anim == null) return;
+        float cadencia = isUltActive ? fireRate * 0.75f : fireRate;
+        anim.speed = duracionClipDisparo > cadencia ? duracionClipDisparo / cadencia : 1f;
+        anim.Play(estadoDisparoUzi, 0, 0f);
+    }
+
+    private void AnimarRecarga(Animator anim)
+    {
+        if (!usandoUzi) { EjecutarAnimacion(anim, "Recharge"); return; }
+        if (anim == null) return;
+        anim.speed = duracionClipRecarga > 0f && tiempoRecarga > 0f ? duracionClipRecarga / tiempoRecarga : 1f;
+        anim.Play(estadoRecargaUzi, 0, 0f);
+    }
+
+    private Vector3 AplicarDispersion(Vector3 direccion)
+    {
+        Vector2 desvio = Random.insideUnitCircle * dispersionActual;
+        dispersionActual = Mathf.Min(dispersionMaxima, dispersionActual + dispersionPorDisparo);
+        return Quaternion.AngleAxis(desvio.x, cam.up) * Quaternion.AngleAxis(desvio.y, cam.right) * direccion;
+    }
+
+    private void AplicarRetroceso()
+    {
+        retrocesoCamara.x = Mathf.Min(retrocesoCamaraMaximo, retrocesoCamara.x + retrocesoCamaraVertical);
+        retrocesoCamara.y += Random.Range(-retrocesoCamaraHorizontal, retrocesoCamaraHorizontal);
+        retrocesoManos = 1f;
     }
 
     void Disparar()
@@ -188,13 +416,13 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
         {
             if (dispararDerecha)
             {
-                EjecutarAnimacion(gunAnim, "Shoot");
+                AnimarDisparo(gunAnim);
                 if (muzzleFlash != null) muzzleFlash.Play();
                 if (muzzleFlash != null) origenTracer = muzzleFlash.transform;
             }
             else
             {
-                EjecutarAnimacion(gunAnimIzquierda, "Shoot");
+                AnimarDisparo(gunAnimIzquierda);
                 if (muzzleFlashIzquierda != null) muzzleFlashIzquierda.Play();
                 if (muzzleFlashIzquierda != null) origenTracer = muzzleFlashIzquierda.transform;
             }
@@ -203,25 +431,32 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
         }
         else
         {
-            EjecutarAnimacion(gunAnim, "Shoot");
+            AnimarDisparo(gunAnim);
             if (muzzleFlash != null) muzzleFlash.Play();
             if (muzzleFlash != null) origenTracer = muzzleFlash.transform;
         }
 
         if (cam == null) return;
 
+        Vector3 direccionBase = cam.forward;
+        if (usandoUzi)
+        {
+            direccionBase = AplicarDispersion(direccionBase);
+            AplicarRetroceso();
+        }
+
         Vector3[] direcciones;
         if (disparoTriple)
         {
             direcciones = new Vector3[3];
-            direcciones[0] = cam.forward;
-            direcciones[1] = Quaternion.AngleAxis(-anguloDisparoTriple, cam.up) * cam.forward;
-            direcciones[2] = Quaternion.AngleAxis(anguloDisparoTriple, cam.up) * cam.forward;
+            direcciones[0] = direccionBase;
+            direcciones[1] = Quaternion.AngleAxis(-anguloDisparoTriple, cam.up) * direccionBase;
+            direcciones[2] = Quaternion.AngleAxis(anguloDisparoTriple, cam.up) * direccionBase;
         }
         else
         {
             direcciones = new Vector3[1];
-            direcciones[0] = cam.forward;
+            direcciones[0] = direccionBase;
         }
 
         foreach (Vector3 direccion in direcciones)
@@ -257,8 +492,8 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
     {
         recargando = true;
         MusicManager.Instance.PlayReload();        
-        EjecutarAnimacion(gunAnim, "Recharge");
-        if (isUltActive && gunAnimIzquierda != null) EjecutarAnimacion(gunAnimIzquierda, "Recharge");
+        AnimarRecarga(gunAnim);
+        if (isUltActive && gunAnimIzquierda != null) AnimarRecarga(gunAnimIzquierda);
 
         yield return new WaitForSeconds(tiempoRecarga);
 
@@ -271,7 +506,7 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
         BuscarCrosshairFeedback();
         if (crosshairFeedback != null && balasARecargar > 0)
         {
-            if (balasReserva <= limitePocasBalas) 
+            if (balasReserva <= limitePocasBalas * escalaMunicion) 
             {
                 crosshairFeedback.ShowWarning(CrosshairFeedbackManager.WarningType.LowAmmo);
             }
@@ -465,7 +700,7 @@ float danoFinal = esHeadshot
 
         if (esHeadshot)
         {
-            ReembolsarBala();
+            if (!usandoUzi) ReembolsarBala();
         }
 
         if (hit.collider.CompareTag("Enemigo") ||
@@ -590,14 +825,10 @@ float danoFinal = esHeadshot
 
     public void ReembolsarBala()
     {
-        if (balasActuales < balasMaximas)
-        {
-            balasActuales++;
-        }
-        else
-        {
-            balasReserva++;
-        }
+        int cantidad = Mathf.RoundToInt(escalaMunicion);
+        int alCargador = Mathf.Min(cantidad, balasMaximas - balasActuales);
+        balasActuales += alCargador;
+        balasReserva += cantidad - alCargador;
 
         BuscarCrosshairFeedback();
         if (crosshairFeedback != null)
@@ -608,7 +839,7 @@ float danoFinal = esHeadshot
 
     public void AddAmmo(int amount)
     {
-        balasReserva += amount;
+        balasReserva += Mathf.RoundToInt(amount * escalaMunicion);
 
         BuscarCrosshairFeedback();
         if (crosshairFeedback != null) crosshairFeedback.ShowReward(CrosshairFeedbackManager.RewardType.Bullets);
