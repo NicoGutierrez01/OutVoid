@@ -217,7 +217,7 @@ public class Stalker : MonoBehaviour
             float dist = Vector3.Distance(transform.position, playerTransform.position);
             if (dist <= attackRange + 0.8f && playerScript != null)
             {
-                playerScript.TakeDamage(damageAmount);
+                playerScript.TakeDamage(damageAmount, "STALKER");
             }
         }
 

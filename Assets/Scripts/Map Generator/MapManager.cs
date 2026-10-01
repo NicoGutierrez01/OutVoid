@@ -38,6 +38,10 @@ public class MapManager : MonoBehaviour
     [HideInInspector] public int enemigosParaJefe;
     public int enemigosMuertosActuales = 0;
 
+    [Header("Puntaje del Game Over")]
+    [Tooltip("Puntos que suma cada jefe derrotado (los enemigos comunes suman 120-350 en EnemyHealth)")]
+    [SerializeField] private int puntosPorJefe = 1000;
+
     [Header("Logica Objetivo 2: Defender Zona")]
     public float tiempoDefensa = 60f;
     public float tiempoDefensaActual = 0f;
@@ -631,6 +635,13 @@ public class MapManager : MonoBehaviour
     public void RegistrarMuerteBoss()
     {
         bossesVivos--;
+
+        // Boss y BossHealth pasan por acá una sola vez por jefe: cuenta como 1 baja para el GameOver.
+        if (AdministradorDeProgreso.Instancia != null)
+        {
+            AdministradorDeProgreso.Instancia.enemigosMuertos++;
+            AdministradorDeProgreso.Instancia.puntosTotales += puntosPorJefe;
+        }
 
         if (bossesVivos <= 0)
         {

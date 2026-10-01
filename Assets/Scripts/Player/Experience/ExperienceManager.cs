@@ -58,6 +58,11 @@ public class ExperienceManager : MonoBehaviour
                 experienciaBase +
                 ((nivelActual - 1) * incrementoPorNivel);
 
+            // Este manager se reinicia en cada mapa: el máximo de la run vive en AdministradorDeProgreso.
+            if (AdministradorDeProgreso.Instancia != null)
+                AdministradorDeProgreso.Instancia.nivelMaximoAlcanzado =
+                    Mathf.Max(AdministradorDeProgreso.Instancia.nivelMaximoAlcanzado, nivelActual);
+
             OnSubioDeNivel?.Invoke(nivelActual);
         }
 

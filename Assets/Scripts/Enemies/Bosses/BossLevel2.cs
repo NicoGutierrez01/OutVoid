@@ -207,7 +207,7 @@ public class BossLevel2 : MonoBehaviour
                 PlayerStats playerStats = hit.collider.GetComponentInParent<PlayerStats>();
                 if (playerStats != null)
                 {
-                    playerStats.TakeDamage(damagePerSecond * Time.deltaTime);
+                    playerStats.TakeDamage(damagePerSecond * Time.deltaTime, "BOSS");
                 }
             }
 

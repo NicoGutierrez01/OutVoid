@@ -70,6 +70,7 @@ public class MiniCube : MonoBehaviour
             if (anim != null && anim.isActiveAndEnabled) anim.SetTrigger("Shoot");
 
             GameObject bala = Instantiate(balaPrefab, puntoDeDisparo.position, puntoDeDisparo.rotation);
+            if (bala.TryGetComponent(out EnemyBullet balaScript)) balaScript.nombreAtacante = "MINICUBO";
             Rigidbody rb = bala.GetComponent<Rigidbody>();
             if (rb != null)
             {

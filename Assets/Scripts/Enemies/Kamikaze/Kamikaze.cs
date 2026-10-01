@@ -223,7 +223,7 @@ public class Kamikaze : MonoBehaviour
             if (hit.CompareTag("Player"))
             {
                 PlayerStats player = hit.GetComponent<PlayerStats>();
-                if (player != null) player.TakeDamage(damgeAmount);
+                if (player != null) player.TakeDamage(damgeAmount, "KAMIKAZE");
             }
         }
 

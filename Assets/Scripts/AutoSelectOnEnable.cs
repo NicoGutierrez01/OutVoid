@@ -7,6 +7,7 @@ public class AutoSelectOnEnable : MonoBehaviour
 
     private void OnEnable()
     {
+        if (EventSystem.current == null) return; // el EventSystem puede habilitarse después al cargar la escena
         EventSystem.current.SetSelectedGameObject(null);
         EventSystem.current.SetSelectedGameObject(defaultSelection);
     }

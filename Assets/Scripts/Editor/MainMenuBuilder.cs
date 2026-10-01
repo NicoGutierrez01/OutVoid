@@ -267,7 +267,7 @@ public static class MainMenuBuilder
     // Unidades: a 60 m de una cámara con FOV 33, la pantalla mide ~35 unidades de alto (1 unidad ≈ 30 px a 1080p).
     // =========================================================
 
-    private static ParticleSystem CrearParticulas(string nombre, Transform padre, Material material)
+    internal static ParticleSystem CrearParticulas(string nombre, Transform padre, Material material)
     {
         GameObject go = new GameObject(nombre, typeof(ParticleSystem));
         go.transform.SetParent(padre, false);
@@ -359,7 +359,7 @@ public static class MainMenuBuilder
         ruido.scrollSpeed = 0.15f;
     }
 
-    private static Gradient Degradado(GradientColorKey[] colores, GradientAlphaKey[] alfas)
+    internal static Gradient Degradado(GradientColorKey[] colores, GradientAlphaKey[] alfas)
     {
         Gradient g = new Gradient();
         g.SetKeys(colores, alfas);
@@ -371,7 +371,7 @@ public static class MainMenuBuilder
     // =========================================================
 
     // Marco alargado con esquinas achaflanadas, doble línea, resplandor y rombos laterales. Blanco: se tiñe con Image.color.
-    private static Sprite CrearMarco()
+    internal static Sprite CrearMarco()
     {
         const int ancho = 256, alto = 96;
         const float margen = 14f, chaflan = 16f, separacionLineas = 6f, rombo = 7f;
@@ -407,7 +407,7 @@ public static class MainMenuBuilder
         return CargarSprite(rutaMarco, new Vector4(bordeX, bordeY, bordeX, bordeY));
     }
 
-    private static Sprite CrearBrilloRadial()
+    internal static Sprite CrearBrilloRadial()
     {
         const int lado = 128;
 
@@ -424,9 +424,9 @@ public static class MainMenuBuilder
     }
 
     // Línea suavizada de grosor medio "grosor" sobre una distancia firmada.
-    private static float Linea(float d, float grosor) => 1f - Mathf.Clamp01(Mathf.Abs(d) - grosor);
+    internal static float Linea(float d, float grosor) => 1f - Mathf.Clamp01(Mathf.Abs(d) - grosor);
 
-    private static void GuardarPNG(string ruta, int ancho, int alto, System.Func<Vector2, float> alfa)
+    internal static void GuardarPNG(string ruta, int ancho, int alto, System.Func<Vector2, float> alfa)
     {
         Texture2D tex = new Texture2D(ancho, alto, TextureFormat.RGBA32, false);
         for (int y = 0; y < alto; y++)
@@ -438,7 +438,7 @@ public static class MainMenuBuilder
         AssetDatabase.ImportAsset(ruta);
     }
 
-    private static Sprite CargarSprite(string ruta, Vector4 borde)
+    internal static Sprite CargarSprite(string ruta, Vector4 borde)
     {
         TextureImporter importer = AssetImporter.GetAtPath(ruta) as TextureImporter;
         if (importer == null)
@@ -466,19 +466,19 @@ public static class MainMenuBuilder
     private static Button BuscarBoton(Transform raiz, string nombre) =>
         raiz.GetComponentsInChildren<Button>(true).FirstOrDefault(b => b.name == nombre);
 
-    private static void DestruirHijo(Transform padre, string nombre)
+    internal static void DestruirHijo(Transform padre, string nombre)
     {
         Transform hijo = padre.Find(nombre);
         if (hijo != null) Undo.DestroyObjectImmediate(hijo.gameObject);
     }
 
-    private static void DestruirRaiz(string nombre)
+    internal static void DestruirRaiz(string nombre)
     {
         GameObject raiz = SceneManager.GetActiveScene().GetRootGameObjects().FirstOrDefault(g => g.name == nombre);
         if (raiz != null) Undo.DestroyObjectImmediate(raiz);
     }
 
-    private static T ObtenerOAgregar<T>(GameObject go) where T : Component
+    internal static T ObtenerOAgregar<T>(GameObject go) where T : Component
     {
         if (go.TryGetComponent(out T componente))
         {
@@ -488,7 +488,7 @@ public static class MainMenuBuilder
         return Undo.AddComponent<T>(go);
     }
 
-    private static void ConfigurarScaler(CanvasScaler scaler)
+    internal static void ConfigurarScaler(CanvasScaler scaler)
     {
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
@@ -496,7 +496,7 @@ public static class MainMenuBuilder
         scaler.matchWidthOrHeight = 0.5f;
     }
 
-    private static RectTransform CrearUI(string nombre, Transform padre)
+    internal static RectTransform CrearUI(string nombre, Transform padre)
     {
         GameObject go = new GameObject(nombre, typeof(RectTransform));
         Undo.RegisterCreatedObjectUndo(go, "Crear " + nombre);
@@ -505,7 +505,7 @@ public static class MainMenuBuilder
         return (RectTransform)go.transform;
     }
 
-    private static TextMeshProUGUI CrearTexto(string nombre, Transform padre, TMP_FontAsset fuente, string texto,
+    internal static TextMeshProUGUI CrearTexto(string nombre, Transform padre, TMP_FontAsset fuente, string texto,
         float tamano, Color color, TextAlignmentOptions alineacion)
     {
         TextMeshProUGUI tmp = CrearUI(nombre, padre).gameObject.AddComponent<TextMeshProUGUI>();
@@ -519,7 +519,7 @@ public static class MainMenuBuilder
         return tmp;
     }
 
-    private static void Vertical(RectTransform rt, float espaciado)
+    internal static void Vertical(RectTransform rt, float espaciado)
     {
         VerticalLayoutGroup grupo = rt.gameObject.AddComponent<VerticalLayoutGroup>();
         grupo.childAlignment = TextAnchor.MiddleCenter;
@@ -528,26 +528,26 @@ public static class MainMenuBuilder
         grupo.childForceExpandWidth = grupo.childForceExpandHeight = false;
     }
 
-    private static void Tamano(RectTransform rt, float ancho, float alto)
+    internal static void Tamano(RectTransform rt, float ancho, float alto)
     {
         LayoutElement le = ObtenerOAgregar<LayoutElement>(rt.gameObject);
         le.preferredWidth = ancho;
         le.preferredHeight = alto;
     }
 
-    private static void Estirar(RectTransform rt)
+    internal static void Estirar(RectTransform rt)
     {
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
         rt.offsetMin = rt.offsetMax = Vector2.zero;
     }
 
-    private static void Esquina(RectTransform rt, Vector2 ancla, Vector2 posicion)
+    internal static void Esquina(RectTransform rt, Vector2 ancla, Vector2 posicion)
     {
         rt.anchorMin = rt.anchorMax = rt.pivot = ancla;
         rt.anchoredPosition = posicion;
         rt.sizeDelta = new Vector2(1000f, 40f);
     }
 
-    private static Color Hex(string hex) => ColorUtility.TryParseHtmlString(hex, out Color c) ? c : Color.magenta;
+    internal static Color Hex(string hex) => ColorUtility.TryParseHtmlString(hex, out Color c) ? c : Color.magenta;
 }
