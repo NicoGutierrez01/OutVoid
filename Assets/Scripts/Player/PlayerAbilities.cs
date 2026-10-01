@@ -15,6 +15,9 @@ public class PlayerAbilities : MonoBehaviour
     private PlayerStats moveScript;
     private WeaponSystem weaponScript;
 
+    // Dash (forma espectral) en curso; lo lee el HUD
+    public bool DashActivo => moveScript != null && moveScript.isGhostMode;
+
     [Header("Cooldowns")]
     public float dynamiteCooldown = 7f;
     public bool canUseE = true;
@@ -95,7 +98,7 @@ public class PlayerAbilities : MonoBehaviour
     public void UpdateInput(CharacterInput input)
     {
         if (input.AbilityE && canUseE) StartCoroutine(UseDynamite());
-        if (input.Ultimate && canUseQ && !isUltActive) StartCoroutine(HandleUltimate());
+        if (input.Ultimate && canUseQ && !isUltActive && !DashActivo) StartCoroutine(HandleUltimate());
         if (input.Dash && canDash) StartCoroutine(GhostDash());
         if (input.Melee && canMelee && !isUltActive) StartCoroutine(UseMelee());
     }
@@ -156,7 +159,7 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator ActivateUlt()
     {
         isUltActive = true;
-        MusicManager.Instance.PlayUltimate();
+        if (MusicManager.Instance != null) MusicManager.Instance.PlayUltimate();
         if (revolverIzquierdo != null) 
         {
             revolverIzquierdo.SetActive(true);
@@ -188,7 +191,7 @@ public class PlayerAbilities : MonoBehaviour
     IEnumerator GhostDash()
     {
         canDash = false;
-        MusicManager.Instance.PlayDash();
+        if (MusicManager.Instance != null) MusicManager.Instance.PlayDash();
         if (playerCamera != null) playerCamera.SetDashFOV(10f);
 
         PlayerHUD hud = Object.FindFirstObjectByType<PlayerHUD>();
