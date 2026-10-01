@@ -94,9 +94,7 @@ public class MapManager : MonoBehaviour
             gameObject.AddComponent<ExperienceManager>();
         }
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
         gameObject.AddComponent<DevConsole>();
-#endif
 
         if (!SceneManager.GetSceneByName("UIScene").isLoaded)
         {
