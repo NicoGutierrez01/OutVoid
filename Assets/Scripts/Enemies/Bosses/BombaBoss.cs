@@ -18,7 +18,7 @@ public class BombaBoss : MonoBehaviour
         {
             if (hit.CompareTag("Player"))
             {
-                hit.GetComponent<PlayerStats>().TakeDamage(dañoExplosion);
+                if (hit.TryGetComponent(out PlayerStats player)) player.TakeDamage(dañoExplosion, "BOSS");
             }
         }
 

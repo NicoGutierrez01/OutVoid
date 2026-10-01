@@ -106,7 +106,7 @@ public class Dynamite : MonoBehaviour
                 PlayerStats player = hit.GetComponentInParent<PlayerStats>();
                 if (player != null)
                 {
-                    player.TakeDamage(dañoExplosion * 0.5f); 
+                    player.TakeDamage(dañoExplosion * 0.5f, "TU PROPIA DINAMITA");
                 }
             }
         }

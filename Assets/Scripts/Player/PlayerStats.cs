@@ -16,6 +16,7 @@ public class PlayerStats : MonoBehaviour
     public float timeBeforeRegen = 4f;
     public float limitRegen = 45f;
     private float regenTimer;
+    private bool muerto;
 
     [Header("Mejoras Pasivas")]
     public bool tieneEscudoEmergencia = false;
@@ -69,14 +70,16 @@ public class PlayerStats : MonoBehaviour
     }
 
 
-    public void TakeDamage(float amount)
+    // atacante: nombre que se muestra en GameOver si este golpe mata al jugador (KAMIKAZE, STALKER...).
+    public void TakeDamage(float amount, string atacante = null)
     {
+        if (muerto) return;
         if (isGhostMode) return;
         if (AdministradorDeProgreso.Instancia != null && AdministradorDeProgreso.Instancia.modoDios) return;
 
         regenTimer = 0f;
 
-        MusicManager.Instance.PlayTakingDamage();
+        if (MusicManager.Instance != null) MusicManager.Instance.PlayTakingDamage();
 
         if (currentShield > 0)
         {
@@ -118,13 +121,20 @@ public class PlayerStats : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            Morir();
+            Morir(atacante);
         }
     }
 
 
-    private void Morir()
+    private void Morir(string atacante)
     {
+        // Una sola muerte: el láser del jefe o varias explosiones pueden pegar varias veces en el mismo frame.
+        muerto = true;
+
+        // Se guarda antes de cambiar de escena: GameOver no puede consultar objetos del mapa.
+        if (AdministradorDeProgreso.Instancia != null)
+            AdministradorDeProgreso.Instancia.enemigoAsesino = string.IsNullOrEmpty(atacante) ? "DESCONOCIDO" : atacante;
+
         Debug.Log(
             "El jugador ha muerto. Enviando evento GameOver y pasando a la pantalla..."
         );
@@ -135,7 +145,9 @@ public class PlayerStats : MonoBehaviour
             time = Mathf.FloorToInt(GameTimer.tiempoTotal),
         };
 
-        AnalyticsService.Instance.RecordEvent(gameOverEvent);
+        // Si Analytics no está inicializado (Play directo en un mapa) no debe impedir llegar al GameOver.
+        try { AnalyticsService.Instance.RecordEvent(gameOverEvent); }
+        catch (System.Exception e) { Debug.LogWarning("[PlayerStats] No se pudo enviar GameOverEvent: " + e.Message); }
 
         UnityEngine.SceneManagement.SceneManager.LoadScene("GameOver");
     }

@@ -8,6 +8,8 @@ public class EnemyBullet : MonoBehaviour
     public float tiempoDeVida = 5f; 
 
     [HideInInspector] public Vector3 origenDisparo;
+    // Lo usa el GameOver si esta bala mata al jugador. El MiniCube del jefe lo pisa al disparar.
+    [HideInInspector] public string nombreAtacante = "STRIKER";
 
     void Start()
     {
@@ -26,7 +28,7 @@ public class EnemyBullet : MonoBehaviour
             PlayerStats pm = other.GetComponentInParent<PlayerStats>();
             if (pm != null)
             {
-                pm.TakeDamage(dano);
+                pm.TakeDamage(dano, nombreAtacante);
             }
 
             if (DirectionalIndicatorHUD.Instance != null && origenDisparo != Vector3.zero)

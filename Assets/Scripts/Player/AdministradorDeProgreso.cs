@@ -41,6 +41,10 @@ public class AdministradorDeProgreso : MonoBehaviour
     public int enemigosMuertos = 0;
     public int puntosTotales = 0;
     public int mejorasRecogidas = 0;
+    [Tooltip("Quién dio el golpe final. Lo escribe PlayerStats al morir, antes de cargar GameOver. Vacío = sin muerte (victoria).")]
+    public string enemigoAsesino = "";
+    [Tooltip("Nivel de XP más alto de la run (ExperienceManager se reinicia en cada mapa).")]
+    public int nivelMaximoAlcanzado = 1;
 
     [Header("Cheats de Consola (solo esta run)")]
     public bool modoDios = false;
@@ -139,6 +143,8 @@ public class AdministradorDeProgreso : MonoBehaviour
         enemigosMuertos = 0;
         puntosTotales = 0;
         mejorasRecogidas = 0;
+        enemigoAsesino = "";
+        nivelMaximoAlcanzado = 1;
 
         modoDios = false;
         municionInfinita = false;
