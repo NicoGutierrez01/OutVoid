@@ -45,10 +45,16 @@ public class Boss : MonoBehaviour
     private int slotBarraAsignado = 0;
     private bool isDead = false;
 
-    void Awake() 
-    { 
-        propBlock = new MaterialPropertyBlock(); 
-    }
+   void Awake()
+{
+    propBlock = new MaterialPropertyBlock();
+
+    if (bossRenderer == null)
+        bossRenderer = GetComponentInChildren<Renderer>();
+
+    if (bossRenderer == null)
+        Debug.LogError("Boss: No se encontró ningún Renderer en el Boss ni en sus hijos.");
+}
 
     void Start()
     {
