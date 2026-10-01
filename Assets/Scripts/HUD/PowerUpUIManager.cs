@@ -214,7 +214,7 @@ public class PowerUpUIManager : MonoBehaviour
         }
     }
 
-    private void AplicarEfecto(PowerUpsChest mejora)
+    public void AplicarEfecto(PowerUpsChest mejora)
     {
         GameObject jugador = GameObject.FindGameObjectWithTag("Player");
         if (jugador == null) return;

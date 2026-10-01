@@ -80,6 +80,9 @@ public class MainMenu : MonoBehaviour
         GameTimer.tiempoTotal = 0f; 
         MapManager.nivelBucle = 1;
 
+        if (AdministradorDeProgreso.Instancia != null)
+            AdministradorDeProgreso.Instancia.ReiniciarProgreso();
+
         SceneManager.LoadScene(nombreEscenaJuego);
     }
 

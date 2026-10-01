@@ -183,6 +183,17 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     {
         _state.Acceleration = Vector3.zero;
 
+        bool noclip = AdministradorDeProgreso.Instancia != null && AdministradorDeProgreso.Instancia.noclip;
+        motor.SetMovementCollisionsSolvingActivation(!noclip);
+        motor.SetGroundSolvingActivation(!noclip);
+        if (noclip)
+        {
+            // Vuela hacia donde mira la cámara; salto sube, agacharse baja.
+            float vertical = (_requestedSustainedJump ? 1f : 0f) - (_requestedCrouch ? 1f : 0f);
+            currentVelocity = (_requestedMovement + Vector3.up * vertical) * walkSpeed * 2f;
+            return;
+        }
+
         if (motor.GroundingStatus.IsStableOnGround)
         {
             _timeSinceUngrounded = 0f;

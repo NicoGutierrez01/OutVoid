@@ -212,7 +212,7 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
 
         if (quiereDisparar && Time.time >= proximoTiempoDisparo)
         {
-            if (balasActuales > 0 || isUltActive)
+            if (balasActuales > 0 || isUltActive || MunicionInfinita)
             {
                 Disparar();
                 float cadenciaActual = isUltActive ? fireRate * 0.75f : fireRate;
@@ -403,9 +403,11 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
         retrocesoManos = 1f;
     }
 
+    private bool MunicionInfinita => AdministradorDeProgreso.Instancia != null && AdministradorDeProgreso.Instancia.municionInfinita;
+
     void Disparar()
     {
-        if (!isUltActive)
+        if (!isUltActive && !MunicionInfinita)
             balasActuales--;
 
         MusicManager.Instance.PlayShoot();

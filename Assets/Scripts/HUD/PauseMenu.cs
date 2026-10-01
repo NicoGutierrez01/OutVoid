@@ -53,6 +53,8 @@ public class PauseMenu : MonoBehaviour
 
     void Update()
     {
+        if (DevConsole.Abierta) return;
+
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             if (estaPausado) ReanudarJuego();

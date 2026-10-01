@@ -42,6 +42,11 @@ public class AdministradorDeProgreso : MonoBehaviour
     public int puntosTotales = 0;
     public int mejorasRecogidas = 0;
 
+    [Header("Cheats de Consola (solo esta run)")]
+    public bool modoDios = false;
+    public bool municionInfinita = false;
+    public bool noclip = false;
+
     private void Awake()
     {
         if (Instancia == null)
@@ -134,6 +139,10 @@ public class AdministradorDeProgreso : MonoBehaviour
         enemigosMuertos = 0;
         puntosTotales = 0;
         mejorasRecogidas = 0;
+
+        modoDios = false;
+        municionInfinita = false;
+        noclip = false;
 
         Debug.Log("[PROGRESO] Progreso reiniciado.");
     }

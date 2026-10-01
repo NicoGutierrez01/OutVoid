@@ -72,6 +72,7 @@ public class PlayerStats : MonoBehaviour
     public void TakeDamage(float amount)
     {
         if (isGhostMode) return;
+        if (AdministradorDeProgreso.Instancia != null && AdministradorDeProgreso.Instancia.modoDios) return;
 
         regenTimer = 0f;
 
