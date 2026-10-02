@@ -108,3 +108,7 @@ InitTestScene*.unity*
 
 CLAUDE.md
 .claude/
+
+# Context OS local state
+.context-os/
+.claude/settings.local.json
