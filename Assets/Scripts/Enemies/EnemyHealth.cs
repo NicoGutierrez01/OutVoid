@@ -263,7 +263,8 @@ if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo 
         if (artillero != null) artillero.enabled = false; 
 
         Collider[] todosLosColliders = GetComponentsInChildren<Collider>();
-        foreach (Collider c in todosLosColliders) c.isTrigger = true;
+        // Desactivar (no solo trigger): el cadáver vive 1-2 frames y no debe frenar disparos ni el raycast de drops.
+        foreach (Collider c in todosLosColliders) c.enabled = false;
 
         if (AdministradorDeProgreso.Instancia != null)
         {
@@ -346,7 +347,9 @@ if (rb != null) rb.isKinematic = true; // Empieza cinemático para que la IA lo 
     }
     IEnumerator KnockbackRoutine(Vector3 direccion)
     {
-        if (rb == null) yield break;
+        // Rigidbody no-kinematic = todavía cayendo del portal (Kamikaze/Stalker/Artillero lo ponen kinematic al aterrizar).
+        // Sin este corte, el knockback lo dejaba kinematic en el aire y nunca disparaba OnCollisionEnter con el suelo.
+        if (rb == null || !rb.isKinematic) yield break;
 
         if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
         {

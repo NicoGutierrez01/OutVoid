@@ -10,8 +10,14 @@ public class WeaponSystem : MonoBehaviour
     public float damage = 20f;
     public float multiplicadorHeadshot = 2f; 
     private bool r2EstabaPresionado = false;
-    public float range = 100f; 
-    public Transform cam; 
+    public float range = 100f;
+    public Transform cam;
+    [Tooltip("Capas que puede impactar el disparo. Los triggers solo cuentan si son hitbox de enemigo (tag Enemigo/Head/MinionBoss).")]
+    [SerializeField] private LayerMask capasDisparo = Physics.DefaultRaycastLayers;
+
+    // ponytail: buffer fijo de 64; si un rayo cruza más colliders, NonAlloc devuelve 64 arbitrarios. Subir si aparece.
+    private readonly RaycastHit[] bufferImpactos = new RaycastHit[64];
+    private readonly System.Collections.Generic.HashSet<GameObject> objetivosGolpeados = new System.Collections.Generic.HashSet<GameObject>();
     [Header("Daño por Distancia")]
 public float distanciaDanioMaximo = 15f;
 public float distanciaDanioMinimo = 40f;
@@ -596,20 +602,16 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
 
     void ProcesarDisparo(Vector3 origen,Vector3 direccion,Transform origenTracer)
     {
+        int cantidad = ObtenerImpactosOrdenados(origen, direccion);
+
         if (!balasPenetrantes)
         {
-            Ray ray = new Ray(origen, direccion);
-            RaycastHit hit;
             Vector3 puntoImpacto = origen + direccion * range;
 
-            if (Physics.Raycast(ray, out hit, range))
+            if (cantidad > 0)
             {
-                puntoImpacto = hit.point;
-
-                if (hit.collider.CompareTag("Player"))
-                    return;
-
-                ProcesarImpacto(hit);
+                puntoImpacto = bufferImpactos[0].point;
+                ProcesarImpacto(bufferImpactos[0]);
             }
 
             if (origenTracer != null)
@@ -623,22 +625,12 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
             return;
         }
 
-        Ray rayPenetrante = new Ray(origen, direccion);
-        RaycastHit[] impactos = Physics.RaycastAll(rayPenetrante, range);
-
-        System.Array.Sort(
-            impactos,
-            (a, b) => a.distance.CompareTo(b.distance)
-        );
-
         Vector3 puntoImpactoPenetrante = origen + direccion * range;
-        System.Collections.Generic.HashSet<GameObject> objetivosGolpeados = new System.Collections.Generic.HashSet<GameObject>();
+        objetivosGolpeados.Clear();
 
-        foreach (RaycastHit hit in impactos)
+        for (int i = 0; i < cantidad; i++)
         {
-            if (hit.collider.CompareTag("Player"))
-                continue;
-
+            RaycastHit hit = bufferImpactos[i];
             puntoImpactoPenetrante = hit.point;
 
             EnemyHealth enemy = hit.collider.GetComponentInParent<EnemyHealth>();
@@ -678,6 +670,40 @@ public float multiplicadorDanioLargoAlcance = 0.7f;
                 puntoImpactoPenetrante
             );
         }
+    }
+
+    // Llena bufferImpactos solo con impactos válidos, ordenados por distancia. Devuelve la cantidad.
+    int ObtenerImpactosOrdenados(Vector3 origen, Vector3 direccion)
+    {
+        int total = Physics.RaycastNonAlloc(origen, direccion, bufferImpactos, range, capasDisparo, QueryTriggerInteraction.Collide);
+        int validos = 0;
+
+        for (int i = 0; i < total; i++)
+        {
+            if (!EsImpactoValido(bufferImpactos[i].collider)) continue;
+
+            // Inserción ordenada (pocos elementos, sin allocations).
+            RaycastHit actual = bufferImpactos[i];
+            int j = validos - 1;
+            while (j >= 0 && bufferImpactos[j].distance > actual.distance)
+            {
+                bufferImpactos[j + 1] = bufferImpactos[j];
+                j--;
+            }
+            bufferImpactos[j + 1] = actual;
+            validos++;
+        }
+
+        return validos;
+    }
+
+    // Ignora al jugador y a los triggers que no son hitbox (drops, XP, zona de defensa, etc.).
+    // Boss2 usa triggers como hitbox, por eso no se usa QueryTriggerInteraction.Ignore.
+    static bool EsImpactoValido(Collider col)
+    {
+        if (col.CompareTag("Player")) return false;
+        if (!col.isTrigger) return true;
+        return col.CompareTag("Enemigo") || col.CompareTag("Head") || col.CompareTag("MinionBoss");
     }
 
     void ProcesarImpacto(RaycastHit hit)

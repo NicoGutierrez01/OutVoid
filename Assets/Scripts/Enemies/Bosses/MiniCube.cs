@@ -32,7 +32,14 @@ public class MiniCube : MonoBehaviour
     private float timerDisparo;
     private bool isDead = false;
 
-    void Awake() { propBlock = new MaterialPropertyBlock(); }
+    void Awake()
+    {
+        propBlock = new MaterialPropertyBlock();
+
+        // La referencia del prefab apuntaba a un MeshRenderer que ya no existe en Boss.fbx (ahora es skinned).
+        // Mismo criterio que Boss.cs: tomar el Renderer del modelo hijo.
+        if (minionRenderer == null) minionRenderer = GetComponentInChildren<Renderer>();
+    }
 
     void Start()
     {
