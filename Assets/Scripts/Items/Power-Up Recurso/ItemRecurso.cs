@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ItemRecurso : MonoBehaviour
@@ -27,13 +28,78 @@ public class ItemRecurso : MonoBehaviour
     public float intensidadMaxima = 2.0f;
     public float velocidadBrillo = 3f;
 
+    [Header("Límite de drops")]
+    [Tooltip("Máximo de recursos (vida+escudo+balas) activos a la vez. Al superarlo se elimina el más antiguo.")]
+    [SerializeField] private int maxDropsActivos = 20;
+
+    // Registro compartido de recursos activos, ordenado del más antiguo al más nuevo.
+    private static readonly List<ItemRecurso> activos = new List<ItemRecurso>();
+    public static IReadOnlyList<ItemRecurso> Activos => activos;
+
+    // Estado global del Magnet: un solo temporizador compartido (dos Magnets no duplican la atracción).
+    private static Transform objetivoMagneto;
+    private static float finMagneto;
+    private static float velocidadInicialMagneto;
+    private static float aceleracionMagneto;
+    private static float distanciaRecogidaMagneto;
+
+    private static bool MagnetoActivo => objetivoMagneto != null && Time.time < finMagneto;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearRegistro()
+    {
+        activos.Clear();
+        objetivoMagneto = null;
+        finMagneto = 0f;
+    }
+
+    // Todos los recursos activos (y los que aparezcan mientras dure) van hacia el jugador, sin importar la distancia.
+    public static void ActivarMagneto(Transform jugador, float duracion, float velocidadInicial, float aceleracion, float distanciaRecogida)
+    {
+        objetivoMagneto = jugador;
+        finMagneto = Mathf.Max(finMagneto, Time.time + duracion);
+        velocidadInicialMagneto = velocidadInicial;
+        aceleracionMagneto = aceleracion;
+        distanciaRecogidaMagneto = distanciaRecogida;
+    }
+
     private Vector3 posicionBase;
     private Renderer itemRenderer;
     private Material itemMaterial;
     private Color colorEmisionBase;
 
-    // NUEVO
     private bool siendoAtraido = false;
+    private float velocidadAtraccion;
+    private bool recogido = false;
+
+    void Awake()
+    {
+        // Estos recursos ya no desaparecen por tiempo: el límite de drops activos los controla.
+        if (TryGetComponent(out ItemDespawnTemporal despawn))
+            despawn.enabled = false;
+    }
+
+    void OnEnable()
+    {
+        activos.Add(this);
+
+        while (activos.Count > Mathf.Max(1, maxDropsActivos))
+        {
+            ItemRecurso masAntiguo = activos[0];
+            activos.RemoveAt(0);
+
+            if (masAntiguo != null)
+            {
+                masAntiguo.gameObject.SetActive(false);
+                Destroy(masAntiguo.gameObject);
+            }
+        }
+    }
+
+    void OnDisable()
+    {
+        activos.Remove(this);
+    }
 
     void Start()
     {
@@ -66,12 +132,34 @@ public class ItemRecurso : MonoBehaviour
             Space.World
         );
 
-        // Si el magneto está atrayendo el objeto,
-        // NO aplicamos la flotación normal.
-        if (!siendoAtraido)
+        float oscilacionPositiva =
+            (Mathf.Sin(Time.time * frecuenciaFlotacion) + 1f) * 0.5f;
+
+        if (MagnetoActivo)
         {
-            float oscilacionPositiva =
-                (Mathf.Sin(Time.time * frecuenciaFlotacion) + 1f) * 0.5f;
+            // Mientras el Magnet está activo no se aplica la flotación (evita que peleen).
+            if (!siendoAtraido)
+            {
+                siendoAtraido = true;
+                velocidadAtraccion = velocidadInicialMagneto;
+            }
+
+            velocidadAtraccion += aceleracionMagneto * Time.deltaTime;
+
+            Vector3 destino = objetivoMagneto.position;
+            if ((destino - transform.position).sqrMagnitude <= distanciaRecogidaMagneto * distanciaRecogidaMagneto)
+                transform.position = destino;
+            else
+                transform.position = Vector3.MoveTowards(transform.position, destino, velocidadAtraccion * Time.deltaTime);
+        }
+        else
+        {
+            if (siendoAtraido)
+            {
+                // Terminó el Magnet: vuelve a flotar donde quedó, sin saltos.
+                siendoAtraido = false;
+                posicionBase = transform.position - Vector3.up * (oscilacionPositiva * amplitudFlotacion);
+            }
 
             float nuevoY =
                 posicionBase.y +
@@ -107,16 +195,14 @@ public class ItemRecurso : MonoBehaviour
         }
     }
 
-    // NUEVO
-    public void ActivarAtraccion()
-    {
-        siendoAtraido = true;
-    }
-
     private void OnTriggerEnter(Collider other)
     {
+        if (recogido)
+            return;
+
         if (other.CompareTag("Player"))
         {
+            recogido = true;
             AplicarRecurso(other.gameObject);
             Destroy(gameObject);
         }

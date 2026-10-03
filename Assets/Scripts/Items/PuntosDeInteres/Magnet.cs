@@ -1,24 +1,25 @@
 using UnityEngine;
-using System.Collections.Generic;
 
 public class Magnet : MonoBehaviour
 {
     [Header("Atracción")]
-    [SerializeField] private float radioAtraccion = 50f;
+    [Tooltip("Velocidad inicial con la que cada recurso empieza a moverse hacia el jugador")]
     [SerializeField] private float velocidadAtraccion = 20f;
+    [Tooltip("Cuánto aumenta la velocidad de cada recurso por segundo mientras es atraído")]
     [SerializeField] private float aceleracion = 40f;
+    [Tooltip("Distancia a la que el recurso se pega al jugador para recogerse")]
     [SerializeField] private float distanciaRecogida = 1.5f;
 
     [Header("Duración")]
-    [SerializeField] private float duracionMagneto = 8f;
+    // Campo nuevo (antes duracionMagneto = 3 en el prefab): toma el default 7.
+    [Tooltip("Segundos que dura el efecto: todos los recursos del mapa van hacia el jugador")]
+    [SerializeField] private float duracionEfecto = 7f;
+
     [Header("Efectos Visuales (Estilo San Andreas)")]
     public float velocidadGiro = 90f;
 
-    private Transform jugador;
     private bool activo = false;
     private float tiempoRestante;
-
-    private readonly List<ItemRecurso> recursosAtraidos = new List<ItemRecurso>();
 
     // Referencias para ocultar el pickup mientras está activo
     private MeshRenderer[] renderers;
@@ -27,7 +28,7 @@ public class Magnet : MonoBehaviour
     private void Awake()
     {
         renderers = GetComponentsInChildren<MeshRenderer>();
-        col = GetComponent<Collider>();
+        TryGetComponent(out col);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -35,101 +36,36 @@ public class Magnet : MonoBehaviour
         if (activo)
             return;
 
-        if (other.CompareTag("Player") || other.GetComponentInParent<PlayerCharacter>() != null)
-        {
-            Transform foundPlayer = other.GetComponentInParent<PlayerCharacter>()?.transform;
-            jugador = foundPlayer != null ? foundPlayer : other.transform;
+        PlayerCharacter pc = other.GetComponentInParent<PlayerCharacter>();
+        if (pc == null && !other.CompareTag("Player"))
+            return;
 
-            ActivarMagneto();
-        }
-    }
+        Transform jugador = pc != null ? pc.transform : other.transform;
 
-    private void ActivarMagneto()
-    {
         activo = true;
-        tiempoRestante = duracionMagneto;
-
-        // Ocultar visualmente y apagar collider para que no se pueda interactuar mientras está activo
+        tiempoRestante = duracionEfecto;
         SetVisuales(false);
 
-        BuscarRecursos();
+        // El movimiento lo hace cada ItemRecurso según el estado global (incluye los que aparezcan después).
+        ItemRecurso.ActivarMagneto(jugador, duracionEfecto, velocidadAtraccion, aceleracion, distanciaRecogida);
     }
 
     private void Update()
     {
         if (!activo)
         {
-            transform.Rotate(
-                Vector3.up,
-                velocidadGiro * Time.deltaTime,
-                Space.World
-            );
+            transform.Rotate(Vector3.up, velocidadGiro * Time.deltaTime, Space.World);
             return;
         }
-
-        if (jugador == null) return;
 
         tiempoRestante -= Time.deltaTime;
-
         if (tiempoRestante <= 0f)
-        {
             DesactivarYReubicarMagneto();
-            return;
-        }
-
-        BuscarRecursos();
-        MoverRecursos();
-    }
-
-    private void BuscarRecursos()
-    {
-        ItemRecurso[] recursos = FindObjectsByType<ItemRecurso>(FindObjectsSortMode.None);
-
-        foreach (ItemRecurso recurso in recursos)
-        {
-            if (recurso == null || recursosAtraidos.Contains(recurso))
-                continue;
-
-            float distancia = Vector3.Distance(jugador.position, recurso.transform.position);
-
-            if (distancia <= radioAtraccion)
-            {
-                recurso.ActivarAtraccion();
-                recursosAtraidos.Add(recurso);
-            }
-        }
-    }
-
-    private void MoverRecursos()
-    {
-        for (int i = recursosAtraidos.Count - 1; i >= 0; i--)
-        {
-            ItemRecurso recurso = recursosAtraidos[i];
-
-            if (recurso == null)
-            {
-                recursosAtraidos.RemoveAt(i);
-                continue;
-            }
-
-            Vector3 direccion = (jugador.position - recurso.transform.position).normalized;
-            float distancia = Vector3.Distance(jugador.position, recurso.transform.position);
-            float factorDistancia = 1f - Mathf.Clamp01(distancia / radioAtraccion);
-            float velocidad = velocidadAtraccion + (velocidadAtraccion * 2f * factorDistancia);
-
-            recurso.transform.position += direccion * velocidad * Time.deltaTime;
-
-            if (distancia <= distanciaRecogida)
-            {
-                recurso.transform.position = jugador.position;
-            }
-        }
     }
 
     private void DesactivarYReubicarMagneto()
     {
         activo = false;
-        recursosAtraidos.Clear();
 
         // Obtener nueva posición desde MapManager
         if (MapManager.Instance != null)
