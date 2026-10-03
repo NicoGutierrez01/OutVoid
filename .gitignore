@@ -108,6 +108,7 @@ InitTestScene*.unity*
 
 CLAUDE.md
 .claude/
+*.slnx
 
 # Context OS local state
 .context-os/
